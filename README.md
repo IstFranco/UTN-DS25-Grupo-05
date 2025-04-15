@@ -5,3 +5,6 @@ El proyecto consiste en una plataforma digital que conecta a empresas organizado
 
 -Miembros del equipo
 Nombre:Franco Oyhenart, leg:33555, alias slack:Franco Oyhenart, perfil:https://github.com/IstFranco
+Nombre:Matias Balda Legajo:33460 Alias Slack:Matias Balda Perfil GitHub:https://github.com/MatiBalda20
+
+
