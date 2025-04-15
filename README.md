@@ -8,3 +8,7 @@ Nombre:Franco Oyhenart, leg:33555, alias slack:Franco Oyhenart, perfil:https://g
 Nombre:Matias Balda Legajo:33460 Alias Slack:Matias Balda Perfil GitHub:https://github.com/MatiBalda20
 
 
+Objetivo principal:
+Desarrollar una plataforma interactiva que facilite la personalización de eventos a través de la participación activa del usuario.
+
+
