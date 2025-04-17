@@ -31,7 +31,14 @@ Desarrollar una plataforma interactiva que facilite la personalización de event
 ---
 
 ## Supuestos y Restricciones
-Supuestos: Se asume que las empresas estarán dispuestas a adaptar sus eventos según la retroalimentación del público. También se asume que los usuarios utilizarán la plataforma activamente.
+- Supuestos: Se asume que las empresas estarán dispuestas a adaptar sus eventos según la retroalimentación del público. También se asume que los usuarios utilizarán la plataforma activamente.
 Restricciones: Tiempo limitado para el desarrollo. Equipo con poca habilidad y experiencia en desarrollo  software. Solo versión web.
+- Empresas organizadoras de eventos como boliches, bares o centros culturales.
 
+---
 
+## Stakeholders Claves
+
+- Cliente/Patrocinador: grupo de estudiantes (nosotros) como impulsores del desarrollo.
+- Usuarios finales: Personas jóvenes que asisten a eventos.
+- Otros interesados: Empresas organizadoras de eventos, bares, boliches, centros culturales.
