@@ -25,3 +25,12 @@ Desarrollar una plataforma interactiva que facilite la personalización de event
 
 - Personas jóvenes interesadas en eventos sociales (conciertos, fiestas, salidas nocturnas).
 - Empresas organizadoras de eventos como boliches, bares o centros culturales.
+
+---
+
+##Supuestos y Restricciones
+- Supuestos: Se asume que las empresas estarán dispuestas a adaptar sus eventos según la retroalimentación del público.
+ 	     También se asume que los usuarios utilizarán la plataforma activamente.
+- Restricciones: Tiempo limitado para el desarrollo. Equipo con poca habilidad y experiencia en desarrollo  software. Solo versión web.
+
+
