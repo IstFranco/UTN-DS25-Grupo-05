@@ -25,3 +25,11 @@ Desarrollar una plataforma interactiva que facilite la personalización de event
 
 - Personas jóvenes interesadas en eventos sociales (conciertos, fiestas, salidas nocturnas).
 - Empresas organizadoras de eventos como boliches, bares o centros culturales.
+
+---
+
+## Stakeholders Claves
+
+- Cliente/Patrocinador: grupo de estudiantes (nosotros) como impulsores del desarrollo.
+- Usuarios finales: Personas jóvenes que asisten a eventos.
+- Otros interesados: Empresas organizadoras de eventos, bares, boliches, centros culturales.
