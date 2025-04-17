@@ -12,7 +12,7 @@ El proyecto consiste en una plataforma digital que conecta a empresas organizado
 |------------------|--------|------------------|--------------------------------------------------|
 | Franco Oyhenart  | 33555  | Franco Oyhenart  | [IstFranco](https://github.com/IstFranco)       |
 | Matias Balda     | 33460  | Matias Balda     | [MatiBalda20](https://github.com/MatiBalda20)   |
-
+Macarena Romero      33372    Macarene Romero Olmo [Macarena1973olmo](https://github.com/Macarena1973olmo)
 ---
 
 ## Objetivo principal
