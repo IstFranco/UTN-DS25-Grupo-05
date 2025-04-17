@@ -12,7 +12,9 @@ El proyecto consiste en una plataforma digital que conecta a empresas organizado
 |------------------|--------|------------------|--------------------------------------------------|
 | Franco Oyhenart  | 33555  | Franco Oyhenart  | [IstFranco](https://github.com/IstFranco)       |
 | Matias Balda     | 33460  | Matias Balda     | [MatiBalda20](https://github.com/MatiBalda20)   |
-Macarena Romero      33372    Macarene Romero Olmo [Macarena1973olmo](https://github.com/Macarena1973olmo)
+|Macarena Romero   | 33372  | Macarene Romero Olmo | [Macarena1973olmo](https://github.com/Macarena1973olmo) |
+| Lautaro Flores   | 33411  | Lautaro Flores   | [LautaFlores47](https://github.com/LautaroFlores47) |
+
 ---
 
 ## Objetivo principal
@@ -24,13 +26,12 @@ Desarrollar una plataforma interactiva que facilite la personalización de event
 ## Usuarios Principales
 
 - Personas jóvenes interesadas en eventos sociales (conciertos, fiestas, salidas nocturnas).
-- Empresas organizadoras de eventos como boliches, bares o centros culturales.
+- Empresas organizadoras de eventos como boliches, bares o centro culturales.
 
 ---
 
-##Supuestos y Restricciones
-- Supuestos: Se asume que las empresas estarán dispuestas a adaptar sus eventos según la retroalimentación del público.
- 	     También se asume que los usuarios utilizarán la plataforma activamente.
-- Restricciones: Tiempo limitado para el desarrollo. Equipo con poca habilidad y experiencia en desarrollo  software. Solo versión web.
+## Supuestos y Restricciones
+Supuestos: Se asume que las empresas estarán dispuestas a adaptar sus eventos según la retroalimentación del público. También se asume que los usuarios utilizarán la plataforma activamente.
+Restricciones: Tiempo limitado para el desarrollo. Equipo con poca habilidad y experiencia en desarrollo  software. Solo versión web.
 
 
