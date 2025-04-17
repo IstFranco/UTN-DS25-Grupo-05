@@ -12,7 +12,7 @@ El proyecto consiste en una plataforma digital que conecta a empresas organizado
 |------------------|--------|------------------|--------------------------------------------------|
 | Franco Oyhenart  | 33555  | Franco Oyhenart  | [IstFranco](https://github.com/IstFranco)       |
 | Matias Balda     | 33460  | Matias Balda     | [MatiBalda20](https://github.com/MatiBalda20)   |
-
+| Lautaro Flores   | 33411  | Lautaro Flores   | [LautaFlores47](https://github.com/LautaroFlores47) |
 ---
 
 ## Objetivo principal
