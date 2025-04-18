@@ -14,8 +14,8 @@ El proyecto consiste en una plataforma digital que conecta a empresas organizado
 | Matias Balda     | 33460  | Matias Balda     | [MatiBalda20](https://github.com/MatiBalda20)   |
 |Macarena Romero   | 33372  | Macarene Romero Olmo | [Macarena1973olmo](https://github.com/Macarena1973olmo) |
 | Lautaro Flores   | 33411  | Lautaro Flores   | [LautaFlores47](https://github.com/LautaroFlores47) |
-| Rodrigo Castaño  | 33659  | Rodrigo Castaño  | [rodricastanio](https://github.com/rodricastanio)
----
+| Rodrigo Castaño  | 33659  | Rodrigo Castaño  | [rodricastanio](https://github.com/rodricastanio)|
+| Esteban Trillo   | 33728  | Trillo Esteban   | [EstebanT1112](https://github.com/EstebanT1112) |
 
 ## Objetivo principal
 
@@ -42,3 +42,11 @@ Restricciones: Tiempo limitado para el desarrollo. Equipo con poca habilidad y e
 - Cliente/Patrocinador: grupo de estudiantes (nosotros) como impulsores del desarrollo.
 - Usuarios finales: Personas jóvenes que asisten a eventos.
 - Otros interesados: Empresas organizadoras de eventos, bares, boliches, centros culturales.
+
+## Riesgos Iniciales
+
+| Riesgo                           | Probabilidad | Impacto | Estrategia Mitigación |
+|-----------------------------------|--------------|---------|-----------------------|
+| Falta de participación de usuarios| Media        | Alta    | Incentivos como sorteos o beneficios por participación |
+| Dificultades técnicas de desarrollo| Alta         | Media   | Planificación anticipada, documentación y división clara de tareas |
+| Dependencia de APIs externas      | Alta         | Alta    | Implementar mecanismos de contingencia, realizar pruebas de carga y asegurar tolerancia ante fallos de APIs |
