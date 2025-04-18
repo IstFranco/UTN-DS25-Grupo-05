@@ -62,6 +62,13 @@ Restricciones: Tiempo limitado para el desarrollo. Equipo con poca habilidad y e
 
 ---
 
+
+## Oportunidades de negocio
+
+Problema que se resuelve: Las personas asisten a eventos que no siempre cumplen con sus expectativas, ya que no pueden influir en su planificación ni comunicar sus preferencias de forma directa y efectiva.
+
+---
+
 ## Riesgos Iniciales
 
 | Riesgo                           | Probabilidad | Impacto | Estrategia Mitigación |
@@ -69,4 +76,5 @@ Restricciones: Tiempo limitado para el desarrollo. Equipo con poca habilidad y e
 | Falta de participación de usuarios| Media        | Alta    | Incentivos como sorteos o beneficios por participación |
 | Dificultades técnicas de desarrollo| Alta         | Media   | Planificación anticipada, documentación y división clara de tareas |
 | Dependencia de APIs externas      | Alta         | Alta    | Implementar mecanismos de contingencia, realizar pruebas de carga y asegurar tolerancia ante fallos de APIs |
+
 
