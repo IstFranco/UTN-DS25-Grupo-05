@@ -30,6 +30,23 @@ Desarrollar una plataforma interactiva que facilite la personalización de event
 
 ---
 
+## Alcance del Producto
+Alcance del Producto:
+Dentro del Alcance: 
+• Registro y autenticación de usuarios 
+• Visualización de eventos disponibles 
+• Votación de preferencias por parte de usuarios 
+• Panel para que empresas suban eventos y vean estadísticas 
+• Sistema de comentarios y valoraciones 
+• Búsqueda y filtros: Buscar canciones por género, artista o popularidad 
+• Integración con APIs musicales 
+ 
+Fuera del Alcance: 
+• Procesamiento de pagos 
+• Organización logística del evento 
+• Aplicación móvil (solo versión web en esta etapa) 
+
+---
 ## Supuestos y Restricciones
 - Supuestos: Se asume que las empresas estarán dispuestas a adaptar sus eventos según la retroalimentación del público. También se asume que los usuarios utilizarán la plataforma activamente.
 Restricciones: Tiempo limitado para el desarrollo. Equipo con poca habilidad y experiencia en desarrollo  software. Solo versión web.
@@ -42,3 +59,12 @@ Restricciones: Tiempo limitado para el desarrollo. Equipo con poca habilidad y e
 - Cliente/Patrocinador: grupo de estudiantes (nosotros) como impulsores del desarrollo.
 - Usuarios finales: Personas jóvenes que asisten a eventos.
 - Otros interesados: Empresas organizadoras de eventos, bares, boliches, centros culturales.
+
+---
+
+## Riesgos Inciales
+Riesgos Inciales:
+
+| Riesgo    | Probabilidad | Impacto   | Estrategia Mitigacion |
+|--------------------------------------------------------------|
+| completar | completar    | completar | completar             |
