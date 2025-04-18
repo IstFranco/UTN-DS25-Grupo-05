@@ -15,8 +15,7 @@ El proyecto consiste en una plataforma digital que conecta a empresas organizado
 |Macarena Romero   | 33372  | Macarene Romero Olmo | [Macarena1973olmo](https://github.com/Macarena1973olmo) |
 | Lautaro Flores   | 33411  | Lautaro Flores   | [LautaFlores47](https://github.com/LautaroFlores47) |
 | Esteban Trillo   | 33728  | Trillo Esteban   | [EstebanT1112](https://github.com/EstebanT1112) |
-
----
+| Rodrigo Castaño  | 33659  | Rodrigo Castaño  | [rodricastanio](https://github.com/rodricastanio)|
 
 ## Objetivo principal
 
