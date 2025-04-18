@@ -14,7 +14,7 @@ El proyecto consiste en una plataforma digital que conecta a empresas organizado
 | Matias Balda     | 33460  | Matias Balda     | [MatiBalda20](https://github.com/MatiBalda20)   |
 |Macarena Romero   | 33372  | Macarene Romero Olmo | [Macarena1973olmo](https://github.com/Macarena1973olmo) |
 | Lautaro Flores   | 33411  | Lautaro Flores   | [LautaFlores47](https://github.com/LautaroFlores47) |
-
+| Rodrigo Castaño  | 33659  | Rodrigo Castaño  | [rodricastanio](https://github.com/rodricastanio)
 ---
 
 ## Objetivo principal
