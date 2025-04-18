@@ -62,9 +62,11 @@ Restricciones: Tiempo limitado para el desarrollo. Equipo con poca habilidad y e
 
 ---
 
-## Riesgos Inciales
-Riesgos Inciales:
+## Riesgos Iniciales
 
-| Riesgo    | Probabilidad | Impacto   | Estrategia Mitigacion |
-|--------------------------------------------------------------|
-| completar | completar    | completar | completar             |
+| Riesgo                           | Probabilidad | Impacto | Estrategia Mitigación |
+|-----------------------------------|--------------|---------|-----------------------|
+| Falta de participación de usuarios| Media        | Alta    | Incentivos como sorteos o beneficios por participación |
+| Dificultades técnicas de desarrollo| Alta         | Media   | Planificación anticipada, documentación y división clara de tareas |
+| Dependencia de APIs externas      | Alta         | Alta    | Implementar mecanismos de contingencia, realizar pruebas de carga y asegurar tolerancia ante fallos de APIs |
+
