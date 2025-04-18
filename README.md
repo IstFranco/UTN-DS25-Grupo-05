@@ -37,7 +37,7 @@ Dentro del Alcance:
  Visualización de eventos disponibles 
  Votación de preferencias por parte de usuarios 
  Panel para que empresas suban eventos y vean estadísticas 
- Sistema de comentarios y valoraciones 
+ Sistema de comentarios y valoraciones
  Búsqueda y filtros: Buscar canciones por género, artista o popularidad 
  Integración con APIs musicales 
  
@@ -45,6 +45,7 @@ Fuera del Alcance:
  Procesamiento de pagos 
  Organización logística del evento 
  Aplicación móvil (solo versión web en esta etapa) 
+
 
 ---
 ## Supuestos y Restricciones
