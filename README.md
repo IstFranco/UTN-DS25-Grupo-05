@@ -33,18 +33,18 @@ Desarrollar una plataforma interactiva que facilite la personalización de event
 ## Alcance del Producto
 Alcance del Producto:
 Dentro del Alcance: 
-• Registro y autenticación de usuarios 
-• Visualización de eventos disponibles 
-• Votación de preferencias por parte de usuarios 
-• Panel para que empresas suban eventos y vean estadísticas 
-• Sistema de comentarios y valoraciones 
-• Búsqueda y filtros: Buscar canciones por género, artista o popularidad 
-• Integración con APIs musicales 
+1) Registro y autenticación de usuarios. 
+2) Visualización de eventos disponibles.
+3) Votación de preferencias por parte de usuarios. 
+4) Panel para que empresas suban eventos y vean estadísticas. 
+5) Sistema de comentarios y valoraciones. 
+6) Búsqueda y filtros: Buscar canciones por género, artista o popularidad. 
+7) Integración con APIs musicales. 
  
 Fuera del Alcance: 
-• Procesamiento de pagos 
-• Organización logística del evento 
-• Aplicación móvil (solo versión web en esta etapa) 
+1) Procesamiento de pagos. 
+2) Organización logística del evento. 
+3) Aplicación móvil (solo versión web en esta etapa). 
 
 ---
 ## Supuestos y Restricciones
