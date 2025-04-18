@@ -30,7 +30,7 @@ Desarrollar una plataforma interactiva que facilite la personalización de event
 
 ---
 
-##Alcance del Producto
+## Alcance del Producto
 Alcance del Producto:
 Dentro del Alcance: 
 • Registro y autenticación de usuarios 
@@ -59,3 +59,12 @@ Restricciones: Tiempo limitado para el desarrollo. Equipo con poca habilidad y e
 - Cliente/Patrocinador: grupo de estudiantes (nosotros) como impulsores del desarrollo.
 - Usuarios finales: Personas jóvenes que asisten a eventos.
 - Otros interesados: Empresas organizadoras de eventos, bares, boliches, centros culturales.
+
+---
+
+## Riesgos Inciales
+Riesgos Inciales:
+
+| Riesgo    | Probabilidad | Impacto   | Estrategia Mitigacion |
+|--------------------------------------------------------------|
+| completar | completar    | completar | completar             |
