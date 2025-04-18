@@ -23,6 +23,16 @@ Desarrollar una plataforma interactiva que facilite la personalización de event
 
 ---
 
+## Objetivos Especificos
+
+Objetivos específicos:
+- Permitir a los usuarios expresar sus preferencias sobre los eventos publicados.
+- Brindar a las empresas información útil sobre las expectativas del público.
+- Diseñar una interfaz atractiva, simple e intuitiva.
+- Implementar un sistema de comentarios y opiniones que incentive la mejora continua.
+
+---
+
 ## Usuarios Principales
 
 - Personas jóvenes interesadas en eventos sociales (conciertos, fiestas, salidas nocturnas).
