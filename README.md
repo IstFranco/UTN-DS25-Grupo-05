@@ -35,3 +35,9 @@ Desarrollar una plataforma interactiva que facilite la personalización de event
 - Cliente/Patrocinador: grupo de estudiantes (nosotros) como impulsores del desarrollo.
 - Usuarios finales: Personas jóvenes que asisten a eventos.
 - Otros interesados: Empresas organizadoras de eventos, bares, boliches, centros culturales.
+
+---
+
+## Oportunidades de negocio
+
+Problema que se resuelve: Las personas asisten a eventos que no siempre cumplen con sus expectativas, ya que no pueden influir en su planificación ni comunicar sus preferencias de forma directa y efectiva.
