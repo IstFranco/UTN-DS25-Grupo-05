@@ -1,6 +1,6 @@
-#Indice de documentos del proyecto:
+# Indice de documentos del proyecto:
 
-##Documentos
+## Documentos
 00-Documento de Visión y Alcance.
 01-Analisis Inicial.
 02-Modelo de Dominio.
