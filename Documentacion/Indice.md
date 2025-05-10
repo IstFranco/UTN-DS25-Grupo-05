@@ -5,5 +5,5 @@
 01-Analisis Inicial.  
 02-Modelo de Dominio. <br>
 03-Elaboracion del Product Backlog.  
-04-Validacion y Trazabilidad
-06-UX and UI
+04-Validacion y Trazabilidad. <br>
+06-UX and UI.
