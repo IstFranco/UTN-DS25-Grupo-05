@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spott - Inicio Usuario</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../estilos/styles.css">
+</head>
+
+<body>
+  <!-- Header Superior (Logo, Perfil, Notificaciones) -->
+  <header class="header">
+    <button onclick="window.location.href='perfil.html'">
+      <img src="../img/LogoPerfil.jpeg" alt="Perfil" id="logo">
+    </button>
+    <h1>Spott</h1>
+    <button onclick="window.location.href='notificaciones.html'">
+      <img src="../img/LogoNotificaciones.jpeg" alt="Notificaciones" id="logo">
+    </button>
+  </header>
+
+  <div class="inicio">
+    <!-- Barra de Búsqueda -->
+
+
+    <!-- Accesos Rápidos -->
+    <section class="quick-access">
+      <button class="quick-btn">
+        <span class="icon">Foto1</span>
+        <span class="text">Acceso1</span>
+      </button>
+      <button class="quick-btn">
+        <span class="icon">Foto2</span>
+        <span class="text">Acceso2</span>
+      </button>
+      <button class="quick-btn">
+        <span class="icon">Foto3</span>
+        <span class="text">Acceso3</span>
+      </button>
+      <button class="quick-btn">
+        <span class="icon">Foto4</span>
+        <span class="text">Acceso4</span>
+      </button>
+    </section>
+
+    <!-- Eventos Activos del Mes -->
+    <div class="destacados">
+      <h2 class="section-title">Eventos Activos del Mes</h2>
+
+      <article class="event-card">
+        <div class="event-image">
+          <img src="" alt="">
+        </div>
+        <div class="event-info">
+          <h3 class="event-title">Concierto de Verano</h3>
+          <p class="event-description">Disfruta de los mejores artistas en nuestro festival anual.</p>
+          <div class="event-rating">⭐ 4.7</div>
+        </div>
+      </article>
+
+      <article class="event-card">
+        <div class="event-image"></div>
+        <div class="event-info">
+          <h3 class="event-title">Exposición de Arte</h3>
+          <p class="event-description">Obras contemporáneas de artistas emergentes.</p>
+          <div class="event-rating">⭐ 4.9</div>
+        </div>
+      </article>
+    </div>
+
+
+    <!-- Eventos con Mejor Valoracion -->
+    <div class="destacados">
+      <h2 class="section-title">Eventos con Mejor Valoracion</h2>
+
+      <article class="event-card">
+        <div class="event-image">
+          <img src="" alt="">
+        </div>
+        <div class="event-info">
+          <h3 class="event-title">Concierto de Verano</h3>
+          <p class="event-description">Disfruta de los mejores artistas en nuestro festival anual.</p>
+          <div class="event-rating">⭐ 4.7</div>
+        </div>
+      </article>
+
+      <article class="event-card">
+        <div class="event-image"></div>
+        <div class="event-info">
+          <h3 class="event-title">Exposición de Arte</h3>
+          <p class="event-description">Obras contemporáneas de artistas emergentes.</p>
+          <div class="event-rating">⭐ 4.9</div>
+        </div>
+      </article>
+    </div>
+
+  </div>
+
+  <!-- Footer Inferior -->
+  <footer class="footer">
+    <button class="footer-btn">
+      <img src="../img/LogoExplorar.jpeg" id="logo" alt="">
+      Explorar</button>
+    <button class="footer-btn" onclick="window.location.href='index.html'">
+      <img src="../img/HomeLogo.jpeg" id="logo" alt="">
+      Inicio
+    </button>
+    <button class="footer-btn" onclick="window.location.href='crearEvento.html'">
+      <img src="../img/CrearLogo.jpeg" id="logo" alt="">
+      Crear Evento</button>
+  </footer>
+
+  <script>
+    // Mostrar/ocultar filtros
+  </script>
+</body>
+
+</html>

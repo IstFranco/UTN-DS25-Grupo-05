@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spott - Inicio Usuario</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../estilos/styles.css">
+</head>
+
+<body>
+  <!-- Header Superior (Logo, Perfil, Notificaciones) -->
+  <header class="header">
+    <button onclick="window.location.href='perfil.html'">
+      <img src="../img/LogoPerfil.jpeg" alt="Perfil" id="logo">
+    </button>
+    <h1>Spott</h1>
+    <button onclick="window.location.href='notificaciones.html'">
+      <img src="../img/LogoNotificaciones.jpeg" alt="Notificaciones" id="logo">
+    </button>
+  </header>
+
+  <div class="inicio">
+    <!-- Barra de Búsqueda -->
+    <section class="search-section">
+      <input type="text" placeholder="Buscar eventos..." class="search-input">
+      <button class="btn-filter" id="filterBtn">Filtrar ▼</button>
+    </section>
+
+
+  <section id="filtersDropdown" class="filters-dropdown hidden">
+    <!-- Filtros -->
+    <div class="filter-group-div" id="x">
+
+      <!-- 🗓 Filtro por Fecha -->
+      <div class="filter-group">
+        <label>📅 Fecha</label>
+        <div>
+          <label>Fecha específica:</label>
+          <input type="date" name="fecha-especifica" id="fecesp" />
+        </div>
+        <div>
+          <label>Rango de fechas:</label>
+          <input type="date" name="fecha-desde" id="fecini" /> a
+          <input type="date" name="fecha-hasta" id="fecfin" />
+        </div>
+        <div>
+          <label>Fechas rápidas:</label>
+          <select name="fechas-rapidas" id="fecrap">
+            <option>Hoy</option>
+            <option>Mañana</option>
+            <option>Este fin de semana</option>
+            <option>Próxima semana</option>
+            <option>Próximo feriado</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 📍 Filtro por Ubicación -->
+      <div class="filter-group">
+        <label>📍 Ubicación</label>
+        <div>
+          <label>Ciudad:</label>
+          <select name="ciudad" id="ciudad">
+            <option>Elija la ciudad...</option>
+            <option>Buenos Aires</option>
+            <option>Córdoba</option>
+            <option>Rosario</option>
+            <option>Mendoza</option>
+          </select>
+        </div>
+        <div>
+          <label>Barrio/Zona:</label>
+          <select name="barrio" id="barrio">
+            <option>Elija el barrio...</option>
+            <option>Palermo</option>
+            <option>San Telmo</option>
+            <option>Nueva Córdoba</option>
+            <option>Centro</option>
+          </select>
+        </div>
+        <div>
+          <label>Distancia desde mi ubicación:</label>
+          <select name="distancia" id="distancia">
+            <option>Menos de 2 km</option>
+            <option>De 2 a 5 km</option>
+            <option>Más de 5 km</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 🎨 Filtro por Ambientación -->
+      <div class="filter-group">
+        <label>🎨 Ambientación</label>
+        <div>
+          <label>Estilo general:</label>
+          <select name="estilo-general" id="estgen">
+            <option>Casual</option>
+            <option>Elegante</option>
+            <option>Temático</option>
+            <option>Glam</option>
+            <option>Alternativo</option>
+          </select>
+        </div>
+        <div>
+          <label>Temáticas específicas:</label>
+          <select name="tematica-especifica" id="temesp">
+            <option>Neon party</option>
+            <option>Halloween</option>
+            <option>Años 80 / 90 / 2000</option>
+            <option>White party (ropa blanca)</option>
+            <option>Carnaval / tropical</option>
+            <option>Cosplay / Anime</option>
+            <option>Interior / cerrado</option>
+            <option>Exterior / jardín o terraza</option>
+            <option>Con luces led / proyecciones</option>
+            <option>Ambientación inmersiva o artística</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 🎧 Filtro por Tipo de Música -->
+      <div class="filter-group">
+        <label>🎧 Tipo de Música</label>
+        <div>
+          <label>Género musical:</label>
+          <select name="genero-musical" id="genmus">
+            <option>Electrónica (Techno, House, EDM)</option>
+            <option>Reggaetón / Latin</option>
+            <option>Rock / Indie</option>
+            <option>Pop</option>
+            <option>Trap / Hip hop</option>
+            <option>Jazz / Funk / Soul</option>
+            <option>Música en vivo</option>
+          </select>
+        </div>
+        <div>
+          <label>Tipo de propuesta:</label>
+          <select name="tipo-propuesta" id="tipoprop">
+            <option>DJ en vivo</option>
+            <option>Bandas en vivo</option>
+            <option>Karaoke</option>
+            <option>Música ambiente chill</option>
+            <option>Open mic / Freestyle</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 💰 Filtro por Precio o Entrada -->
+      <div class="filter-group">
+        <label>💰 Precio o Entrada</label>
+        <div>
+          <label><input type="checkbox" name="entrada-gratis" id="entgrat" /> Entrada gratuita</label>
+        </div>
+        <div>
+          <label>Rango de precios:</label>
+          <select name="rango-precios" id="rango">
+            <option>Hasta $3.000</option>
+            <option>$3.000 a $7.000</option>
+            <option>Más de $7.000</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 🔥 Filtro por Popularidad -->
+      <div class="filter-group">
+        <label>🔥 Popularidad</label>
+        <div>
+          <label><input type="checkbox" name="mas-votados" id="masvot" /> Eventos más votados</label><br />
+          <label><input type="checkbox" name="comentarios-positivos" id="mascom" /> Más comentarios positivos</label><br />
+          <label><input type="checkbox" name="tendencias" id="tenact" /> Tendencias actuales / destacados</label><br />
+          <label><input type="checkbox" name="organizadores-top" id="mejororg" /> Organizadores mejor calificados</label>
+        </div>
+      </div>
+
+      <!-- ✅ Filtro por Disponibilidad -->
+      <div class="filter-group">
+        <label>✅ Disponibilidad</label>
+        <div>
+          <label><input type="checkbox" name="disponibles" id="disp" /> Con entradas disponibles</label><br />
+          <label><input type="checkbox" name="ultimos-lugares" id="ult" /> Últimos lugares</label>
+        </div>
+      </div>
+
+    </div>
+
+    <button id="confirmar-filtro" type="button"><b>Confirmar</b></button>
+    <h3 id="resultado"></h3>
+  </section>
+
+
+
+    <!-- Accesos Rápidos -->
+    <section class="quick-access">
+      <button class="quick-btn">
+        <span class="icon">Foto1</span>
+        <span class="text">Acceso1</span>
+      </button>
+      <button class="quick-btn">
+        <span class="icon">Foto2</span>
+        <span class="text">Acceso2</span>
+      </button>
+      <button class="quick-btn">
+        <span class="icon">Foto3</span>
+        <span class="text">Acceso3</span>
+      </button>
+      <button class="quick-btn">
+        <span class="icon">Foto4</span>
+        <span class="text">Acceso4</span>
+      </button>
+    </section>
+
+    <!-- Eventos Destacados -->
+    <div class="destacados">
+      <h2 class="section-title">Eventos Destacados</h2>
+
+      <article class="event-card">
+        <div class="event-image">
+          <img src="" alt="">
+        </div>
+        <div class="event-info">
+          <h3 class="event-title">Concierto de Verano</h3>
+          <p class="event-description">Disfruta de los mejores artistas en nuestro festival anual.</p>
+          <div class="event-rating">⭐ 4.7</div>
+        </div>
+      </article>
+
+      <article class="event-card">
+        <div class="event-image"></div>
+        <div class="event-info">
+          <h3 class="event-title">Exposición de Arte</h3>
+          <p class="event-description">Obras contemporáneas de artistas emergentes.</p>
+          <div class="event-rating">⭐ 4.9</div>
+        </div>
+      </article>
+    </div>
+
+  </div>
+
+  <!-- Footer Inferior -->
+  <footer class="footer">
+    <button class="footer-btn">
+      <img src="../img/LogoExplorar.jpeg" id="logo" alt="">
+      Explorar</button>
+    <button class="footer-btn" onclick="window.location.href='index.html'">
+      <img src="../img/HomeLogo.jpeg" id="logo" alt="">
+      Inicio
+    </button>
+    <button class="footer-btn" onclick="window.location.href='favoritos.html'">
+      <img src="../img/LogoFav.jpeg" id="logo" alt="">
+      Favoritos</button>
+  </footer>
+
+  <script src="../javascript/index.js" ></script>
+  <!--<script>
+    // Mostrar/ocultar filtros
+  </script> -->
+</body>
+
+</html>
