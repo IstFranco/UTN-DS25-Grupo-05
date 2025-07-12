@@ -10,9 +10,9 @@ export default function FooterEmpresa() {
 
     return (
         <footer className="footer">
-            <button className="footer-btn">
+            <button className="footer-btn" onClick={() => navigate('/empresa/mis-eventos')}>
                 <img src={explorarImg} className="footer-icon" alt="Explorar" />
-                Explorar
+                Mis eventos
             </button>
             <button className="footer-btn" onClick={() => navigate('/empresa')}>
                 <img src={homeImg} className="footer-icon" alt="Inicio" />
