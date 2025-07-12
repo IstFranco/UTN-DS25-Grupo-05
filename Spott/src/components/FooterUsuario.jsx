@@ -5,14 +5,14 @@ import homeImg from '../img/HomeLogo.jpeg';
 import favImg from '../img/LogoFav.jpeg';
 import '../app.css';
 
-export default function FooterEmpresa() {
+export default function FooterUsuario() {
     const navigate = useNavigate();
 
     return (
         <footer className="footer">
-            <button className="footer-btn">
+            <button className="footer-btn" onClick={() => navigate('/usuario/mis-eventos')}>
                 <img src={explorarImg} className="footer-icon" alt="Explorar" />
-                Explorar
+                Mis Eventos
             </button>
             <button className="footer-btn" onClick={() => navigate('/usuario')}>
                 <img src={homeImg} className="footer-icon" alt="Inicio" />

@@ -1,6 +1,6 @@
-export default function PresentCard({ imageSrc = "", title, description, rating }) {
+export default function PresentCard({ imageSrc = "", title, description, rating, onClick }) {
     return (
-        <article className="event-card">
+        <article className="event-card" onClick={onClick} style={{ cursor: onClick ? 'pointer' : 'default' }}>
             <div className="event-image">
                 {imageSrc ? <img src={imageSrc} alt={title} /> : null}
             </div>
