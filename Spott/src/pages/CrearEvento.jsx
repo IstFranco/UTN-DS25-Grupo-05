@@ -11,13 +11,14 @@ export default function CrearEvento() {
 
     const [formulario, setFormulario] = useState({
         nombre: '',
+        portada: null,
+        imagenes: [],
         fecha: '',
         ciudad: '',
         barrio: '',
         estilo: '',
         tematica: '',
         musica: '',
-        propuesta: '',
         precio: '',
         cupo:''
     });
@@ -30,11 +31,24 @@ export default function CrearEvento() {
         }));
     };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        console.log('Datos del evento:', formulario);
-        // Acá podrías mandar los datos al backend más adelante
+const handleSubmit = (e) => {
+    e.preventDefault();
+
+    const nuevoEvento = {
+        imageSrc: formulario.portada ? URL.createObjectURL(formulario.portada) : '',
+        title: formulario.nombre,
+        description: `Temática: ${formulario.tematica}, Música: ${formulario.musica}`,
+        rating: (4 + Math.random()).toFixed(1) // Valor ficticio
     };
+
+    // Guardar en localStorage
+    const eventosGuardados = JSON.parse(localStorage.getItem('misEventos')) || [];
+    eventosGuardados.push(nuevoEvento);
+    localStorage.setItem('misEventos', JSON.stringify(eventosGuardados));
+
+    // Redirigir a la vista de inicio
+    navigate('/empresa');
+};
 
     return (
         <div className="inicio">
@@ -53,8 +67,42 @@ export default function CrearEvento() {
                     <label>Nombre del evento:</label>
                     <input type="text" name="nombre" value={formulario.nombre} onChange={handleChange} required />
 
+                    <label>Descripción detallada:</label>
+                    <textarea name="descripcionLarga" value={formulario.descripcionLarga} onChange={handleChange} />
+
+                    <label>Edad mínima:</label>
+                    <input type="number" name="edadMinima" value={formulario.edadMinima} onChange={handleChange} min="0" />
+
+                    <label>Imagen de portada:</label>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) =>
+                            setFormulario((prev) => ({
+                                ...prev,
+                                portada: e.target.files[0] || null
+                            }))
+                        }
+                    />
+
+                    <label>Galería de imágenes:</label>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={(e) =>
+                            setFormulario((prev) => ({
+                                ...prev,
+                                imagenes: Array.from(e.target.files)
+                            }))
+                        }
+                    />
+
                     <label>Fecha:</label>
                     <input type="date" name="fecha" value={formulario.fecha} onChange={handleChange} required />
+
+                    <label>Hora de inicio:</label>
+                    <input type=   "time" name="horaInicio" value={formulario.horaInicio} onChange={handleChange} />
 
                     <label>Ciudad:</label>
                     <select name="ciudad" value={formulario.ciudad} onChange={handleChange}>
@@ -111,16 +159,6 @@ export default function CrearEvento() {
                         <option>Música en vivo</option>
                     </select>
 
-                    <label>Tipo de propuesta:</label>
-                    <select name="propuesta" value={formulario.propuesta} onChange={handleChange}>
-                        <option value="">Seleccione el tipo de propuesta...</option>
-                        <option>DJ en vivo</option>
-                        <option>Bandas en vivo</option>
-                        <option>Karaoke</option>
-                        <option>Chill</option>
-                        <option>Open mic</option>
-                    </select>
-
                     <label>Precio estimado:</label>
                     <input
                         type="number"
@@ -134,6 +172,26 @@ export default function CrearEvento() {
 
                     <label>Cupo total de entradas:</label>
                     <input type="number" name="cupo" value={formulario.cupo} onChange={handleChange} min="1" placeholder="Ingrese la cantidad maxima de personas..." required />
+
+                    <label>Cupo entradas generales:</label>
+                    <input type="number" name="entradasGenerales" value={formulario.entradasGenerales} onChange={handleChange} min="0" />
+
+                    <label>Cupo entradas VIP:</label>
+                    <input type="number" name="entradasVIP" value={formulario.entradasVIP} onChange={handleChange} min="0" />
+
+                    <label>
+                    <input type="checkbox" name="accesible" checked={formulario.accesible} onChange={handleChange} />
+                    Evento accesible
+                    </label>
+            
+                    <label>Enlace externo (tickets / más info):</label>
+                    <input type="url" name="linkExterno" value={formulario.linkExterno} onChange={handleChange} />
+
+                    <label>Política de cancelación:</label>
+                    <textarea name="politicaCancelacion" value={formulario.politicaCancelacion} onChange={handleChange} />
+
+                    <label>Etiqueta o hashtag del evento:</label>
+                    <input type="text" name="hashtag" value={formulario.hashtag} onChange={handleChange} placeholder="#fiestaElectro2025" />
 
                     <button type="submit">Crear evento</button>
                 </form>

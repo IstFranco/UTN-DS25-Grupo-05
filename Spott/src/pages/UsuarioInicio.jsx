@@ -15,6 +15,34 @@ export default function UsuarioInicio() {
   const [eventos, setEventos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
+  const [busqueda, setBusqueda] = useState('');
+  const [eventosInscritos, setEventosInscritos] = useState([]);
+
+  const validGenres = [
+  "acoustic", "afrobeat", "alt-rock", "alternative", "ambient", "black-metal",
+  "bluegrass", "blues", "bossanova", "brazil", "breakbeat", "british", "cantopop",
+  "chicago-house", "chill", "classical", "club", "comedy", "country",
+  "dance", "dancehall", "death-metal", "deep-house", "detroit-techno", "disco",
+  "disney", "drum-and-bass", "dub", "dubstep", "electro", "electronic",
+  "emo", "folk", "french", "funk", "garage", "german", "goth",
+  "groove", "guitar", "happy", "hard-rock",
+  "hardstyle", "heavy-metal", "hip-hop", "holidays", "house"
+  , "indie", "indie-pop", "industrial", "j-dance",
+  "j-idol", "j-pop", "j-rock", "jazz", "k-pop", "latin", "latino", 
+  "mandopop", "metal", "metal-misc", "minimal-techno",
+  "movies", "new-age", "new-release", "opera", "party",
+  "piano", "pop", "pop-film", "post-dubstep", "power-pop",
+  "progressive-house", "psych-rock", "punk", "punk-rock", "rainy-day",
+  "reggae", "reggaeton", "road-trip", "rock", "rock-n-roll", "rockabilly",
+  "romance", "sad", "salsa", "samba", "singer-songwriter"
+  ,"songwriter", "soul", "soundtracks", "spanish",
+  "summer", "swedish", "synth-pop", "tango", "techno", "trip-hop",
+  "work-out", "world-music"
+  ];
+
+  const eventosFiltrados = eventos.filter(evento =>
+    evento.title.toLowerCase().includes(busqueda.toLowerCase())
+  );
 
   useEffect(() => {
     const apiKey = import.meta.env.VITE_TM_API;
@@ -27,17 +55,24 @@ export default function UsuarioInicio() {
       .then(data => {
         const eventosRaw = data._embedded?.events || [];
 
-        // Eliminar duplicados por ID
         const unicos = eventosRaw.filter(
           (e, i, arr) => arr.findIndex(ev => ev.id === e.id) === i
         );
 
-        const transformar = e => ({
-          imageSrc: e.images?.[0]?.url || '',
-          title: e.name,
-          description: e.info || e.description || 'Sin descripción disponible.',
-          rating: (4 + Math.random()).toFixed(1)
-        });
+        const transformar = e => {
+          const generoTicketmaster = e.classifications?.[0]?.genre?.name?.toLowerCase() || '';
+          const generoValido = validGenres.includes(generoTicketmaster)
+            ? generoTicketmaster
+            : validGenres[Math.floor(Math.random() * validGenres.length)];
+
+          return {
+            imageSrc: e.images?.[0]?.url || '',
+            title: e.name,
+            description: e.info || e.description || 'Sin descripción disponible.',
+            rating: (4 + Math.random()).toFixed(1),
+            musica: generoValido
+          };
+        };
 
         setEventos(unicos.slice(0, 6).map(transformar));
         setCargando(false);
@@ -48,30 +83,34 @@ export default function UsuarioInicio() {
       });
   }, []);
 
+  useEffect(() => {
+    const guardados = JSON.parse(localStorage.getItem('eventosUsuario')) || [];
+    setEventosInscritos(guardados);
+  }, []);
+
   return (
     <div>
-      {/* Header Superior */}
       <Header
         title="Spott"
         leftButton={{ type: 'image', content: perfilImg, to: '/usuario/perfil' }}
         rightButton={{ type: 'image', content: notiImg, to: '/usuario/notificaciones' }}
       />
       <div className='inicio'>
+        <section className="search-section">
+          <input
+            type="text"
+            placeholder="Buscar eventos..."
+            className="search-input"
+            value={busqueda}
+            onChange={e => setBusqueda(e.target.value)}
+          />
+          <button className="btn-filter" onClick={toggle}>
+            {visible ? 'Ocultar' : 'Filtrar'}
+            <span className="arrow">{visible ? '▲' : '▼'}</span>
+          </button>
+        </section>
 
-          {/* Barra de Búsqueda */}
-          <section className="search-section">
-            <input
-              type="text"
-              placeholder="Buscar eventos..."
-              className="search-input"
-            />
-            <button className="btn-filter" onClick={toggle}>
-              {visible ? 'Ocultar' : 'Filtrar'}
-              <span className="arrow">{visible ? '▲' : '▼'}</span>
-            </button>
-          </section>
-
-          {/* Filtros desplegables */}
+        {/* Filtros desplegables */}
           {visible && (
             <section id="filtersDropdown" className="filters-dropdown">
               <div className="filter-group-div" id="x">
@@ -147,7 +186,7 @@ export default function UsuarioInicio() {
                     </select>
                   </div>
                   <div>
-                    <label>Temáticas específicas:</label>
+                    <label>Temáticas:</label>
                     <select name="tematica-especifica" id="temesp">
                       <option>Neon party</option>
                       <option>Halloween</option>
@@ -176,16 +215,6 @@ export default function UsuarioInicio() {
                       <option>Trap / Hip hop</option>
                       <option>Jazz / Funk / Soul</option>
                       <option>Música en vivo</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label>Tipo de propuesta:</label>
-                    <select name="tipo-propuesta" id="tipoprop">
-                      <option>DJ en vivo</option>
-                      <option>Bandas en vivo</option>
-                      <option>Karaoke</option>
-                      <option>Música ambiente chill</option>
-                      <option>Open mic / Freestyle</option>
                     </select>
                   </div>
                 </div>
@@ -235,36 +264,27 @@ export default function UsuarioInicio() {
             </section>
           )}
 
-          {/* Accesos Rápidos */}
-          <section className="quick-access">
-            {[1, 2, 3, 4].map(i => (
-              <button className="quick-btn" key={i}>
-                <span className="icon">Foto{i}</span>
-                <span className="text">Acceso{i}</span>
-              </button>
-            ))}
-          </section>
+        
 
-          {/* Eventos Destacados */}
-          <div className="destacados">
-            <h2 className="section-title">Eventos Destacados</h2>
+        {/* Eventos destacados */}
+        <div className="destacados">
+          <h2 className="section-title">Eventos Destacados</h2>
+          {cargando && <p>Cargando eventos...</p>}
+          {error && <p>Error: {error}</p>}
+          {!cargando && !error && eventosFiltrados.map((evento, i) => (
+            <PresentCard
+              key={`evento-${i}`}
+              imageSrc={evento.imageSrc}
+              title={evento.title}
+              description={evento.description}
+              rating={evento.rating}
+              onClick={() => navigate('/evento', { state: { evento } })}
+            />
+          ))}
+        </div>
 
-            {cargando && <p>Cargando eventos...</p>}
-            {error && <p>Error: {error}</p>}
-            {!cargando && !error && eventos.map((evento, i) => (
-              <PresentCard
-                key={`evento-${i}`}
-                imageSrc={evento.imageSrc}
-                title={evento.title}
-                description={evento.description}
-                rating={evento.rating}
-              />
-            ))}
-          </div>
-
-          {/* Footer Inferior */}
-          <FooterUsuario />
+        <FooterUsuario />
       </div>
-  </div>
+    </div>
   );
 }
