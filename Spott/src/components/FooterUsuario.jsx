@@ -5,7 +5,6 @@ import homeImg from '../img/HomeLogo.jpeg';
 import favImg from '../img/LogoFav.jpeg';
 import '../app.css';
 
-
 export default function FooterUsuario() {
     const navigate = useNavigate();
 
