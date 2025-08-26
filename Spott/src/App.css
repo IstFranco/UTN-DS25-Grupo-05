@@ -1119,3 +1119,343 @@ input placeholder{
   margin: 0;
   padding-top: 0;
 }
+
+
+/* Song Voting Component */
+.song-voting-container {
+  background-color: transparent; 
+  margin: 1.5rem 0 0 0; /* solo espacio arriba */
+  margin: 0;            /* para que quede pegado */
+  padding: 0;           /* reducimos padding */
+  border-radius: 0;     /* sin bordes redondeados extras */
+  color: white;         /* mantenemos texto blanco */
+  width: 100%;          /* ocupar ancho completo del evento-card */
+}
+
+.song-voting-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.song-voting-header h2 {
+  margin: 0;
+  font-size: 1.6rem;
+  color: white;
+}
+
+.btn-add-song {
+  background-color: #2c3e50;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.btn-add-song:hover {
+  background-color: #34495e;
+  transform: scale(1.05);
+}
+
+.song-search-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 15px;
+}
+
+.song-search-input {
+  flex: 1;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  background-color: white;
+  color: #333;
+  outline: none;
+}
+
+.song-search-input::placeholder {
+  color: #999;
+}
+
+.song-count {
+  color: #ddd;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.songs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.song-item {
+  display: flex;
+  align-items: center;
+  background-color: rgba(255,255,255,0.15);
+  border-radius: 12px;
+  padding: 15px;
+  gap: 15px;
+  transition: transform 0.2s ease;
+}
+
+.song-item:hover {
+  transform: scale(1.01);
+}
+
+.song-rank {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #ffffff;
+  min-width: 25px;
+  text-align: center;
+}
+
+.song-info-container {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 12px;
+}
+
+.song-image {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.song-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.song-title {
+  font-weight: bold;
+  color: #ffffff;
+  font-size: 1rem;
+}
+
+.song-artist {
+  color: #ddd;
+  font-size: 0.9rem;
+}
+
+.song-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.song-votes {
+  font-weight: bold;
+  color: #27ae60;
+  font-size: 1.1rem;
+  min-width: 30px;
+  text-align: center;
+}
+
+.vote-btn {
+  background-color: transparent;
+  border: 2px solid #ddd;
+  border-radius: 50%;
+  width: 35px;
+  height: 35px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.vote-btn:hover {
+  transform: scale(1.1);
+}
+
+.like-btn {
+  border-color: #27ae60;
+}
+
+.like-btn:hover {
+  background-color: #60e899;
+  color: white;
+  border-color: #049f45;
+}
+
+.like-btn.active {
+  background-color: #27ae60;
+  color: white;
+  border-color: #27ae60;
+}
+
+.dislike-btn {
+  border-color: #e74c3c;
+}
+
+.dislike-btn:hover {
+  background-color: #d16e6e;
+  color: white;
+  border-color: #ff0000;
+}
+
+.dislike-btn.active {
+  background-color: #e74c3c;
+  color: white;
+  border-color: #e74c3c;
+}
+
+/* Modal para agregar canción */
+.add-song-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 30px;
+  border-radius: 15px;
+  max-width: 400px;
+  width: 90%;
+  color: #333;
+}
+
+.modal-content h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  text-align: center;
+  color: #904ba2;
+}
+
+.add-song-input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.add-song-input:focus {
+  border-color: #904ba2;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.btn-cancel, .btn-confirm {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel {
+  background-color: #95a5a6;
+  color: white;
+}
+
+.btn-cancel:hover {
+  background-color: #7f8c8d;
+}
+
+.btn-confirm {
+  background-color: #904ba2;
+  color: white;
+}
+
+.btn-confirm:hover {
+  background-color: #7a3d8a;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .song-voting-container {
+    margin: 20px 10px;
+    padding: 20px;
+  }
+
+  .song-voting-header {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+
+  .song-search-section {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .song-item {
+    flex-direction: column;
+    text-align: center;
+    gap: 10px;
+  }
+
+  .song-info-container {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .song-actions {
+    justify-content: center;
+  }
+
+  .modal-content {
+    padding: 20px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+}
+
+/* Estilos adicionales para MostrarEvento con SongVoting */
+
+.inscripcion-confirmada {
+  background-color: #27ae60;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Ajustar el espacio entre el evento y las votaciones */
+.mostrar-evento {
+  padding-bottom: 0; /* Remover padding bottom para que SongVoting se vea pegado */
+}
+
+/* Asegurar que el footer tenga espacio suficiente */
+.song-voting-container {
+  margin-bottom: 120px; /* Espacio para el footer */
+}
