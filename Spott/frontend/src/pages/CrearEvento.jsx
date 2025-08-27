@@ -4,23 +4,35 @@ import perfilImg from '../img/LogoPerfil.jpeg';
 import notiImg from '../img/LogoNotificaciones.jpeg';
 import Header from '../components/Header';
 import FooterEmpresa from '../components/FooterEmpresa';
+import ApiService from '../services/api';
 import '../app.css';
 
 export default function CrearEvento() {
     const navigate = useNavigate();
+    const [cargando, setCargando] = useState(false);
+    const [error, setError] = useState(null);
 
     const [formulario, setFormulario] = useState({
         nombre: '',
         portada: null,
         imagenes: [],
         fecha: '',
+        horaInicio: '',
         ciudad: '',
         barrio: '',
         estilo: '',
         tematica: '',
         musica: '',
         precio: '',
-        cupo:''
+        cupo: '',
+        descripcionLarga: '',
+        edadMinima: '',
+        entradasGenerales: '',
+        entradasVIP: '',
+        accesible: false,
+        linkExterno: '',
+        politicaCancelacion: '',
+        hashtag: ''
     });
 
     const handleChange = (e) => {
@@ -31,24 +43,50 @@ export default function CrearEvento() {
         }));
     };
 
-const handleSubmit = (e) => {
-    e.preventDefault();
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setCargando(true);
+        setError(null);
 
-    const nuevoEvento = {
-        imageSrc: formulario.portada ? URL.createObjectURL(formulario.portada) : '',
-        title: formulario.nombre,
-        description: `Temática: ${formulario.tematica}, Música: ${formulario.musica}`,
-        rating: (4 + Math.random()).toFixed(1) // Valor ficticio
+        try {
+            // Crear FormData para enviar archivos
+            const formData = new FormData();
+            
+            // Agregar todos los campos del formulario
+            Object.keys(formulario).forEach(key => {
+                if (key === 'portada' && formulario.portada) {
+                    formData.append('portada', formulario.portada);
+                } else if (key === 'imagenes' && formulario.imagenes.length > 0) {
+                    formulario.imagenes.forEach(imagen => {
+                        formData.append('imagenes', imagen);
+                    });
+                } else if (key !== 'portada' && key !== 'imagenes') {
+                    formData.append(key, formulario[key]);
+                }
+            });
+
+            // Agregar empresa ID (esto debería venir de un contexto o estado global)
+            const empresaId = localStorage.getItem('empresaId') || 'empresa-default-id';
+            formData.append('empresaId', empresaId);
+
+            const response = await ApiService.crearEvento(formData);
+
+            if (response.evento) {
+                // Opcional: Mantener también en localStorage para transición
+                const eventosGuardados = JSON.parse(localStorage.getItem('misEventos')) || [];
+                eventosGuardados.push(response.evento);
+                localStorage.setItem('misEventos', JSON.stringify(eventosGuardados));
+
+                // Redirigir a la vista de empresa
+                navigate('/empresa');
+            }
+        } catch (error) {
+            console.error('Error al crear evento:', error);
+            setError(error.message || 'Error al crear el evento');
+        } finally {
+            setCargando(false);
+        }
     };
-
-    // Guardar en localStorage
-    const eventosGuardados = JSON.parse(localStorage.getItem('misEventos')) || [];
-    eventosGuardados.push(nuevoEvento);
-    localStorage.setItem('misEventos', JSON.stringify(eventosGuardados));
-
-    // Redirigir a la vista de inicio
-    navigate('/empresa');
-};
 
     return (
         <div className="inicio">
@@ -58,6 +96,19 @@ const handleSubmit = (e) => {
                 leftButton={{ type: 'image', content: perfilImg, to: '/empresa/perfil' }}
                 rightButton={{ type: 'image', content: notiImg, to: '/empresa/notificaciones' }}
             />
+
+            {/* Mostrar errores */}
+            {error && (
+                <div style={{ 
+                    backgroundColor: '#ff4444', 
+                    color: 'white', 
+                    padding: '10px', 
+                    margin: '10px', 
+                    borderRadius: '5px' 
+                }}>
+                    {error}
+                </div>
+            )}
 
             {/*Formulario para crear evento*/}
             <div className='form-box'>
@@ -102,10 +153,10 @@ const handleSubmit = (e) => {
                     <input type="date" name="fecha" value={formulario.fecha} onChange={handleChange} required />
 
                     <label>Hora de inicio:</label>
-                    <input type=   "time" name="horaInicio" value={formulario.horaInicio} onChange={handleChange} />
+                    <input type="time" name="horaInicio" value={formulario.horaInicio} onChange={handleChange} />
 
                     <label>Ciudad:</label>
-                    <select name="ciudad" value={formulario.ciudad} onChange={handleChange}>
+                    <select name="ciudad" value={formulario.ciudad} onChange={handleChange} required>
                         <option value="">Seleccione una ciudad...</option>
                         <option>Buenos Aires</option>
                         <option>Córdoba</option>
@@ -133,22 +184,10 @@ const handleSubmit = (e) => {
                     </select>
 
                     <label>Temática:</label>
-                    <select name="tematica" value={formulario.tematica} onChange={handleChange}>
-                        <option value="">Seleccione una tematica...</option>
-                        <option>Neon party</option>
-                        <option>Halloween</option>
-                        <option>Años 80 / 90 / 2000</option>
-                        <option>White party</option>
-                        <option>Carnaval</option>
-                        <option>Cosplay / Anime</option>
-                        <option>Interior</option>
-                        <option>Exterior</option>
-                        <option>Luces / Proyecciones</option>
-                        <option>Inmersiva / Artística</option>
-                    </select>
+                    <input type="text" name="tematica" value={formulario.tematica} onChange={handleChange} placeholder="Ej: Neon party, Halloween, etc." />
 
                     <label>Género musical:</label>
-                    <select name="musica" value={formulario.musica} onChange={handleChange}>
+                    <select name="musica" value={formulario.musica} onChange={handleChange} required>
                         <option value="">Seleccione un genero...</option>
                         <option>Electrónica</option>
                         <option>Reggaetón</option>
@@ -167,7 +206,7 @@ const handleSubmit = (e) => {
                         onChange={handleChange}
                         step="0.01"
                         min="0"
-                        placeholder="ingrese el precio..."
+                        placeholder="Ingrese el precio..."
                     />
 
                     <label>Cupo total de entradas:</label>
@@ -180,20 +219,22 @@ const handleSubmit = (e) => {
                     <input type="number" name="entradasVIP" value={formulario.entradasVIP} onChange={handleChange} min="0" />
 
                     <label>
-                    <input type="checkbox" name="accesible" checked={formulario.accesible} onChange={handleChange} />
-                    Evento accesible
+                        <input type="checkbox" name="accesible" checked={formulario.accesible} onChange={handleChange} />
+                        Evento accesible
                     </label>
             
                     <label>Enlace externo (tickets / más info):</label>
-                    <input type="url" name="linkExterno" value={formulario.linkExterno} onChange={handleChange} />
+                    <input type="url" name="linkExterno" value={formulario.linkExterno} onChange={handleChange} placeholder="https://..." />
 
                     <label>Política de cancelación:</label>
-                    <textarea name="politicaCancelacion" value={formulario.politicaCancelacion} onChange={handleChange} />
+                    <textarea name="politicaCancelacion" value={formulario.politicaCancelacion} onChange={handleChange} placeholder="Describe las condiciones de cancelación..." />
 
                     <label>Etiqueta o hashtag del evento:</label>
                     <input type="text" name="hashtag" value={formulario.hashtag} onChange={handleChange} placeholder="#fiestaElectro2025" />
 
-                    <button type="submit">Crear evento</button>
+                    <button type="submit" disabled={cargando}>
+                        {cargando ? 'Creando evento...' : 'Crear evento'}
+                    </button>
                 </form>
             </div>
 
