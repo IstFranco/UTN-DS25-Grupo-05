@@ -18,7 +18,7 @@ export default function FooterEmpresa() {
                 <img src={homeImg} className="footer-icon" alt="Inicio" />
                 Inicio
             </button>
-            <button className="footer-btn" onClick={() => navigate('/empresa/CrearEvento')}>
+            <button className="footer-btn" onClick={() => navigate('/empresa/crearevento')}>
                 <img src={crearImg} className="footer-icon" alt="Crear Evento" />
                 Crear Evento
             </button>

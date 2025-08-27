@@ -15,7 +15,8 @@ export default function MostrarEvento() {
     }
 
     const {
-        imageSrc,           // logo del evento
+        id,
+        imageSrc,
         title,
         description,
         rating,
@@ -24,40 +25,44 @@ export default function MostrarEvento() {
         tematica,
         musica,
         inscriptos,
-        imagenes = []       // array de fotos adicionales
+        imagenes = []
     } = state.evento;
 
     // Verificar si el usuario ya está inscrito al cargar el componente
     useEffect(() => {
-        const eventosInscritos = JSON.parse(localStorage.getItem('eventosUsuario')) || [];
-        const yaInscripto = eventosInscritos.some(e => e.title === title);
-        setUsuarioInscrito(yaInscripto);
-    }, [title]);
+        const usuarioId = localStorage.getItem("usuarioId") || "usuario-default-id";
 
-    const inscribirme = () => {
-    const eventosInscritos = JSON.parse(localStorage.getItem('eventosUsuario')) || [];
+        fetch(`http://localhost:3001/api/eventos/usuario/${usuarioId}/inscritos`)
+            .then(res => res.json())
+            .then(data => {
+                const yaInscripto = data.eventos?.some(e => e.id === id);
+                setUsuarioInscrito(yaInscripto);
+            })
+            .catch(err => console.error("Error al verificar inscripción:", err));
+    }, [id]);
 
-    // Evitar duplicados por título
-    const yaInscripto = eventosInscritos.some(e => e.title === title);
-    if (!yaInscripto) {
-        eventosInscritos.push({
-        imageSrc,
-        title,
-        description,
-        rating,
-        ciudad,
-        barrio,
-        tematica,
-        musica
-        });
-        localStorage.setItem('eventosUsuario', JSON.stringify(eventosInscritos));
-        setUsuarioInscrito(true);
-        alert('¡Te inscribiste al evento!');
-    } else {
-        alert('Ya estás inscripto en este evento.');
-    }
+    const inscribirme = async () => {
+        try {
+            const usuarioId = localStorage.getItem("usuarioId") || "usuario-default-id";
+
+            const res = await fetch(`http://localhost:3001/api/eventos/${id}/inscribirse`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ usuarioId, tipoEntrada: "general" })
+            });
+
+            if (!res.ok) throw new Error("Error al inscribirse");
+
+            const data = await res.json();
+            console.log("Inscripción realizada:", data);
+
+            setUsuarioInscrito(true);
+            alert("¡Te inscribiste al evento!");
+        } catch (err) {
+            console.error(err);
+            alert("Error al inscribirse al evento.");
+        }
     };
-
 
     return (
         <div>
@@ -115,15 +120,11 @@ export default function MostrarEvento() {
                         )}
                     </div>
                 </div>
-                
-                
             </div>
 
-{/* Componente de votación de canciones - solo se muestra si está inscrito */}
-                <SongVoting 
-                    eventoId={title} // usando title como ID único
-                    usuarioInscrito={usuarioInscrito} 
-                />
+            {/* Componente de votación de canciones - solo se muestra si está inscrito */}
+            <SongVoting eventoId={id} usuarioInscrito={usuarioInscrito} />
+
             <FooterUsuario />
         </div>
     );
