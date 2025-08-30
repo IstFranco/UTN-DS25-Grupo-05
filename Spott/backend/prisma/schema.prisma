@@ -1,0 +1,104 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id            String         @id @default(uuid())
+  nombre        String
+  email         String         @unique
+  creadoEn      DateTime       @default(now())
+  actualizadoEn DateTime       @updatedAt
+
+  inscripciones Inscripcion[]
+  votos         Voto[]
+}
+
+model Empresa {
+  id            String    @id @default(uuid())
+  nombre        String
+  email         String?   @unique
+  creadoEn      DateTime  @default(now())
+  actualizadoEn DateTime  @updatedAt
+
+  eventos       Evento[]
+}
+
+enum TipoEntrada {
+  general
+  vip
+}
+
+enum EstadoInscripcion {
+  activa
+  cancelada
+}
+
+model Evento {
+  id               String    @id @default(uuid())
+  nombre           String
+  descripcionLarga String?
+  ciudad           String
+  barrio           String?
+  tematica         String?
+  musica           String
+  fecha            DateTime
+  precio           Float?
+  cupoGeneral      Int?      // opcional si manejás stock
+  cupoVip          Int?
+  portada          String?   // /uploads/...
+  imagenes         String[]  @db.Text    // almacena como JSON/texto (sqlite usa TEXT)
+  activo           Boolean   @default(true)
+  fechaCreacion    DateTime  @default(now())
+  fechaActualizacion DateTime @updatedAt
+
+  empresa   Empresa  @relation(fields: [empresaId], references: [id])
+  empresaId String
+
+  inscripciones Inscripcion[]
+  canciones     Cancion[]
+}
+
+model Inscripcion {
+  id              String            @id @default(uuid())
+  usuario         Usuario           @relation(fields: [usuarioId], references: [id])
+  usuarioId       String
+  evento          Evento            @relation(fields: [eventoId], references: [id])
+  eventoId        String
+  tipoEntrada     TipoEntrada       @default(general)
+  estado          EstadoInscripcion @default(activa)
+  fechaInscripcion DateTime         @default(now())
+
+  @@unique([usuarioId, eventoId, estado], map: "uniq_activa_usuario_evento_estado")
+}
+
+model Cancion {
+  id        String   @id @default(uuid())
+  titulo    String
+  artista   String
+  spotifyId String?  // si integrás Spotify
+  creadoEn  DateTime @default(now())
+
+  evento   Evento  @relation(fields: [eventoId], references: [id])
+  eventoId String
+
+  votos Voto[]
+}
+
+model Voto {
+  id        String   @id @default(uuid())
+  creadoEn  DateTime @default(now())
+
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id])
+  usuarioId String
+
+  cancion   Cancion  @relation(fields: [cancionId], references: [id])
+  cancionId String
+
+  @@unique([usuarioId, cancionId], map: "uniq_voto_usuario_cancion")
+}

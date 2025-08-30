@@ -106,5 +106,5 @@ export const actualizarEmpresa = async (req: Request, res: Response) => {
     } catch (error) {
         console.error('Error al actualizar empresa:', error);
         res.status(500).json({ message: 'Error al actualizar la empresa' });
-      }
+    }
 };
