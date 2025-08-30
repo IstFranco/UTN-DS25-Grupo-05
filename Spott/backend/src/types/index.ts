@@ -71,20 +71,21 @@ export interface Inscripcion {
 export interface Cancion {
     id: string;
     eventoId: string;
-    usuarioId: string;
-    spotifyId: string;
+    spotifyId?: string;
     nombre: string;
     artista: string;
-    genero: string;
+    genero?: string;
     fechaRecomendacion: Date;
-    votos: number;
+    votosUp: number;
+    votosDown: number;
+    activo: boolean;
 }
 
 export interface VotoCancion {
     id: string;
     cancionId: string;
-    usuarioId: string;
-    voto: 'up' | 'down';
+    usuarioId?: string;
+    tipo: 'up' | 'down';
     fechaVoto: Date;
 }
 
