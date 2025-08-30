@@ -123,7 +123,7 @@ export default function MostrarEvento() {
             </div>
 
             {/* Componente de votación de canciones - solo se muestra si está inscrito */}
-            <SongVoting eventoId={id} usuarioInscrito={usuarioInscrito} />
+            <SongVoting eventoId={id} usuarioInscrito={usuarioInscrito} generoEvento={musica} />
 
             <FooterUsuario />
         </div>

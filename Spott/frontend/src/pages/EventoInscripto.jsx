@@ -4,6 +4,7 @@ import Header from '../components/Header';
 import FooterUsuario from '../components/FooterUsuario';
 import perfilImg from '../img/LogoPerfil.jpeg';
 import notiImg from '../img/LogoNotificaciones.jpeg';
+import SongVoting from '../components/SongVoting';
 
 export default function EventoInscripto() {
     const { state } = useLocation();
@@ -130,28 +131,10 @@ export default function EventoInscripto() {
                         </button>
                     </div>
                 </div>
-
-                <section className="canciones-relacionadas">
-                    <h3>Canciones recomendadas</h3>
-                    {loadingTracks ? (
-                        <p>Cargando canciones...</p>
-                    ) : tracks.length > 0 ? (
-                        <ul>
-                            {tracks.map((t, i) => (
-                                <li key={i}>
-                                    {t.name} — {t.artists.map(a => a.name).join(', ')}
-                                    {t.preview_url && (
-                                        <audio controls src={t.preview_url} style={{ marginLeft: '8px' }} />
-                                    )}
-                                </li>
-                            ))}
-                        </ul>
-                    ) : (
-                        <p>No se encontraron canciones para el género "{musica}".</p>
-                    )}
-                </section>
             </div>
 
+            {/* Componente de votación de canciones - solo se muestra si está inscrito */}
+            <SongVoting eventoId={title} usuarioInscrito={true} />
             <FooterUsuario />
         </div>
     );

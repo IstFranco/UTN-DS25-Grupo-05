@@ -14,6 +14,7 @@ import IniciarSesion from './pages/IniciarSesion';
 import EventoInscripto from './pages/EventoInscripto';
 import EditarEvento from './pages/EditarEvento';
 import MisEventos from './pages/MisEventos';
+import Registro from './pages/Registro';   // ✅ importamos Registro
 
 
 function App() {
@@ -41,6 +42,11 @@ function App() {
         {/* Selector inicial */}
         <Route path="/" element={<SelectorDeRol />} />
         <Route path="/iniciar-sesion/:rol" element={<IniciarSesion />} />
+
+        {/* Nuevo: Registro */}
+        <Route path="/registro/:rol" element={<Registro />} />
+
+        {/* 404 */}
         <Route path="*" element={<h1>404 - Página no encontrada</h1>} />
       </Routes>
     </BrowserRouter>
