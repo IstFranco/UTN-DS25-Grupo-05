@@ -1,292 +1,218 @@
+// src/controllers/eventosController.ts
 import { Request, Response } from 'express';
-import { v4 as uuidv4 } from 'uuid';
-import fs from 'fs/promises';
-import path from 'path';
-import { Evento, CrearEventoDTO, FiltrosEvento, Inscripcion } from '../types/index.js';
+import type { Evento as EventoModel, Inscripcion } from '@prisma/client';
+import { prisma } from '../data/prisma.js';
 
-// Simulamos una base de datos en memoria (en producción usar una DB real)
-let eventos: Evento[] = [];
-let inscripciones: Inscripcion[] = [];
+// ---- Tipos auxiliares ----
+type InscripcionConEvento = Inscripcion & { evento: EventoModel };
 
-// Función auxiliar para crear el objeto compatible con el frontend
-const formatearEventoParaFrontend = (evento: Evento): Evento => {
-    return {
-        ...evento,
-        imageSrc: evento.portada,
-        title: evento.nombre,
-        description: `Temática: ${evento.tematica || 'Sin temática'}, Música: ${evento.musica}`,
-        rating: (4 + Math.random()).toFixed(1)
+type FiltrosEvento = {
+    ciudad?: string;
+    musica?: string;
+    busqueda?: string;
+    fechaDesde?: string | Date;
+    fechaHasta?: string | Date;
     };
-};
 
-export const crearEvento = async (req: Request, res: Response) => {
+    type CrearEventoBody = {
+    nombre: string;
+    descripcionLarga?: string | null;
+    ciudad: string;
+    barrio?: string | null;
+    tematica?: string | null;
+    musica: string;
+    fecha: string | Date;
+    precio?: number | string | null;
+    cupoGeneral?: number | string | null;
+    cupoVip?: number | string | null;
+    empresaId: string;
+    // campos que llegan por multer
+    portada?: string | null;
+    imagenes?: string[];
+    };
+
+    // Utilidad para mapear al formato que tu front espera
+    const toFrontend = (e: EventoModel) => ({
+    ...e,
+    imageSrc: e.portada ?? '',
+    title: e.nombre,
+    description: `Temática: ${e.tematica ?? 'Sin temática'}, Música: ${e.musica}`,
+    rating: (4 + Math.random()).toFixed(1),
+    });
+
+    export const crearEvento = async (req: Request, res: Response) => {
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+    const body = req.body as CrearEventoBody;
+
+    const portada = files?.portada?.[0] ? `/uploads/${files.portada[0].filename}` : null;
+    const imagenes = files?.imagenes?.map((f) => `/uploads/${f.filename}`) ?? [];
+
     try {
-        const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-        const datos: CrearEventoDTO = req.body;
+        const evento = await prisma.evento.create({
+        data: {
+            nombre: body.nombre,
+            descripcionLarga: body.descripcionLarga ?? null,
+            ciudad: body.ciudad,
+            barrio: body.barrio ?? null,
+            tematica: body.tematica ?? null,
+            musica: body.musica,
+            fecha: new Date(body.fecha),
+            precio: body.precio != null ? Number(body.precio) : null,
+            cupoGeneral: body.cupoGeneral != null ? Number(body.cupoGeneral) : null,
+            cupoVip: body.cupoVip != null ? Number(body.cupoVip) : null,
+            portada,
+            imagenes,
+            empresa: { connect: { id: body.empresaId } },
+        },
+        });
+        return res.status(201).json({ message: 'Evento creado exitosamente', evento: toFrontend(evento) });
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json({ message: 'Error al crear el evento' });
+    }
+    };
 
-        // Procesar imagen de portada
-        let portadaUrl = '';
-        if (files.portada && files.portada[0]) {
-            portadaUrl = `/uploads/${files.portada[0].filename}`;
-        }
+    export const obtenerEventos = async (req: Request, res: Response) => {
+    const q = req.query as FiltrosEvento;
 
-        // Procesar galería de imágenes
-        let imagenesUrls: string[] = [];
-        if (files.imagenes) {
-            imagenesUrls = files.imagenes.map(file => `/uploads/${file.filename}`);
-        }
-
-        const nuevoEvento: Evento = {
-            id: uuidv4(),
-            ...datos,
-            portada: portadaUrl,
-            imagenes: imagenesUrls,
-            fechaCreacion: new Date(),
-            fechaActualizacion: new Date(),
+    try {
+        const eventos = await prisma.evento.findMany({
+        where: {
             activo: true,
-            // Campos para compatibilidad con frontend
-            imageSrc: portadaUrl,
-            title: datos.nombre,
-            description: `Temática: ${datos.tematica || 'Sin temática'}, Música: ${datos.musica}`,
-            rating: (4 + Math.random()).toFixed(1)
-        };
-
-        eventos.push(nuevoEvento);
-
-        res.status(201).json({
-            message: 'Evento creado exitosamente',
-            evento: formatearEventoParaFrontend(nuevoEvento)
+            ciudad: q.ciudad ? { contains: q.ciudad, mode: 'insensitive' } : undefined,
+            musica: q.musica ? { contains: q.musica, mode: 'insensitive' } : undefined,
+            AND: [
+            q.busqueda
+                ? {
+                    OR: [
+                    { nombre: { contains: q.busqueda, mode: 'insensitive' } },
+                    { descripcionLarga: { contains: q.busqueda, mode: 'insensitive' } },
+                    ],
+                }
+                : {},
+            q.fechaDesde ? { fecha: { gte: new Date(q.fechaDesde) } } : {},
+            q.fechaHasta ? { fecha: { lte: new Date(q.fechaHasta) } } : {},
+            ],
+        },
+        orderBy: { fecha: 'asc' },
         });
-    } catch (error) {
-        console.error('Error al crear evento:', error);
-        res.status(500).json({ message: 'Error al crear el evento' });
+
+        const data = eventos.map(toFrontend);
+        return res.json({ eventos: data, total: data.length });
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json({ message: 'Error al obtener eventos' });
     }
-};
+    };
 
-export const obtenerEventos = async (req: Request, res: Response) => {
+    export const obtenerEventoPorId = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const evento = await prisma.evento.findFirst({ where: { id, activo: true } });
+    if (!evento) return res.status(404).json({ message: 'Evento no encontrado' });
+    return res.json({ evento: toFrontend(evento) });
+    };
+
+    export const actualizarEvento = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+    const body = req.body as Partial<CrearEventoBody>;
+
+    const portada = files?.portada?.[0] ? `/uploads/${files.portada[0].filename}` : undefined;
+    const nuevasImgs: string[] | undefined = files?.imagenes?.map((f) => `/uploads/${f.filename}`);
+
     try {
-        const filtros: FiltrosEvento = req.query;
-        let eventosFiltrados = eventos.filter(evento => evento.activo);
-
-        // Aplicar filtros
-        if (filtros.ciudad) {
-            eventosFiltrados = eventosFiltrados.filter(evento => 
-                evento.ciudad.toLowerCase().includes(filtros.ciudad!.toLowerCase())
-            );
-        }
-
-        if (filtros.musica) {
-            eventosFiltrados = eventosFiltrados.filter(evento => 
-                evento.musica.toLowerCase().includes(filtros.musica!.toLowerCase())
-            );
-        }
-
-        if (filtros.busqueda) {
-            eventosFiltrados = eventosFiltrados.filter(evento => 
-                evento.nombre.toLowerCase().includes(filtros.busqueda!.toLowerCase()) ||
-                evento.descripcionLarga?.toLowerCase().includes(filtros.busqueda!.toLowerCase())
-            );
-        }
-
-        if (filtros.fechaDesde) {
-            eventosFiltrados = eventosFiltrados.filter(evento => 
-                new Date(evento.fecha) >= new Date(filtros.fechaDesde!)
-            );
-        }
-
-        if (filtros.fechaHasta) {
-            eventosFiltrados = eventosFiltrados.filter(evento => 
-                new Date(evento.fecha) <= new Date(filtros.fechaHasta!)
-            );
-        }
-
-        const eventosFormateados = eventosFiltrados.map(formatearEventoParaFrontend);
-
-        res.json({
-            eventos: eventosFormateados,
-            total: eventosFormateados.length
+        const evento = await prisma.evento.update({
+        where: { id },
+        data: {
+            nombre: body.nombre,
+            descripcionLarga: body.descripcionLarga ?? undefined,
+            ciudad: body.ciudad,
+            barrio: body.barrio ?? undefined,
+            tematica: body.tematica ?? undefined,
+            musica: body.musica,
+            fecha: body.fecha ? new Date(body.fecha) : undefined,
+            precio: body.precio != null ? Number(body.precio) : undefined,
+            cupoGeneral: body.cupoGeneral != null ? Number(body.cupoGeneral) : undefined,
+            cupoVip: body.cupoVip != null ? Number(body.cupoVip) : undefined,
+            portada,
+            imagenes: nuevasImgs ?? undefined,
+        },
         });
-    } catch (error) {
-        console.error('Error al obtener eventos:', error);
-        res.status(500).json({ message: 'Error al obtener eventos' });
+        return res.json({ message: 'Evento actualizado', evento: toFrontend(evento) });
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json({ message: 'Error al actualizar el evento' });
     }
-};
+    };
 
-export const obtenerEventoPorId = async (req: Request, res: Response) => {
+    export const eliminarEvento = async (req: Request, res: Response) => {
+    const { id } = req.params;
     try {
-        const { id } = req.params;
-        const evento = eventos.find(e => e.id === id && e.activo);
-
-        if (!evento) {
-            return res.status(404).json({ message: 'Evento no encontrado' });
-        }
-
-        res.json({ evento: formatearEventoParaFrontend(evento) });
-    } catch (error) {
-        console.error('Error al obtener evento:', error);
-        res.status(500).json({ message: 'Error al obtener el evento' });
+        await prisma.evento.update({ where: { id }, data: { activo: false } });
+        return res.json({ message: 'Evento eliminado exitosamente' });
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json({ message: 'Error al eliminar el evento' });
     }
-};
+    };
 
-export const obtenerEventosPorEmpresa = async (req: Request, res: Response) => {
+    export const obtenerEventosPorEmpresa = async (req: Request, res: Response) => {
+    const { empresaId } = req.params;
+    const eventos = await prisma.evento.findMany({
+        where: { empresaId, activo: true },
+        orderBy: { fecha: 'asc' },
+    });
+    const data = eventos.map(toFrontend);
+    return res.json({ eventos: data, total: data.length });
+    };
+
+    export const inscribirseEvento = async (req: Request, res: Response) => {
+    const { id: eventoId } = req.params;
+    const { usuarioId, tipoEntrada } = req.body as { usuarioId: string; tipoEntrada: 'general' | 'vip' };
+
     try {
-        const { empresaId } = req.params;
-        const eventosEmpresa = eventos
-            .filter(evento => evento.empresaId === empresaId)
-            .map(formatearEventoParaFrontend);
-
-        res.json({
-            eventos: eventosEmpresa,
-            total: eventosEmpresa.length
+        const insc = await prisma.inscripcion.create({
+        data: { eventoId, usuarioId, tipoEntrada },
         });
-    } catch (error) {
-        console.error('Error al obtener eventos de empresa:', error);
-        res.status(500).json({ message: 'Error al obtener eventos de la empresa' });
+        return res.status(201).json({ message: 'Inscripción realizada', inscripcion: insc });
+    } catch (e: any) {
+        if (e.code === 'P2002') {
+        return res.status(400).json({ message: 'Ya estás inscrito en este evento' });
+        }
+        console.error(e);
+        return res.status(500).json({ message: 'Error al inscribirse' });
     }
-};
+    };
 
-export const actualizarEvento = async (req: Request, res: Response) => {
+    export const desinscribirseEvento = async (req: Request, res: Response) => {
+    const { id: eventoId } = req.params;
+    const { usuarioId } = req.body as { usuarioId: string };
+
     try {
-        const { id } = req.params;
-        const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-        const datos = req.body;
-
-        const eventoIndex = eventos.findIndex(e => e.id === id);
-        if (eventoIndex === -1) {
-            return res.status(404).json({ message: 'Evento no encontrado' });
-        }
-
-        // Actualizar imágenes si se proporcionan nuevas
-        if (files.portada && files.portada[0]) {
-            datos.portada = `/uploads/${files.portada[0].filename}`;
-            datos.imageSrc = datos.portada;
-        }
-
-        if (files.imagenes) {
-            datos.imagenes = files.imagenes.map((file: Express.Multer.File) => `/uploads/${file.filename}`);
-        }
-
-        eventos[eventoIndex] = {
-            ...eventos[eventoIndex],
-            ...datos,
-            fechaActualizacion: new Date(),
-            title: datos.nombre || eventos[eventoIndex].nombre,
-            description: `Temática: ${datos.tematica || eventos[eventoIndex].tematica}, Música: ${datos.musica || eventos[eventoIndex].musica}`
-        };
-
-        res.json({
-            message: 'Evento actualizado exitosamente',
-            evento: formatearEventoParaFrontend(eventos[eventoIndex])
+        const inscActiva = await prisma.inscripcion.findFirst({
+        where: { eventoId, usuarioId, estado: 'activa' },
         });
-    } catch (error) {
-        console.error('Error al actualizar evento:', error);
-        res.status(500).json({ message: 'Error al actualizar el evento' });
-    }
-};
+        if (!inscActiva) return res.status(404).json({ message: 'Inscripción no encontrada' });
 
-export const eliminarEvento = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-        const eventoIndex = eventos.findIndex(e => e.id === id);
-
-        if (eventoIndex === -1) {
-            return res.status(404).json({ message: 'Evento no encontrado' });
-        }
-
-        // Soft delete - marcar como inactivo
-        eventos[eventoIndex].activo = false;
-        eventos[eventoIndex].fechaActualizacion = new Date();
-
-        res.json({ message: 'Evento eliminado exitosamente' });
-    } catch (error) {
-        console.error('Error al eliminar evento:', error);
-        res.status(500).json({ message: 'Error al eliminar el evento' });
-    }
-};
-
-export const inscribirseEvento = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-        const { usuarioId, tipoEntrada = 'general' } = req.body;
-
-        const evento = eventos.find(e => e.id === id && e.activo);
-        if (!evento) {
-            return res.status(404).json({ message: 'Evento no encontrado' });
-        }
-
-        // Verificar si ya está inscrito
-        const inscripcionExistente = inscripciones.find(i => 
-            i.eventoId === id && i.usuarioId === usuarioId && i.estado === 'activa'
-        );
-
-        if (inscripcionExistente) {
-            return res.status(400).json({ message: 'Ya estás inscrito en este evento' });
-        }
-
-        const nuevaInscripcion: Inscripcion = {
-            id: uuidv4(),
-            usuarioId,
-            eventoId: id,
-            tipoEntrada: tipoEntrada as 'general' | 'vip',
-            estado: 'activa',
-            fechaInscripcion: new Date()
-        };
-
-        inscripciones.push(nuevaInscripcion);
-
-        res.status(201).json({
-            message: 'Inscripción realizada exitosamente',
-            inscripcion: nuevaInscripcion
+        await prisma.inscripcion.update({
+        where: { id: inscActiva.id },
+        data: { estado: 'cancelada' },
         });
-    } catch (error) {
-        console.error('Error al inscribirse:', error);
-        res.status(500).json({ message: 'Error al inscribirse al evento' });
+        return res.json({ message: 'Te has desinscrito del evento exitosamente' });
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json({ message: 'Error al desinscribirse del evento' });
     }
-};
+    };
 
-export const desinscribirseEvento = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-        const { usuarioId } = req.body;
+    export const obtenerEventosInscritos = async (req: Request, res: Response) => {
+    const { usuarioId } = req.params;
 
-        const inscripcionIndex = inscripciones.findIndex(i => 
-            i.eventoId === id && i.usuarioId === usuarioId && i.estado === 'activa'
-        );
+    const inscs = await prisma.inscripcion.findMany({
+        where: { usuarioId, estado: 'activa' },
+        include: { evento: true },
+    });
 
-        if (inscripcionIndex === -1) {
-            return res.status(404).json({ message: 'Inscripción no encontrada' });
-        }
-
-        inscripciones[inscripcionIndex].estado = 'cancelada';
-
-        res.json({ message: 'Te has desinscrito del evento exitosamente' });
-    } catch (error) {
-        console.error('Error al desinscribirse:', error);
-        res.status(500).json({ message: 'Error al desinscribirse del evento' });
-    }
-};
-
-export const obtenerEventosInscritos = async (req: Request, res: Response) => {
-    try {
-        const { usuarioId } = req.params;
-
-        const inscripcionesUsuario = inscripciones.filter(i => 
-            i.usuarioId === usuarioId && i.estado === 'activa'
-        );
-
-        const eventosInscritos = inscripcionesUsuario
-            .map(inscripcion => {
-                const evento = eventos.find(e => e.id === inscripcion.eventoId && e.activo);
-                return evento ? formatearEventoParaFrontend(evento) : null;
-            })
-            .filter(evento => evento !== null);
-
-        res.json({
-            eventos: eventosInscritos,
-            total: eventosInscritos.length
-        });
-    } catch (error) {
-        console.error('Error al obtener eventos inscritos:', error);
-        res.status(500).json({ message: 'Error al obtener eventos inscritos' });
-    }
+    const data = (inscs as InscripcionConEvento[]).map((i) => toFrontend(i.evento));
+    return res.json({ eventos: data, total: data.length });
 };
