@@ -1,4 +1,3 @@
-// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,30 +8,87 @@ datasource db {
 }
 
 model Usuario {
-  id            String         @id @default(uuid())
+  id            String        @id @default(uuid())
   nombre        String
-  email         String         @unique
+  email         String        @unique
+  creadoEn      DateTime      @default(now())
+  actualizadoEn DateTime      @updatedAt
   password      String
-  creadoEn      DateTime       @default(now())
-  actualizadoEn DateTime       @updatedAt
-
   inscripciones Inscripcion[]
   votos         Voto[]
 }
 
 model Empresa {
-  id            String    @id @default(uuid())
+  id            String   @id @default(uuid())
   nombre        String
-  email         String?   @unique
-  password      String               //agregamos la contraseña
-  descripcion   String?              //opcional
-  telefono      String?              //opcional
-  sitioWeb      String?              //opcional
-  // Estos parametros despues vemos si los sacamos, siento que estan buenos para una empresa.
-  creadoEn      DateTime  @default(now())
-  actualizadoEn DateTime  @updatedAt
-
+  email         String?  @unique
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+  descripcion   String?
+  password      String
+  sitioWeb      String?
+  telefono      String?
   eventos       Evento[]
+}
+
+model Evento {
+  id                 String        @id @default(uuid())
+  nombre             String
+  descripcionLarga   String?
+  ciudad             String
+  barrio             String?
+  tematica           String?
+  musica             String
+  fecha              DateTime
+  precio             Float?
+  cupoGeneral        Int?
+  cupoVip            Int?
+  portada            String?
+  imagenes           String[]
+  activo             Boolean       @default(true)
+  fechaCreacion      DateTime      @default(now())
+  fechaActualizacion DateTime      @updatedAt
+  empresaId          String
+  canciones          Cancion[]
+  empresa            Empresa       @relation(fields: [empresaId], references: [id])
+  inscripciones      Inscripcion[]
+}
+
+model Inscripcion {
+  id               String            @id @default(uuid())
+  usuarioId        String
+  eventoId         String
+  tipoEntrada      TipoEntrada       @default(general)
+  estado           EstadoInscripcion @default(activa)
+  fechaInscripcion DateTime          @default(now())
+  evento           Evento            @relation(fields: [eventoId], references: [id])
+  usuario          Usuario           @relation(fields: [usuarioId], references: [id])
+
+  @@unique([usuarioId, eventoId])
+}
+
+model Cancion {
+  id        String   @id @default(uuid())
+  titulo    String
+  artista   String
+  spotifyId String?
+  creadoEn  DateTime @default(now())
+  eventoId  String
+  genero    String
+  evento    Evento   @relation(fields: [eventoId], references: [id])
+  votos     Voto[]
+}
+
+model Voto {
+  id        String   @id @default(uuid())
+  creadoEn  DateTime @default(now())
+  usuarioId String
+  cancionId String
+  tipo      TipoVoto
+  cancion   Cancion  @relation(fields: [cancionId], references: [id])
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id])
+
+  @@unique([usuarioId, cancionId])
 }
 
 enum TipoEntrada {
@@ -45,75 +101,7 @@ enum EstadoInscripcion {
   cancelada
 }
 
-model Evento {
-  id               String    @id @default(uuid())
-  nombre           String
-  descripcionLarga String?
-  ciudad           String
-  barrio           String?
-  tematica         String?
-  musica           String
-  fecha            DateTime
-  precio           Float?
-  cupoGeneral      Int?      // opcional si manejás stock
-  cupoVip          Int?
-  portada          String?   // /uploads/...
-  imagenes         String[]  @db.Text   
-  activo           Boolean   @default(true)
-  fechaCreacion    DateTime  @default(now())
-  fechaActualizacion DateTime @updatedAt
-
-  empresa   Empresa  @relation(fields: [empresaId], references: [id])
-  empresaId String
-
-  inscripciones Inscripcion[]
-  canciones     Cancion[]
-}
-// ? El signo de pregunta despues del tiop de dato significa que la base de datos acepta valores nulos.
-
-model Inscripcion {
-  id              String            @id @default(uuid())
-  usuario         Usuario           @relation(fields: [usuarioId], references: [id])
-  usuarioId       String
-  evento          Evento            @relation(fields: [eventoId], references: [id])
-  eventoId        String
-  tipoEntrada     TipoEntrada       @default(general)
-  estado          EstadoInscripcion @default(activa)
-  fechaInscripcion DateTime         @default(now())
-
-  @@unique([usuarioId, eventoId, estado], map: "uniq_activa_usuario_evento_estado")
-}
-
-model Cancion {
-  id        String   @id @default(uuid())
-  titulo    String
-  artista   String
-  genero    String
-  spotifyId String?  // si integrás Spotify
-  creadoEn  DateTime @default(now())
-
-  evento   Evento  @relation(fields: [eventoId], references: [id])
-  eventoId String
-
-  votos Voto[]
-}
-
-model Voto {
-  id        String   @id @default(uuid())
-  creadoEn  DateTime @default(now())
-
-  usuario   Usuario  @relation(fields: [usuarioId], references: [id])
-  usuarioId String
-
-  cancion   Cancion  @relation(fields: [cancionId], references: [id])
-  cancionId String
-
-  tipo TipoVoto //enumerativa
-
-  @@unique([usuarioId, cancionId], map: "uniq_voto_usuario_cancion")
-}
-
-enum TipoVoto{
+enum TipoVoto {
   up
   down
 }
