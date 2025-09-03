@@ -12,6 +12,7 @@ model Usuario {
   id            String         @id @default(uuid())
   nombre        String
   email         String         @unique
+  password      String
   creadoEn      DateTime       @default(now())
   actualizadoEn DateTime       @updatedAt
 
@@ -23,6 +24,11 @@ model Empresa {
   id            String    @id @default(uuid())
   nombre        String
   email         String?   @unique
+  password      String               //agregamos la contraseña
+  descripcion   String?              //opcional
+  telefono      String?              //opcional
+  sitioWeb      String?              //opcional
+  // Estos parametros despues vemos si los sacamos, siento que estan buenos para una empresa.
   creadoEn      DateTime  @default(now())
   actualizadoEn DateTime  @updatedAt
 
@@ -52,7 +58,7 @@ model Evento {
   cupoGeneral      Int?      // opcional si manejás stock
   cupoVip          Int?
   portada          String?   // /uploads/...
-  imagenes         String[]  @db.Text    // almacena como JSON/texto (sqlite usa TEXT)
+  imagenes         String[]  @db.Text   
   activo           Boolean   @default(true)
   fechaCreacion    DateTime  @default(now())
   fechaActualizacion DateTime @updatedAt
@@ -63,6 +69,7 @@ model Evento {
   inscripciones Inscripcion[]
   canciones     Cancion[]
 }
+// ? El signo de pregunta despues del tiop de dato significa que la base de datos acepta valores nulos.
 
 model Inscripcion {
   id              String            @id @default(uuid())
@@ -81,6 +88,7 @@ model Cancion {
   id        String   @id @default(uuid())
   titulo    String
   artista   String
+  genero    String
   spotifyId String?  // si integrás Spotify
   creadoEn  DateTime @default(now())
 
@@ -100,5 +108,12 @@ model Voto {
   cancion   Cancion  @relation(fields: [cancionId], references: [id])
   cancionId String
 
+  tipo TipoVoto //enumerativa
+
   @@unique([usuarioId, cancionId], map: "uniq_voto_usuario_cancion")
+}
+
+enum TipoVoto{
+  up
+  down
 }
