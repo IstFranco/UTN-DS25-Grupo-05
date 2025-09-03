@@ -1,110 +1,129 @@
-// controllers/empresasController.ts
+// src/controllers/empresasController.ts
 import { Request, Response } from 'express';
-import { v4 as uuidv4 } from 'uuid';
-import { Empresa } from '../types/index.js';
+import { prisma } from '../data/prisma.js';
+import bcrypt from 'bcryptjs';
 
-// Simulamos una base de datos en memoria
-let empresas: Empresa[] = [];
-
+// Crear empresa
 export const crearEmpresa = async (req: Request, res: Response) => {
     try {
         const { nombre, email, password, descripcion, telefono, sitioWeb } = req.body;
 
-        // Verificar si el email ya existe
-        const empresaExistente = empresas.find(e => e.email === email);
+        if (!nombre || !email || !password) {
+        return res.status(400).json({ message: 'Nombre, email y password son requeridos' });
+        }
+
+        const empresaExistente = await prisma.empresa.findUnique({ where: { email } });
         if (empresaExistente) {
         return res.status(400).json({ message: 'El email ya está registrado' });
         }
 
-        const nuevaEmpresa: Empresa = {
-        id: uuidv4(),
-        nombre,
-        email,
-        password, // En producción, hashear la contraseña
-        descripcion,
-        telefono,
-        sitioWeb,
-        fechaCreacion: new Date(),
-        fechaActualizacion: new Date()
-        };
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-        empresas.push(nuevaEmpresa);
+        const nuevaEmpresa = await prisma.empresa.create({
+        data: {
+            nombre,
+            email,
+            password: hashedPassword,
+            descripcion,
+            telefono,
+            sitioWeb,
+        },
+        });
 
-        // No devolver la contraseña
         const { password: _, ...empresaSinPassword } = nuevaEmpresa;
 
-        res.status(201).json({
+        return res.status(201).json({
         message: 'Empresa creada exitosamente',
-        empresa: empresaSinPassword
+        empresa: empresaSinPassword,
         });
     } catch (error) {
         console.error('Error al crear empresa:', error);
-        res.status(500).json({ message: 'Error al crear la empresa' });
+        return res.status(500).json({ message: 'Error al crear la empresa' });
     }
 };
 
+// Login empresa
 export const loginEmpresa = async (req: Request, res: Response) => {
     try {
         const { email, password } = req.body;
 
-        const empresa = empresas.find(e => e.email === email && e.password === password);
+        if (!email || !password) {
+        return res.status(400).json({ message: 'Email y password son requeridos' });
+        }
+
+        const empresa = await prisma.empresa.findUnique({ where: { email } });
         if (!empresa) {
         return res.status(401).json({ message: 'Credenciales inválidas' });
         }
 
-        // No devolver la contraseña
-        const { password: _, ...empresaSinPassword } = empresa;
+        const esPasswordValido = await bcrypt.compare(password, empresa.password);
+        if (!esPasswordValido) {
+        return res.status(401).json({ message: 'Credenciales inválidas' });
+        }
 
-        res.json({
+        const { password: _, ...empresaSinPassword } = empresa;
+        return res.json({
         message: 'Login exitoso',
-        empresa: empresaSinPassword
+        empresa: empresaSinPassword,
         });
     } catch (error) {
         console.error('Error en login:', error);
-        res.status(500).json({ message: 'Error en el login' });
+        return res.status(500).json({ message: 'Error en el login' });
     }
 };
 
+// Obtener empresa
 export const obtenerEmpresa = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const empresa = empresas.find(e => e.id === id);
+        const empresa = await prisma.empresa.findUnique({ where: { id } });
 
         if (!empresa) {
         return res.status(404).json({ message: 'Empresa no encontrada' });
         }
 
         const { password: _, ...empresaSinPassword } = empresa;
-        res.json({ empresa: empresaSinPassword });
+        return res.json({ empresa: empresaSinPassword });
     } catch (error) {
         console.error('Error al obtener empresa:', error);
-        res.status(500).json({ message: 'Error al obtener la empresa' });
+        return res.status(500).json({ message: 'Error al obtener la empresa' });
     }
 };
 
+// Actualizar empresa
 export const actualizarEmpresa = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const empresaIndex = empresas.findIndex(e => e.id === id);
+        const { nombre, email, password, descripcion, telefono, sitioWeb } = req.body;
 
-        if (empresaIndex === -1) {
-        return res.status(404).json({ message: 'Empresa no encontrada' });
-        }
-
-        empresas[empresaIndex] = {
-        ...empresas[empresaIndex],
-        ...req.body,
-        fechaActualizacion: new Date()
+        const data: any = {
+        nombre,
+        email,
+        descripcion,
+        telefono,
+        sitioWeb,
         };
 
-        const { password: _, ...empresaSinPassword } = empresas[empresaIndex];
+        if (password) {
+        data.password = await bcrypt.hash(password, 10);
+        }
 
-        res.json({
-        message: 'Empresa actualizada exitosamente',
-        empresa: empresaSinPassword
+        const empresa = await prisma.empresa.update({
+        where: { id },
+        data,
         });
-    } catch (error) {
+
+        const { password: _, ...empresaSinPassword } = empresa;
+
+        return res.json({
+        message: 'Empresa actualizada exitosamente',
+        empresa: empresaSinPassword,
+        });
+    } catch (error: any) {
+        if (error.code === 'P2025') {
+        return res.status(404).json({ message: 'Empresa no encontrada' });
+        }
         console.error('Error al actualizar empresa:', error);
-        res.status(500).json({ message: 'Error al actualizar la empresa' });
+        return res.status(500).json({ message: 'Error al actualizar la empresa' });
     }
 };
