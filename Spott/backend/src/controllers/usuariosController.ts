@@ -3,9 +3,16 @@ import { Request, Response } from 'express';
 import { prisma } from '../data/prisma.js';
 import bcrypt from 'bcryptjs';
 
+
+
 // Crear usuario
 export const crearUsuario = async (req: Request, res: Response) => {
     try {
+console.log('LLEGÓ REQUEST AL CONTROLLER');
+        // Al inicio de crearUsuario
+console.log('Usuarios existentes en BD:');
+const todosUsuarios = await prisma.usuario.findMany();
+console.log(todosUsuarios);
         const { nombre, email, password } = req.body;
 
         if (!nombre || !email || !password) {
@@ -27,6 +34,8 @@ export const crearUsuario = async (req: Request, res: Response) => {
             password: hashedPassword,
         },
         });
+
+        console.log('✅ Usuario creado en BD:', nuevoUsuario.id, nuevoUsuario.email);
 
         // No devolvemos el password
         const { password: _, ...usuarioSinPassword } = nuevoUsuario;
@@ -95,13 +104,33 @@ export const actualizarUsuario = async (req: Request, res: Response) => {
         const { id } = req.params;
         const { nombre, email, password } = req.body;
 
+        // Validar contraseña antes de procesarla
+        if (password && password.length < 6) {
+            return res.status(400).json({ message: 'La contraseña debe tener al menos 6 caracteres' });
+        }
+
+        // Validar email
+        if (email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                return res.status(400).json({ message: 'Formato de email inválido' });
+            }
+
+            const usuarioExistente = await prisma.usuario.findUnique({ 
+                where: { email } 
+            });
+            if (usuarioExistente && usuarioExistente.id !== id) {
+                return res.status(400).json({ message: 'El email ya está registrado' });
+            }
+        }
+
         const data: any = {
-        nombre,
-        email,
+            nombre,
+            email,
         };
 
         if (password) {
-        data.password = await bcrypt.hash(password, 10);
+            data.password = await bcrypt.hash(password, 10);
         }
 
         const usuario = await prisma.usuario.update({

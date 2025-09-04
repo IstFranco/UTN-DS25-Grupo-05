@@ -49,6 +49,16 @@ export default function CrearEvento() {
         setError(null);
 
         try {
+            // Obtener y validar empresaId PRIMERO
+            const empresaData = JSON.parse(localStorage.getItem('empresa') || '{}');
+            const empresaId = empresaData.id;
+
+            if (!empresaId) {
+                setError('No se encontró información de la empresa. Inicia sesión nuevamente.');
+                setCargando(false);
+                return;
+            }
+
             // Crear FormData para enviar archivos
             const formData = new FormData();
             
@@ -65,9 +75,16 @@ export default function CrearEvento() {
                 }
             });
 
-            // Agregar empresa ID (esto debería venir de un contexto o estado global)
-            const empresaId = localStorage.getItem('empresaId') || 'empresa-default-id';
+            // Agregar empresaId
             formData.append('empresaId', empresaId);
+
+            // Mapear campos del frontend al backend
+            if (formulario.entradasGenerales) {
+                formData.append('cupoGeneral', formulario.entradasGenerales);
+            }
+            if (formulario.entradasVIP) {
+                formData.append('cupoVip', formulario.entradasVIP);
+            }
 
             const response = await ApiService.crearEvento(formData);
 

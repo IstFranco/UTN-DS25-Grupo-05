@@ -46,7 +46,9 @@ export const upload = multer({
 });
 
 // Rutas
+console.log('📋 Registrando rutas de eventos...');
 app.use('/api/eventos', eventosRoutes);
+console.log('📋 Rutas de eventos registradas');
 app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/empresas', empresasRoutes);
 app.use('/canciones', rutasCanciones);
