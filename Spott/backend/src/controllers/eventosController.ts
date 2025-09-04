@@ -65,6 +65,8 @@ const toFrontend = (e: any) => ({
 
 export const crearEvento = async (req: Request, res: Response) => {
     try {
+        console.log('📋 Datos recibidos para crear evento:', req.body);
+        console.log('📁 Archivos recibidos:', req.files);
         const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
         const body = req.body as CrearEventoBody;
 
@@ -326,6 +328,8 @@ export const desinscribirseEvento = async (req: Request, res: Response) => {
 
 export const obtenerEventosInscritos = async (req: Request, res: Response) => {
     try {
+        console.log('🔥 EJECUTANDO obtenerEventosInscritos');
+        console.log('🔥 Params:', req.params);
         const { usuarioId } = req.params;
 
         const inscs = await prisma.inscripcion.findMany({
