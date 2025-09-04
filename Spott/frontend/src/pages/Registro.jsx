@@ -5,7 +5,6 @@ import "../app.css";
 export default function Registro() {
     const { rol } = useParams();
     const navigate = useNavigate();
-
     const [nombre, setNombre] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -16,86 +15,93 @@ export default function Registro() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
-
+       
         if (!nombre || !email || !password) {
-        setError("Todos los campos son obligatorios");
-        return;
-        }
-
-        try {
-        setLoading(true);
-
-        const res = await fetch("http://localhost:3001/api/usuarios/registro", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-            nombre,
-            email,
-            password,
-            ciudad,
-            }),
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-            setError(data.message || "Error en registro");
+            setError("Todos los campos son obligatorios");
             return;
         }
+   
+        try {
+            setLoading(true);
+           
+            // Cambiar URL según el rol
+            const url = rol === "empresa"
+                ? "http://localhost:3001/api/empresas/registro"
+                : "http://localhost:3001/api/usuarios/registro";
+           
+            const res = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    nombre,
+                    email,
+                    password,
+                    ciudad,
+                }),
+            });
 
-        // Si todo salió bien, guardamos usuario en localStorage
-        localStorage.setItem("usuario", JSON.stringify(data.usuario));
+            const data = await res.json();
+            
+            if (!res.ok) {
+                setError(data.message || "Error en registro");
+                return;
+            }
 
-        // Redirigir al inicio según rol
-        if (rol === "usuario") {
-            navigate("/usuario");
-        } else {
-            navigate("/empresa");
-        }
+            // Guardar datos según el tipo de entidad creada
+            if (rol === "empresa") {
+                localStorage.setItem("empresa", JSON.stringify(data.empresa));
+            } else {
+                localStorage.setItem("usuario", JSON.stringify(data.usuario));
+            }
+
+            // Redirigir al inicio según rol
+            if (rol === "usuario") {
+                navigate("/usuario");
+            } else {
+                navigate("/empresa");
+            }
         } catch (err) {
-        setError("No se pudo conectar al servidor");
+            setError("No se pudo conectar al servidor");
         } finally {
-        setLoading(false);
+            setLoading(false);
         }
     };
 
     return (
         <div className="login-container">
-        <div className="login-box">
-            <h2>Registro de {rol === "empresa" ? "Empresa" : "Usuario"}</h2>
-            {error && <p className="login-error">{error}</p>}
-
-            <form onSubmit={handleSubmit} className="login-form">
-            <input
-                type="text"
-                placeholder="Nombre"
-                value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
-            />
-            <input
-                type="email"
-                placeholder="Correo electrónico"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-            />
-            <input
-                type="password"
-                placeholder="Contraseña"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-            />
-            <input
-                type="text"
-                placeholder="Ciudad"
-                value={ciudad}
-                onChange={(e) => setCiudad(e.target.value)}
-            />
-
-            <button type="submit" disabled={loading}>
-                {loading ? "Creando cuenta..." : "Registrarse"}
-            </button>
-            </form>
-        </div>
+            <div className="login-box">
+                <h2>Registro de {rol === "empresa" ? "Empresa" : "Usuario"}</h2>
+                {error && <p className="login-error">{error}</p>}
+                <form onSubmit={handleSubmit} className="login-form">
+                    <input
+                        type="text"
+                        placeholder="Nombre"
+                        value={nombre}
+                        onChange={(e) => setNombre(e.target.value)}
+                    />
+                    <input
+                        type="email"
+                        placeholder="Correo electrónico"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                    />
+                    <input
+                        type="password"
+                        placeholder="Contraseña"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
+                    <input
+                        type="text"
+                        placeholder="Ciudad"
+                        value={ciudad}
+                        onChange={(e) => setCiudad(e.target.value)}
+                    />
+                    <button type="submit" disabled={loading}>
+                        {loading ? "Creando cuenta..." : "Registrarse"}
+                    </button>
+                </form>
+            </div>
         </div>
     );
 }

@@ -30,12 +30,30 @@ export default function MostrarEvento() {
 
     // Verificar si el usuario ya está inscrito al cargar el componente
     useEffect(() => {
-        const usuarioId = localStorage.getItem("usuarioId") || "usuario-default-id";
+        const usuarioData = JSON.parse(localStorage.getItem("usuario") || "{}");
+        const usuarioId = usuarioData.id;
 
-        fetch(`http://localhost:3001/api/eventos/usuario/${usuarioId}/inscritos`)
+        console.log('🔍 DEBUG - Evento actual ID:', id); // ← AGREGAR
+
+        if (!usuarioId) {
+            console.error("No se encontró ID de usuario");
+            return;
+        }
+
+        fetch(`http://localhost:3001/api/eventos/usuario/${usuarioId}/inscriptos`)
             .then(res => res.json())
             .then(data => {
+                console.log('🔍 DEBUG - Respuesta del servidor:', data); // ← AGREGAR
+                console.log('🔍 DEBUG - Eventos inscritos:', data.eventos); // ← AGREGAR
+                
+                // Verificar cada evento individualmente
+                data.eventos?.forEach(evento => {
+                    console.log(`🔍 DEBUG - Comparando: "${evento.id}" === "${id}"`); // ← AGREGAR
+                    console.log(`🔍 DEBUG - ¿Son iguales?`, evento.id === id); // ← AGREGAR
+                });
+
                 const yaInscripto = data.eventos?.some(e => e.id === id);
+                console.log('🔍 DEBUG - Resultado final yaInscripto:', yaInscripto); // ← AGREGAR
                 setUsuarioInscrito(yaInscripto);
             })
             .catch(err => console.error("Error al verificar inscripción:", err));
@@ -43,7 +61,14 @@ export default function MostrarEvento() {
 
     const inscribirme = async () => {
         try {
-            const usuarioId = localStorage.getItem("usuarioId") || "usuario-default-id";
+            // Obtener usuarioId del objeto completo guardado
+            const usuarioData = JSON.parse(localStorage.getItem("usuario") || "{}");
+            const usuarioId = usuarioData.id;
+
+            if (!usuarioId) {
+                alert("Error: No se encontró información del usuario. Inicia sesión nuevamente.");
+                return;
+            }
 
             const res = await fetch(`http://localhost:3001/api/eventos/${id}/inscribirse`, {
                 method: "POST",
@@ -51,7 +76,10 @@ export default function MostrarEvento() {
                 body: JSON.stringify({ usuarioId, tipoEntrada: "general" })
             });
 
-            if (!res.ok) throw new Error("Error al inscribirse");
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || "Error al inscribirse");
+            }
 
             const data = await res.json();
             console.log("Inscripción realizada:", data);
@@ -60,7 +88,7 @@ export default function MostrarEvento() {
             alert("¡Te inscribiste al evento!");
         } catch (err) {
             console.error(err);
-            alert("Error al inscribirse al evento.");
+            alert(`Error al inscribirse al evento: ${err.message}`);
         }
     };
 
