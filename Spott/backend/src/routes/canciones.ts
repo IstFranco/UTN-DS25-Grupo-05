@@ -7,7 +7,7 @@ import {
 
 const router = Router();
 
-router.get('/', obtenerCanciones);                 // ?eventoId=&q=&genero=
+router.get('/', obtenerCanciones);                 
 router.post('/', crearCancion);
 router.post('/from-spotify', crearCancionDesdeSpotify);
 router.get('/:id', obtenerCancionPorId);

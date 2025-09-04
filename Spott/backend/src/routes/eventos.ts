@@ -16,6 +16,8 @@ import {
 import { validate } from '../middlewares/validate.js';
 import { crearEventoSchema, actualizarEventoSchema, filtrosEventoSchema, inscripcionSchema } from '../validations/eventoSchemas.js';
 
+console.log('📋 Cargando rutas de eventos...');
+
 const router = express.Router();
 
 const storage = multer.diskStorage({
@@ -25,24 +27,25 @@ const storage = multer.diskStorage({
         cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
     }
 });
+
 const upload = multer({ storage });
 
-// -------- Rutas con validación --------
-router.get('/', validate(filtrosEventoSchema, 'query'), obtenerEventos);
-
-// ¡más específica antes!
+// -------- Rutas GET - específicas primero, generales al final --------
+router.get('/', obtenerEventos);
 router.get('/empresa/:empresaId', obtenerEventosPorEmpresa);
 router.get('/usuario/:usuarioId/inscritos', obtenerEventosInscritos);
-
+// IMPORTANTE: /:id debe ir AL FINAL de todos los GET específicos
 router.get('/:id', obtenerEventoPorId);
 
+// -------- Rutas POST --------
 router.post(
     '/',
     upload.fields([{ name: 'portada', maxCount: 1 }, { name: 'imagenes', maxCount: 10 }]),
-    validate(crearEventoSchema),
     crearEvento
 );
+router.post('/:id/inscribirse', inscribirseEvento);
 
+// -------- Rutas PUT --------
 router.put(
     '/:id',
     upload.fields([{ name: 'portada', maxCount: 1 }, { name: 'imagenes', maxCount: 10 }]),
@@ -50,9 +53,9 @@ router.put(
     actualizarEvento
 );
 
+// -------- Rutas DELETE --------
 router.delete('/:id', eliminarEvento);
-
-router.post('/:id/inscribirse', validate(inscripcionSchema), inscribirseEvento);
 router.delete('/:id/desinscribirse', desinscribirseEvento);
 
+console.log('📋 Rutas de eventos configuradas correctamente');
 export default router;
