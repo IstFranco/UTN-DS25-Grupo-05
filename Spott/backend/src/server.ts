@@ -36,7 +36,7 @@ const storage = multer.diskStorage({
     }
 });
 
-export const upload = multer({ 
+export const upload = multer({
     storage: storage,
     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
     fileFilter: (req, file, cb) => {
@@ -46,14 +46,14 @@ export const upload = multer({
 });
 
 // Rutas
-console.log('📋 Registrando rutas de eventos...');
+console.log('📋 Registrando rutas...');
 app.use('/api/eventos', eventosRoutes);
-console.log('📋 Rutas de eventos registradas');
 app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/empresas', empresasRoutes);
-app.use('/canciones', rutasCanciones);
-app.use('/votos', rutasVotos);
-app.use('/spotify', rutasSpotify);
+app.use('/api/canciones', rutasCanciones);  // ← CORREGIDO: agregado /api/
+app.use('/api/votos', rutasVotos);           // ← CORREGIDO: agregado /api/
+app.use('/api/spotify', rutasSpotify);       // ← CORREGIDO: agregado /api/
+console.log('✅ Todas las rutas registradas');
 
 // Ruta de prueba
 app.get('/api/health', (req, res) => {
@@ -67,5 +67,12 @@ app.use((error: any, req: express.Request, res: express.Response, next: express.
 });
 
 app.listen(PORT, () => {
-    console.log(`Servidor corriendo en http://localhost:${PORT}`);
+    console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
+    console.log('📋 Rutas disponibles:');
+    console.log('   - /api/eventos');
+    console.log('   - /api/usuarios');
+    console.log('   - /api/empresas');
+    console.log('   - /api/canciones');
+    console.log('   - /api/votos');
+    console.log('   - /api/spotify');
 });

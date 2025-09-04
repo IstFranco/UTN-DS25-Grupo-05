@@ -205,14 +205,24 @@ export default function CrearEvento() {
 
                     <label>Género musical:</label>
                     <select name="musica" value={formulario.musica} onChange={handleChange} required>
-                        <option value="">Seleccione un genero...</option>
-                        <option>Electrónica</option>
-                        <option>Reggaetón</option>
-                        <option>Rock / Indie</option>
-                        <option>Pop</option>
-                        <option>Trap / Hip hop</option>
-                        <option>Jazz / Funk / Soul</option>
-                        <option>Música en vivo</option>
+                        <option value="">Seleccione un género...</option>
+                        <option value="electronic">Electrónica</option>
+                        <option value="reggaeton">Reggaetón</option>
+                        <option value="rock">Rock</option>
+                        <option value="indie">Indie</option>
+                        <option value="pop">Pop</option>
+                        <option value="trap">Trap</option>
+                        <option value="hip-hop">Hip Hop</option>
+                        <option value="jazz">Jazz</option>
+                        <option value="funk">Funk</option>
+                        <option value="soul">Soul</option>
+                        <option value="latin">Música Latina</option>
+                        <option value="alternative">Alternativo</option>
+                        <option value="house">House</option>
+                        <option value="techno">Techno</option>
+                        <option value="r-n-b">R&B</option>
+                        <option value="country">Country</option>
+                        <option value="classical">Clásica</option>
                     </select>
 
                     <label>Precio estimado:</label>

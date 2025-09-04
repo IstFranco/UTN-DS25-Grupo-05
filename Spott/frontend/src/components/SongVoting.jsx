@@ -10,14 +10,14 @@ function getAnonUserId() {
         localStorage.setItem(key, uid);
     }
     return uid;
-    }
+}
 
-    const PLACEHOLDER_IMG = "/placeholder.png";
+const PLACEHOLDER_IMG = "/placeholder.png";
 
-    // helper: quita tildes y pasa a minúsculas
-    const normalize = (s) => s?.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+// helper: quita tildes y pasa a minúsculas
+const normalize = (s) => s?.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
 
-    export default function SongVoting({ eventoId, usuarioInscrito = false, userId, generoEvento }) {
+export default function SongVoting({ eventoId, usuarioInscrito = false, userId, generoEvento }) {
     // ---- hooks (siempre arriba) ----
     const [songs, setSongs] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -35,7 +35,7 @@ function getAnonUserId() {
 
     const effectiveUserId = userId || getAnonUserId();
 
-    // Cargar canciones del evento
+    // Cargar canciones del evento CON VOTOS
     useEffect(() => {
         if (!usuarioInscrito || !eventoId) return;
         let alive = true;
@@ -43,19 +43,28 @@ function getAnonUserId() {
         try {
             setLoading(true);
             setError(null);
-            const res = await fetch(`${API}/canciones?eventoId=${encodeURIComponent(eventoId)}`);
+            
+            // Incluir usuarioId para obtener los votos del usuario
+            const res = await fetch(`${API}/api/canciones?eventoId=${encodeURIComponent(eventoId)}&usuarioId=${encodeURIComponent(effectiveUserId)}`);
             if (!res.ok) throw new Error('No se pudieron obtener las canciones');
             const data = await res.json();
+            
+            console.log('🎵 Datos recibidos del backend:', data);
+            
             const mapped = (data.canciones || []).map(c => ({
             id: c.id,
-            title: c.nombre,
+            title: c.titulo,
             artist: c.artista,
-            votesUp: c.votosUp ?? 0,
-            votesDown: c.votosDown ?? 0,
+            votesUp: c.votosUp ?? 0,        // Conteos calculados por el backend
+            votesDown: c.votosDown ?? 0,    // Conteos calculados por el backend
             image: PLACEHOLDER_IMG,
-            userVote: null,
-            userVoteId: null,
+            // Mapear el voto del usuario desde el backend
+            userVote: c.votoUsuario ? 
+                (c.votoUsuario.tipo === 'up' ? 'like' : 'dislike') : null,
+            userVoteId: c.votoUsuario ? c.votoUsuario.id : null,
             }));
+            
+            console.log('🎵 Canciones mapeadas con votos:', mapped);
             if (alive) setSongs(mapped);
         } catch (e) {
             if (alive) setError(e.message || 'Error cargando canciones');
@@ -64,7 +73,7 @@ function getAnonUserId() {
         }
         })();
         return () => { alive = false; };
-    }, [usuarioInscrito, eventoId]);
+    }, [usuarioInscrito, eventoId, effectiveUserId]); // Agregar effectiveUserId como dependencia
 
     // Búsqueda y orden
     const filteredSongs = useMemo(() => {
@@ -90,19 +99,23 @@ function getAnonUserId() {
         try {
         setPosting(true);
         setError(null);
-        const res = await fetch(`${API}/canciones`, {
+        const res = await fetch(`${API}/api/canciones`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ eventoId, nombre: newSong.title.trim(), artista: newSong.artist.trim() })
+            body: JSON.stringify({ 
+                eventoId, 
+                titulo: newSong.title.trim(),
+                artista: newSong.artist.trim() 
+            })
         });
         if (!res.ok) throw new Error('No se pudo crear la canción');
         const { cancion } = await res.json();
         setSongs(prev => [...prev, {
             id: cancion.id,
-            title: cancion.nombre,
+            title: cancion.titulo,
             artist: cancion.artista,
-            votesUp: cancion.votosUp ?? 0,
-            votesDown: cancion.votosDown ?? 0,
+            votesUp: 0,
+            votesDown: 0,
             image: PLACEHOLDER_IMG,
             userVote: null,
             userVoteId: null,
@@ -119,15 +132,11 @@ function getAnonUserId() {
     // ---- Spotify: buscar y agregar ----
     const searchSpotify = async () => {
         if (!spQuery.trim()) return;
-        if (!generoEvento) {
-        setSpError('No se especificó el género del evento');
-        return;
-        }
         try {
         setSpLoading(true);
         setSpError(null);
-        const genreParam = normalize(generoEvento); // 👈 normaliza "Reggaetón" -> "reggaeton"
-        const url = `${API}/spotify/search?title=${encodeURIComponent(spQuery)}&genre=${encodeURIComponent(genreParam)}&limit=8`;
+        const genreParam = generoEvento ? normalize(generoEvento) : '';
+        const url = `${API}/api/spotify/search?title=${encodeURIComponent(spQuery)}&genre=${encodeURIComponent(genreParam)}&limit=8`;
         const res = await fetch(url);
         if (!res.ok) throw new Error('No se pudo buscar en Spotify');
         const { tracks } = await res.json();
@@ -143,23 +152,22 @@ function getAnonUserId() {
         try {
         setPosting(true);
         setError(null);
-        const res = await fetch(`${API}/canciones/from-spotify`, {
+        const res = await fetch(`${API}/api/canciones/spotify`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
             eventoId,
-            spotifyId: track.id,
-            genero: generoEvento || undefined
+            spotifyId: track.id
             })
         });
         if (!res.ok) throw new Error('No se pudo crear desde Spotify');
         const { cancion } = await res.json();
         setSongs(prev => [...prev, {
             id: cancion.id,
-            title: cancion.nombre,
+            title: cancion.titulo,
             artist: cancion.artista,
-            votesUp: cancion.votosUp ?? 0,
-            votesDown: cancion.votosDown ?? 0,
+            votesUp: 0,
+            votesDown: 0,
             image: track?.album?.images?.[0]?.url || PLACEHOLDER_IMG,
             userVote: null,
             userVoteId: null,
@@ -184,14 +192,17 @@ function getAnonUserId() {
         const currentVoteId = song.userVoteId;
 
         if (current === voteType && currentVoteId) {
-            const res = await fetch(`${API}/votos/${currentVoteId}`, { method: 'DELETE' });
+            console.log('🗳️ Eliminando voto existente:', currentVoteId);
+            const res = await fetch(`${API}/api/votos/${currentVoteId}`, { method: 'DELETE' });
             if (!res.ok) throw new Error('No se pudo eliminar el voto');
+            
+            const data = await res.json();
             setSongs(prev => prev.map(s => {
             if (s.id !== songId) return s;
             return {
                 ...s,
-                votesUp: voteType === 'like' ? Math.max(0, (s.votesUp || 0) - 1) : s.votesUp,
-                votesDown: voteType === 'dislike' ? Math.max(0, (s.votesDown || 0) - 1) : s.votesDown,
+                votesUp: data?.cancion?.votosUp ?? (voteType === 'like' ? Math.max(0, (s.votesUp || 0) - 1) : s.votesUp),
+                votesDown: data?.cancion?.votosDown ?? (voteType === 'dislike' ? Math.max(0, (s.votesDown || 0) - 1) : s.votesDown),
                 userVote: null,
                 userVoteId: null,
                 _busy: false
@@ -201,11 +212,14 @@ function getAnonUserId() {
         }
 
         if (current && currentVoteId && current !== voteType) {
-            const del = await fetch(`${API}/votos/${currentVoteId}`, { method: 'DELETE' });
+            console.log('🗳️ Cambiando voto de', current, 'a', voteType);
+            const del = await fetch(`${API}/api/votos/${currentVoteId}`, { method: 'DELETE' });
             if (!del.ok) throw new Error('No se pudo cambiar el voto (fase 1)');
         }
 
-        const res = await fetch(`${API}/votos`, {
+        console.log('🗳️ Creando nuevo voto:', { cancionId: songId, tipo: voteType === 'like' ? 'up' : 'down' });
+
+        const res = await fetch(`${API}/api/votos`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -214,8 +228,14 @@ function getAnonUserId() {
             usuarioId: effectiveUserId
             })
         });
-        if (!res.ok) throw new Error('No se pudo registrar el voto');
+        
+        if (!res.ok) {
+            throw new Error('No se pudo registrar el voto');
+        }
+        
         const data = await res.json();
+        console.log('🗳️ Voto registrado, respuesta:', data);
+        
         const newVoteId = data?.voto?.id;
 
         setSongs(prev => prev.map(s => {
@@ -231,6 +251,7 @@ function getAnonUserId() {
             };
         }));
         } catch (e) {
+        console.log('❌ Error en handleVote:', e);
         setError(e.message || 'Error al votar');
         setSongs(prev => prev.map(s => (s.id === songId ? { ...s, _busy: false } : s)));
         }
@@ -317,7 +338,7 @@ function getAnonUserId() {
                 {spError && <div className="error-banner">{spError}</div>}
                 {spLoading && <div className="loading">Buscando…</div>}
                 {!spLoading && spQuery && spResults.length === 0 && (
-                    <div className="muted">Sin resultados para “{spQuery}”.</div>
+                    <div className="muted">Sin resultados para "{spQuery}".</div>
                 )}
 
                 {!!spResults.length && (
@@ -343,22 +364,6 @@ function getAnonUserId() {
                 </div>
 
                 <hr />
-
-                {/* Manual */}
-                <input
-                type="text"
-                placeholder="Song title"
-                value={newSong.title}
-                onChange={(e) => setNewSong({ ...newSong, title: e.target.value })}
-                className="add-song-input"
-                />
-                <input
-                type="text"
-                placeholder="Artist name"
-                value={newSong.artist}
-                onChange={(e) => setNewSong({ ...newSong, artist: e.target.value })}
-                className="add-song-input"
-                />
 
                 <div className="modal-actions">
                 <button
