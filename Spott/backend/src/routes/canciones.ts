@@ -1,18 +1,29 @@
+// src/routes/canciones.ts
 import { Router } from 'express';
 import {
-    crearCancion, obtenerCanciones, obtenerCancionPorId,
-    actualizarCancion, eliminarCancion, obtenerTallyCancion,
-    crearCancionDesdeSpotify,
-} from '../controllers/cancionesController.js';
+    crearCancion,
+    obtenerCanciones,
+    obtenerCancionPorId,
+    actualizarCancion,
+    eliminarCancion,
+    obtenerTallyCancion,
+    crearCancionDesdeSpotify
+    // NO incluimos recomendarCancionSpotify por ahora
+} from '../controllers/cancionesController.js'; // ← NOTA: .js al final
 
 const router = Router();
 
-router.get('/', obtenerCanciones);                 
+// Rutas específicas PRIMERO
+router.get('/tally/:id', obtenerTallyCancion);
+router.post('/spotify', crearCancionDesdeSpotify);
+
+// Rutas generales
+router.get('/', obtenerCanciones);
 router.post('/', crearCancion);
-router.post('/from-spotify', crearCancionDesdeSpotify);
+
+// Rutas con parámetro dinámico AL FINAL
 router.get('/:id', obtenerCancionPorId);
 router.put('/:id', actualizarCancion);
 router.delete('/:id', eliminarCancion);
-router.get('/:id/tally', obtenerTallyCancion);
 
 export default router;
