@@ -9,6 +9,7 @@ import notiImg from '../img/LogoNotificaciones.jpeg';
 export default function MostrarEvento() {
     const { state } = useLocation();
     const [usuarioInscrito, setUsuarioInscrito] = useState(false);
+    const [usuarioData, setUsuarioData] = useState(null); // ← AGREGAR ESTE STATE
 
     if (!state?.evento) {
         return <p>No hay datos del evento.</p>;
@@ -30,40 +31,31 @@ export default function MostrarEvento() {
 
     // Verificar si el usuario ya está inscrito al cargar el componente
     useEffect(() => {
-        const usuarioData = JSON.parse(localStorage.getItem("usuario") || "{}");
-        const usuarioId = usuarioData.id;
+        const userData = JSON.parse(localStorage.getItem("usuario") || "{}");
+        setUsuarioData(userData); // ← GUARDAR LOS DATOS DEL USUARIO
+        
+        const usuarioId = userData.id;
 
-        console.log('🔍 DEBUG - Evento actual ID:', id); // ← AGREGAR
+        console.log('🔍 DEBUG - Evento actual ID:', id);
+        console.log('🔍 DEBUG - Usuario ID:', usuarioId); // ← AGREGAR LOG
 
         if (!usuarioId) {
             console.error("No se encontró ID de usuario");
             return;
         }
 
-        fetch(`http://localhost:3001/api/eventos/usuario/${usuarioId}/inscriptos`)
-            .then(res => res.json())
-            .then(data => {
-                console.log('🔍 DEBUG - Respuesta del servidor:', data); // ← AGREGAR
-                console.log('🔍 DEBUG - Eventos inscritos:', data.eventos); // ← AGREGAR
-                
-                // Verificar cada evento individualmente
-                data.eventos?.forEach(evento => {
-                    console.log(`🔍 DEBUG - Comparando: "${evento.id}" === "${id}"`); // ← AGREGAR
-                    console.log(`🔍 DEBUG - ¿Son iguales?`, evento.id === id); // ← AGREGAR
-                });
-
-                const yaInscripto = data.eventos?.some(e => e.id === id);
-                console.log('🔍 DEBUG - Resultado final yaInscripto:', yaInscripto); // ← AGREGAR
-                setUsuarioInscrito(yaInscripto);
-            })
-            .catch(err => console.error("Error al verificar inscripción:", err));
+        fetch(`http://localhost:3001/api/eventos/check/${id}/${usuarioId}`)
+        .then(res => res.json())
+        .then(data => {
+            setUsuarioInscrito(data.inscrito);
+        })
+        .catch(err => console.error("Error al verificar inscripción:", err));
     }, [id]);
 
     const inscribirme = async () => {
         try {
-            // Obtener usuarioId del objeto completo guardado
-            const usuarioData = JSON.parse(localStorage.getItem("usuario") || "{}");
-            const usuarioId = usuarioData.id;
+            // Usar usuarioData del state en lugar de obtenerlo de nuevo
+            const usuarioId = usuarioData?.id;
 
             if (!usuarioId) {
                 alert("Error: No se encontró información del usuario. Inicia sesión nuevamente.");
@@ -150,8 +142,13 @@ export default function MostrarEvento() {
                 </div>
             </div>
 
-            {/* Componente de votación de canciones - solo se muestra si está inscrito */}
-            <SongVoting eventoId={id} usuarioInscrito={usuarioInscrito} generoEvento={musica} />
+            {/* Componente de votación de canciones - CORREGIDO: pasar userId */}
+            <SongVoting 
+                eventoId={id} 
+                usuarioInscrito={usuarioInscrito} 
+                userId={usuarioData?.id} // ← CORREGIDO: pasar el ID real del usuario
+                generoEvento={musica} 
+            />
 
             <FooterUsuario />
         </div>

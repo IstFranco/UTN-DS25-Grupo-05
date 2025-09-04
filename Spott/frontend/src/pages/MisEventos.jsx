@@ -30,11 +30,27 @@ export default function MisEventos() {
             try {
                 let eventos = [];
                 if (esEmpresa) {
-                    const empresaId = localStorage.getItem('empresaId') || 'empresa-default-id';
+                    // Obtener empresaId del objeto completo
+                    const empresaData = JSON.parse(localStorage.getItem('empresa') || '{}');
+                    const empresaId = empresaData.id;
+                    
+                    if (!empresaId) {
+                        setError('No se encontró información de la empresa');
+                        return;
+                    }
+                    
                     const response = await ApiService.obtenerEventosPorEmpresa(empresaId);
                     eventos = response.eventos || [];
                 } else {
-                    const usuarioId = localStorage.getItem('usuarioId') || 'usuario-default-id';
+                    // Obtener usuarioId del objeto completo
+                    const usuarioData = JSON.parse(localStorage.getItem('usuario') || '{}');
+                    const usuarioId = usuarioData.id;
+                    
+                    if (!usuarioId) {
+                        setError('No se encontró información del usuario');
+                        return;
+                    }
+                    
                     const response = await ApiService.obtenerEventosInscritos(usuarioId);
                     eventos = response.eventos || [];
                 }
@@ -63,7 +79,15 @@ export default function MisEventos() {
         if (esEmpresa) {
             navigate('/empresa/editar-evento', { state: { evento } });
         } else {
-            navigate('/evento-inscripto', { state: { evento } });
+            const usuarioData = JSON.parse(localStorage.getItem('usuario') || '{}');
+            const usuarioId = usuarioData.id;
+            navigate('/evento-inscripto', { 
+                state: { 
+                    evento, 
+                    usuarioInscrito: true, 
+                    userId: usuarioId 
+                } 
+            });
         }
     };
 
@@ -85,7 +109,15 @@ export default function MisEventos() {
     const handleDesinscribirse = async (eventoId) => {
         if (!window.confirm('¿Estás seguro de que deseas desinscribirte de este evento?')) return;
         try {
-            const usuarioId = localStorage.getItem('usuarioId') || 'usuario-default-id';
+            // Obtener usuarioId del objeto completo
+            const usuarioData = JSON.parse(localStorage.getItem('usuario') || '{}');
+            const usuarioId = usuarioData.id;
+            
+            if (!usuarioId) {
+                setError('No se encontró información del usuario');
+                return;
+            }
+            
             await ApiService.desinscribirseEvento(eventoId, usuarioId);
             setEventosInscritos(prev => prev.filter(evento => evento.id !== eventoId));
             const clave = 'eventosUsuario';
