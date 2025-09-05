@@ -8,14 +8,16 @@ export const passwordSchema = z
     .regex(/[A-Za-z]/, "Debe incluir al menos una letra")
     .regex(/\d/, "Debe incluir al menos un número");
 
-export const usuarioRegisterSchema = z.object({
+export const empresaRegisterSchema = z.object({
     nombre: z.string().trim().min(1, "El nombre es obligatorio"),
     email: z.string().trim().toLowerCase().email("Email inválido"),
     password: passwordSchema,
-    ciudad: z.string().trim().optional(),
+    descripcion: z.string().trim().optional(),
+    telefono: z.string().trim().optional(),
+    sitioWeb: z.string().trim().url("URL inválida").optional().or(z.literal("")),
 });
 
-export const usuarioLoginSchema = z.object({
+export const empresaLoginSchema = z.object({
     email: z.string().trim().toLowerCase().email("Email inválido"),
     password: z.string().min(1, "La contraseña es obligatoria"),
 });
