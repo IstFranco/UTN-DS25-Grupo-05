@@ -15,6 +15,10 @@ import EventoInscripto from './pages/EventoInscripto';
 import EditarEvento from './pages/EditarEvento';
 import MisEventos from './pages/MisEventos';
 import Registro from './pages/Registro';   // ✅ importamos Registro
+import Contacto from './pages/Contacto';
+import EmpresaAyuda from './pages/EmpresaAyuda';
+
+
 
 
 function App() {
@@ -38,6 +42,11 @@ function App() {
         <Route path="/empresa/notificaciones" element={<EmpresaNotificaciones />} />
         <Route path="/empresa/mis-eventos" element={<MisEventos rol="empresa"/>} />
         <Route path="/empresa/editar-evento" element={<EditarEvento />} />
+        <Route path="/empresa/ayuda" element={<EmpresaAyuda />} />
+
+
+        {/* Empresa y Usuario */}
+        <Route path="/contacto" element={<Contacto />} />
 
         {/* Selector inicial */}
         <Route path="/" element={<SelectorDeRol />} />
