@@ -104,7 +104,7 @@ router.put(
 
 // -------- Rutas DELETE --------
 router.delete('/:id', eliminarEvento);
-router.delete('/:id/desinscribirse', desinscribirseEvento);
+router.delete('/:eventoId/usuario/:usuarioId', desinscribirseEvento);
 
 console.log('📋 Rutas de eventos configuradas correctamente');
 
