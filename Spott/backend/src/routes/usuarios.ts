@@ -11,5 +11,4 @@ router.post('/login', validate(usuarioLoginSchema), loginUsuario);
 router.get('/:id', obtenerUsuario);
 router.put('/:id', actualizarUsuario);
 
-
 export default router;
