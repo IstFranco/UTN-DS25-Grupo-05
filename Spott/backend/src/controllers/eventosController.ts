@@ -261,7 +261,16 @@ export const inscribirseEvento = async (req: Request, res: Response) => {
             return res.status(400).json({ message: "tipoEntrada debe ser 'general' o 'vip'" });
         }
 
-        // Verificar si ya está inscrito - usando findFirst en lugar del constraint
+        // 1. OBTENER EL EVENTO Y VERIFICAR QUE EXISTE
+        const evento = await prisma.evento.findFirst({
+            where: { id: eventoId, activo: true }
+        });
+
+        if (!evento) {
+            return res.status(404).json({ message: 'Evento no encontrado o inactivo' });
+        }
+
+        // 2. VERIFICAR SI YA ESTÁ INSCRITO
         const inscripcionExistente = await prisma.inscripcion.findFirst({
             where: {
                 usuarioId: usuarioId,
@@ -269,13 +278,54 @@ export const inscribirseEvento = async (req: Request, res: Response) => {
             }
         });
 
-        if (inscripcionExistente) {
-            if (inscripcionExistente.estado === 'activa') {
-                return res.status(400).json({ message: 'Ya estás inscrito en este evento' });
+        if (inscripcionExistente && inscripcionExistente.estado === 'activa') {
+            return res.status(400).json({ message: 'Ya estás inscrito en este evento' });
+        }
+
+        // 3. CONTAR INSCRIPCIONES ACTUALES POR TIPO
+        const inscripcionesGenerales = await prisma.inscripcion.count({
+            where: {
+                eventoId: eventoId,
+                tipoEntrada: 'general',
+                estado: 'activa'
             }
-            
-            // Si estaba cancelada, reactivamos
-            const insc = await prisma.inscripcion.update({
+        });
+
+        const inscripcionesVip = await prisma.inscripcion.count({
+            where: {
+                eventoId: eventoId,
+                tipoEntrada: 'vip',
+                estado: 'activa'
+            }
+        });
+
+        // 4. VALIDAR DISPONIBILIDAD SEGÚN TIPO DE ENTRADA
+        if (tipoEntrada === 'general') {
+            const cupoGeneral = evento.cupoGeneral || 0;
+            if (inscripcionesGenerales >= cupoGeneral) {
+                return res.status(400).json({ 
+                    message: `No hay cupo disponible para entradas generales. Disponibles: ${cupoGeneral - inscripcionesGenerales}`,
+                    disponibles: cupoGeneral - inscripcionesGenerales,
+                    tipo: 'general'
+                });
+            }
+        } else if (tipoEntrada === 'vip') {
+            const cupoVip = evento.cupoVip || 0;
+            if (inscripcionesVip >= cupoVip) {
+                return res.status(400).json({ 
+                    message: `No hay cupo disponible para entradas VIP. Disponibles: ${cupoVip - inscripcionesVip}`,
+                    disponibles: cupoVip - inscripcionesVip,
+                    tipo: 'vip'
+                });
+            }
+        }
+
+        // 5. CREAR O REACTIVAR INSCRIPCIÓN
+        let inscripcion;
+
+        if (inscripcionExistente && inscripcionExistente.estado === 'cancelada') {
+            // Reactivar inscripción cancelada
+            inscripcion = await prisma.inscripcion.update({
                 where: { id: inscripcionExistente.id },
                 data: { 
                     estado: 'activa', 
@@ -283,14 +333,27 @@ export const inscribirseEvento = async (req: Request, res: Response) => {
                     fechaInscripcion: new Date()
                 }
             });
-            return res.status(200).json({ message: 'Inscripción reactivada', inscripcion: insc });
+            
+            return res.status(200).json({ 
+                message: 'Inscripción reactivada exitosamente', 
+                inscripcion,
+                disponiblesGeneral: (evento.cupoGeneral || 0) - (inscripcionesGenerales + (tipoEntrada === 'general' ? 1 : 0)),
+                disponiblesVip: (evento.cupoVip || 0) - (inscripcionesVip + (tipoEntrada === 'vip' ? 1 : 0))
+            });
+        } else {
+            // Crear nueva inscripción
+            inscripcion = await prisma.inscripcion.create({
+                data: { eventoId, usuarioId, tipoEntrada },
+            });
+
+            return res.status(201).json({ 
+                message: 'Inscripción realizada exitosamente', 
+                inscripcion,
+                disponiblesGeneral: (evento.cupoGeneral || 0) - (inscripcionesGenerales + (tipoEntrada === 'general' ? 1 : 0)),
+                disponiblesVip: (evento.cupoVip || 0) - (inscripcionesVip + (tipoEntrada === 'vip' ? 1 : 0))
+            });
         }
 
-        const insc = await prisma.inscripcion.create({
-            data: { eventoId, usuarioId, tipoEntrada },
-        });
-
-        return res.status(201).json({ message: 'Inscripción realizada', inscripcion: insc });
     } catch (e: any) {
         console.error('Error al inscribirse:', e);
         return res.status(500).json({ message: 'Error al inscribirse' });
@@ -343,5 +406,67 @@ export const obtenerEventosInscritos = async (req: Request, res: Response) => {
     } catch (e) {
         console.error('Error al obtener eventos inscritos:', e);
         return res.status(500).json({ message: 'Error al obtener eventos inscritos' });
+    }
+};
+
+// Función auxiliar para obtener estadísticas de inscripciones
+export const obtenerEstadisticasEvento = async (req: Request, res: Response) => {
+    try {
+        const { id: eventoId } = req.params;
+        
+        const evento = await prisma.evento.findFirst({
+            where: { id: eventoId, activo: true }
+        });
+
+        if (!evento) {
+            return res.status(404).json({ message: 'Evento no encontrado' });
+        }
+
+        const [inscripcionesGenerales, inscripcionesVip] = await Promise.all([
+            prisma.inscripcion.count({
+                where: { eventoId, tipoEntrada: 'general', estado: 'activa' }
+            }),
+            prisma.inscripcion.count({
+                where: { eventoId, tipoEntrada: 'vip', estado: 'activa' }
+            })
+        ]);
+
+        const cupoGeneral = evento.cupoGeneral || 0;
+        const cupoVip = evento.cupoVip || 0;
+        const disponiblesGeneral = cupoGeneral - inscripcionesGenerales;
+        const disponiblesVip = cupoVip - inscripcionesVip;
+        const totalInscripciones = inscripcionesGenerales + inscripcionesVip;
+        const totalCupo = cupoGeneral + cupoVip;
+
+        return res.json({
+            evento: {
+                id: evento.id,
+                nombre: evento.nombre,
+                fecha: evento.fecha
+            },
+            cupos: {
+                cupoGeneral,
+                cupoVip,
+                total: totalCupo
+            },
+            inscripciones: {
+                inscritosGeneral: inscripcionesGenerales,
+                inscritosVip: inscripcionesVip,
+                totalInscritos: totalInscripciones
+            },
+            disponibles: {
+                disponiblesGeneral,
+                disponiblesVip,
+                totalDisponibles: totalCupo - totalInscripciones
+            },
+            porcentajes: {
+                ocupacionGeneral: cupoGeneral > 0 ? ((inscripcionesGenerales / cupoGeneral) * 100).toFixed(1) : 0,
+                ocupacionVip: cupoVip > 0 ? ((inscripcionesVip / cupoVip) * 100).toFixed(1) : 0,
+                ocupacionTotal: totalCupo > 0 ? ((totalInscripciones / totalCupo) * 100).toFixed(1) : 0
+            }
+        });
+    } catch (e) {
+        console.error('Error al obtener estadísticas:', e);
+        return res.status(500).json({ message: 'Error al obtener estadísticas' });
     }
 };

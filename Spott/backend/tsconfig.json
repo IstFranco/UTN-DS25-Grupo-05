@@ -16,16 +16,19 @@
         "rootDir": "./src",
         "declaration": true,
         "declarationMap": true,
-        "sourceMap": true
+        "sourceMap": true,
+        "types": ["node"]
     },
     "include": [
-        "src//*"
+        "src/**/*"
     ],
     "exclude": [
         "node_modules",
-        "dist"
+        "dist",
+        "**/*.test.ts"
     ],
     "ts-node": {
-        "esm":true
+        "esm": true,
+        "experimentalSpecifierResolution": "node"
     }
 }
