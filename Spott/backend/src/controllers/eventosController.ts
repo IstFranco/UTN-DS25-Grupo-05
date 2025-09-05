@@ -57,16 +57,29 @@ type CrearEventoBody = {
 // Utilidad para mapear al formato que tu front espera
 const toFrontend = (e: any) => ({
     ...e,
+    
+    // Campos que el frontend espera específicamente
+    id: e.id,
     imageSrc: e.portada ?? '',
     title: e.nombre,
-    description: `Temática: ${e.tematica ?? 'Sin temática'}, Música: ${e.musica}`,
+    description: e.descripcionLarga || `Temática: ${e.tematica ?? 'Sin temática'}, Música: ${e.musica}`,
     rating: (4 + Math.random()).toFixed(1),
+    ciudad: e.ciudad,
+    barrio: e.barrio,
+    tematica: e.tematica,
+    musica: e.musica,
+    fecha: e.fecha,
+    precio: e.precio,
+    cupoGeneral: e.cupoGeneral,
+    cupoVip: e.cupoVip,
+    imagenes: e.imagenes || [],
+    
+    // Calcular inscriptos dinámicamente
+    inscriptos: e._count?.inscripciones || 0
 });
 
 export const crearEvento = async (req: Request, res: Response) => {
     try {
-        console.log('📋 Datos recibidos para crear evento:', req.body);
-        console.log('📁 Archivos recibidos:', req.files);
         const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
         const body = req.body as CrearEventoBody;
 
@@ -146,6 +159,15 @@ export const obtenerEventos = async (req: Request, res: Response) => {
         const eventos = await prisma.evento.findMany({
             where: whereClause,
             orderBy: { fecha: 'asc' },
+            include: {
+                _count: {
+                    select: { 
+                        inscripciones: { 
+                            where: { estado: 'activa' } 
+                        } 
+                    }
+                }
+            }
         });
 
         const data = eventos.map(toFrontend);
@@ -160,7 +182,16 @@ export const obtenerEventoPorId = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
         const evento = await prisma.evento.findFirst({ 
-            where: { id, activo: true } 
+            where: { id, activo: true },
+            include: {
+                _count: {
+                    select: { 
+                        inscripciones: { 
+                            where: { estado: 'activa' } 
+                        } 
+                    }
+                }
+            }
         });
         
         if (!evento) {
@@ -239,6 +270,15 @@ export const obtenerEventosPorEmpresa = async (req: Request, res: Response) => {
         const eventos = await prisma.evento.findMany({
             where: { empresaId, activo: true },
             orderBy: { fecha: 'asc' },
+            include: {
+                _count: {
+                    select: { 
+                        inscripciones: { 
+                            where: { estado: 'activa' } 
+                        } 
+                    }
+                }
+            }
         });
         const data = eventos.map(toFrontend);
         return res.json({ eventos: data, total: data.length });
@@ -362,8 +402,7 @@ export const inscribirseEvento = async (req: Request, res: Response) => {
 
 export const desinscribirseEvento = async (req: Request, res: Response) => {
     try {
-        const { id: eventoId } = req.params;
-        const { usuarioId } = req.body as { usuarioId: string };
+        const { eventoId, usuarioId } = req.params;
 
         if (!usuarioId) {
             return res.status(400).json({ message: 'usuarioId es requerido' });
@@ -396,7 +435,13 @@ export const obtenerEventosInscritos = async (req: Request, res: Response) => {
         const { usuarioId } = req.params;
 
         const inscs = await prisma.inscripcion.findMany({
-            where: { usuarioId, estado: 'activa' },
+            where: { 
+                usuarioId, 
+                estado: 'activa',
+                evento: {
+                    activo: true
+                }
+            },
             include: { evento: true },
         }) as InscripcionConEvento[];
         

@@ -1,6 +1,7 @@
 // src/controllers/usuariosController.ts
 import { Request, Response } from 'express';
 import { prisma } from '../data/prisma.js';
+import { usuarioRegisterSchema } from '../validations/usuariosSchema.js';
 import bcrypt from 'bcryptjs';
 
 
@@ -8,41 +9,40 @@ import bcrypt from 'bcryptjs';
 // Crear usuario
 export const crearUsuario = async (req: Request, res: Response) => {
     try {
-console.log('LLEGÓ REQUEST AL CONTROLLER');
-        // Al inicio de crearUsuario
-console.log('Usuarios existentes en BD:');
-const todosUsuarios = await prisma.usuario.findMany();
-console.log(todosUsuarios);
-        const { nombre, email, password } = req.body;
-
-        if (!nombre || !email || !password) {
-        return res.status(400).json({ message: 'Nombre, email y password son requeridos' });
+        // Validar los datos con Zod
+        const validationResult = usuarioRegisterSchema.safeParse(req.body);
+        
+        if (!validationResult.success) {
+            return res.status(400).json({ 
+                message: 'Datos inválidos',
+                errors: validationResult.error.issues 
+            });
         }
 
+        const { nombre, email, password } = validationResult.data;
+
+        // Verificar si el usuario ya existe
         const usuarioExistente = await prisma.usuario.findUnique({ where: { email } });
         if (usuarioExistente) {
-        return res.status(400).json({ message: 'El email ya está registrado' });
+            return res.status(400).json({ message: 'El email ya está registrado' });
         }
 
         // Hash del password
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const nuevoUsuario = await prisma.usuario.create({
-        data: {
-            nombre,
-            email,
-            password: hashedPassword,
-        },
+            data: {
+                nombre,
+                email,
+                password: hashedPassword,
+            },
         });
 
-        console.log('✅ Usuario creado en BD:', nuevoUsuario.id, nuevoUsuario.email);
-
-        // No devolvemos el password
         const { password: _, ...usuarioSinPassword } = nuevoUsuario;
 
         return res.status(201).json({
-        message: 'Usuario creado exitosamente',
-        usuario: usuarioSinPassword,
+            message: 'Usuario creado exitosamente',
+            usuario: usuarioSinPassword,
         });
     } catch (error) {
         console.error('Error al crear usuario:', error);
