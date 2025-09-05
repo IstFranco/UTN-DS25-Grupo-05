@@ -107,9 +107,9 @@ export default function MisEventos() {
     };
 
     const handleDesinscribirse = async (eventoId) => {
+        console.log('🔴 BOTÓN DESINSCRIBIRSE CLICKEADO');
         if (!window.confirm('¿Estás seguro de que deseas desinscribirte de este evento?')) return;
         try {
-            // Obtener usuarioId del objeto completo
             const usuarioData = JSON.parse(localStorage.getItem('usuario') || '{}');
             const usuarioId = usuarioData.id;
             
@@ -118,7 +118,16 @@ export default function MisEventos() {
                 return;
             }
             
-            await ApiService.desinscribirseEvento(eventoId, usuarioId);
+            const res = await fetch(`http://localhost:3001/api/eventos/${eventoId}/usuario/${usuarioId}`, {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" }
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || "Error al desinscribirse");
+            }
+            
             setEventosInscritos(prev => prev.filter(evento => evento.id !== eventoId));
             const clave = 'eventosUsuario';
             const guardados = JSON.parse(localStorage.getItem(clave)) || [];

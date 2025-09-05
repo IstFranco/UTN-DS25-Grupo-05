@@ -28,12 +28,46 @@ export default function EventoInscripto() {
         musica
     } = state.evento;
 
-    const desinscribirme = () => {
-        const eventos = JSON.parse(localStorage.getItem('eventosUsuario')) || [];
-        const actualizados = eventos.filter(e => e.id !== id);
-        localStorage.setItem('eventosUsuario', JSON.stringify(actualizados));
-        alert('Te desinscribiste del evento');
-        navigate('/usuario');
+    const desinscribirme = async () => {
+        console.log('🔴 BOTÓN DESINSCRIBIRSE CLICKEADO EN EVENTO INSCRIPTO');
+        
+        if (!window.confirm('¿Estás seguro de que deseas desinscribirte de este evento?')) {
+            return;
+        }
+        
+        try {
+            const usuarioData = JSON.parse(localStorage.getItem("usuario") || "{}");
+            const usuarioId = usuarioData.id;
+
+            if (!usuarioId) {
+                alert("Error: No se encontró información del usuario. Inicia sesión nuevamente.");
+                return;
+            }
+
+            const res = await fetch(`http://localhost:3001/api/eventos/${id}/usuario/${usuarioId}`, {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" }
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || "Error al desinscribirse");
+            }
+
+            const data = await res.json();
+            console.log("Desinscripción realizada:", data);
+
+            // Actualizar localStorage también
+            const eventos = JSON.parse(localStorage.getItem('eventosUsuario')) || [];
+            const actualizados = eventos.filter(e => e.id !== id);
+            localStorage.setItem('eventosUsuario', JSON.stringify(actualizados));
+            
+            alert("Te has desinscrito del evento exitosamente");
+            navigate('/usuario');
+        } catch (err) {
+            console.error(err);
+            alert(`Error al desinscribirse del evento: ${err.message}`);
+        }
     };
 
     return (
