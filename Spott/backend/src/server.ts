@@ -8,6 +8,7 @@ import empresasRoutes from './routes/empresas.js';
 import rutasCanciones from './routes/canciones.js';
 import rutasVotos from './routes/votos.js';
 import rutasSpotify from './routes/spotify.js';
+import favoritosRoutes from './routes/favoritos.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -50,9 +51,10 @@ console.log('📋 Registrando rutas...');
 app.use('/api/eventos', eventosRoutes);
 app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/empresas', empresasRoutes);
-app.use('/api/canciones', rutasCanciones);  // ← CORREGIDO: agregado /api/
-app.use('/api/votos', rutasVotos);           // ← CORREGIDO: agregado /api/
-app.use('/api/spotify', rutasSpotify);       // ← CORREGIDO: agregado /api/
+app.use('/api/canciones', rutasCanciones);
+app.use('/api/votos', rutasVotos);  
+app.use('/api/spotify', rutasSpotify);
+app.use('/api/favoritos', favoritosRoutes);
 console.log('✅ Todas las rutas registradas');
 
 // Ruta de prueba
@@ -76,3 +78,4 @@ app.listen(PORT, () => {
     console.log('   - /api/votos');
     console.log('   - /api/spotify');
 });
+
