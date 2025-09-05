@@ -24,7 +24,6 @@ export default function CrearEvento() {
         tematica: '',
         musica: '',
         precio: '',
-        cupo: '',
         descripcionLarga: '',
         edadMinima: '',
         entradasGenerales: '',
@@ -235,9 +234,6 @@ export default function CrearEvento() {
                         min="0"
                         placeholder="Ingrese el precio..."
                     />
-
-                    <label>Cupo total de entradas:</label>
-                    <input type="number" name="cupo" value={formulario.cupo} onChange={handleChange} min="1" placeholder="Ingrese la cantidad maxima de personas..." required />
 
                     <label>Cupo entradas generales:</label>
                     <input type="number" name="entradasGenerales" value={formulario.entradasGenerales} onChange={handleChange} min="0" />
