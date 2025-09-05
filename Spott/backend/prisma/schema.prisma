@@ -14,6 +14,7 @@ model Usuario {
   creadoEn      DateTime      @default(now())
   actualizadoEn DateTime      @updatedAt
   password      String
+  favoritos     Favorito[]
   inscripciones Inscripcion[]
   votos         Voto[]
 }
@@ -51,6 +52,7 @@ model Evento {
   empresaId          String
   canciones          Cancion[]
   empresa            Empresa       @relation(fields: [empresaId], references: [id])
+  favoritos          Favorito[]
   inscripciones      Inscripcion[]
 }
 
@@ -63,6 +65,17 @@ model Inscripcion {
   fechaInscripcion DateTime          @default(now())
   evento           Evento            @relation(fields: [eventoId], references: [id])
   usuario          Usuario           @relation(fields: [usuarioId], references: [id])
+
+  @@unique([usuarioId, eventoId])
+}
+
+model Favorito {
+  id        String   @id @default(uuid())
+  usuarioId String
+  eventoId  String
+  creadoEn  DateTime @default(now())
+  evento    Evento   @relation(fields: [eventoId], references: [id])
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id])
 
   @@unique([usuarioId, eventoId])
 }
