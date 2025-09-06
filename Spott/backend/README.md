@@ -16,3 +16,8 @@ Esre proyecto corresponde al trabajo practico de la materia.El backend esta desa
 - **Desinscripciones**: se gestionan correctamente para mantener integridad de datos.  
 
 Los controladores están organizados de forma modular y separan la lógica de negocio de las rutas.
+## Observaciones relevantes
+
+- Durante las pruebas, se detectó y resolvió un error en el proceso de desinscripción de eventos (se esperaba JSON pero respondía HTML).  
+- Se agregó manejo de errores con mensajes claros hacia el cliente.  
+- El backend está preparado para futuras ampliaciones (ejemplo: notificaciones, integración con APIs externas).
