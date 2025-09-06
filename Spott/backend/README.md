@@ -21,3 +21,10 @@ Los controladores están organizados de forma modular y separan la lógica de ne
 - Durante las pruebas, se detectó y resolvió un error en el proceso de desinscripción de eventos (se esperaba JSON pero respondía HTML).  
 - Se agregó manejo de errores con mensajes claros hacia el cliente.  
 - El backend está preparado para futuras ampliaciones (ejemplo: notificaciones, integración con APIs externas).
+## Créditos del equipo
+
+Este trabajo fue realizado en equipo por los integrantes del grupo, cada uno aportando en distintas áreas:  
+
+- **Backend**: desarrollo de controladores, validaciones, configuración de Prisma y conexión con base de datos.  
+- **Frontend**: vistas de login, registro e interacción con eventos.  
+- **Integración**: pruebas de endpoints, debugging y documentación.
