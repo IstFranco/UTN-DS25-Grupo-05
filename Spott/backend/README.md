@@ -1,5 +1,6 @@
-###Notas de la entrega:
-Este proyecto corresponde al trabajo practico de la materia.El backend esta desarrollado en **Node.js con Express**, con **Prisma** como ORM y conexion a base de datos.El repositorio incluye tanto el frontend como el backend.
+Notas de la entrega:
+
+- Este proyecto corresponde al trabajo practico de la materia.El backend esta desarrollado en **Node.js con Express**, con **Prisma** como ORM y conexion a base de datos.El repositorio incluye tanto el frontend como el backend.
 
 ### Funcionalidades implementadas
 
