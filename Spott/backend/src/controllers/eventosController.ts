@@ -1,13 +1,13 @@
 // src/controllers/eventosController.ts
 import { Request, Response } from 'express';
-import { z } from 'zod';
+import { z, ZodIssue } from 'zod';
 import { prisma } from '../data/prisma.js';
 import { 
     crearEventoSchema, 
     actualizarEventoSchema, 
     filtrosEventoSchema, 
     inscripcionSchema 
-} from '../validations/eventoSchema.js';
+} from '../validations/eventoSchemas.js';
 
 // ---- Tipos auxiliares ----
 type InscripcionConEvento = {
@@ -72,7 +72,7 @@ export const crearEvento = async (req: Request, res: Response) => {
         const validationResult = crearEventoSchema.safeParse(req.body);
         
         if (!validationResult.success) {
-            const errors = validationResult.error.issues.map(err => ({
+            const errors = validationResult.error.issues.map((err: ZodIssue) => ({
                 field: err.path.join('.'),
                 message: err.message
             }));
@@ -134,7 +134,7 @@ export const obtenerEventos = async (req: Request, res: Response) => {
         const validationResult = filtrosEventoSchema.safeParse(req.query);
         
         if (!validationResult.success) {
-            const errors = validationResult.error.issues.map(err => ({
+            const errors = validationResult.error.issues.map((err: ZodIssue) => ({
                 field: err.path.join('.'),
                 message: err.message
             }));
@@ -233,7 +233,7 @@ export const obtenerEventoPorId = async (req: Request, res: Response) => {
 export const actualizarEvento = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        
+    
         // Validar que el ID sea un UUID válido
         const idValidation = z.string().uuid().safeParse(id);
         if (!idValidation.success) {
@@ -246,7 +246,7 @@ export const actualizarEvento = async (req: Request, res: Response) => {
         const validationResult = actualizarEventoSchema.safeParse(req.body);
         
         if (!validationResult.success) {
-            const errors = validationResult.error.errors.map(err => ({
+            const errors = validationResult.error.issues.map((err: ZodIssue) => ({
                 field: err.path.join('.'),
                 message: err.message
             }));
@@ -364,7 +364,7 @@ export const inscribirseEvento = async (req: Request, res: Response) => {
         const validationResult = inscripcionSchema.safeParse(req.body);
         
         if (!validationResult.success) {
-            const errors = validationResult.error.errors.map(err => ({
+            const errors = validationResult.error.issues.map((err: ZodIssue) => ({
                 field: err.path.join('.'),
                 message: err.message
             }));
