@@ -6,6 +6,7 @@ import bcrypt from 'bcryptjs';
 
 // Crear usuario
 export const crearUsuario = async (req: Request, res: Response) => {
+    console.log("LLEGÓ REQUEST AL CONTROLLER");
     try {
         // Validar los datos con Zod
         const validationResult = usuarioRegisterSchema.safeParse(req.body);
@@ -17,7 +18,16 @@ export const crearUsuario = async (req: Request, res: Response) => {
             });
         }
 
-        const { nombre, email, password, edad, ciudad } = validationResult.data;
+        let { nombre, email, password, edad, ciudad } = validationResult.data;
+
+        // Convertir edad a número si viene como string
+        if (edad !== undefined && typeof edad === 'string') {
+            edad = parseInt(edad, 10);
+        }
+
+        console.log("Usuarios existentes en BD:");
+        const usuariosExistentes = await prisma.usuario.findMany();
+        console.log(usuariosExistentes);
 
         // Verificar si el usuario ya existe
         const usuarioExistente = await prisma.usuario.findUnique({ where: { email } });
@@ -28,12 +38,13 @@ export const crearUsuario = async (req: Request, res: Response) => {
         // Hash del password
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        // Crear usuario (edad es opcional)
         const nuevoUsuario = await prisma.usuario.create({
             data: {
                 nombre,
                 email,
                 password: hashedPassword,
-                edad,
+                edad: edad ?? null,
                 ciudad: ciudad || null,
             },
         });
@@ -104,17 +115,14 @@ export const actualizarUsuario = async (req: Request, res: Response) => {
         const { id } = req.params;
         const { nombre, email, password, edad, ciudad } = req.body;
 
-        // Validar contraseña antes de procesarla
         if (password && password.length < 6) {
             return res.status(400).json({ message: 'La contraseña debe tener al menos 6 caracteres' });
         }
 
-        // Validar edad si se proporciona
         if (edad !== undefined && (edad < 1 || edad > 120)) {
             return res.status(400).json({ message: 'La edad debe estar entre 1 y 120 años' });
         }
 
-        // Validar email
         if (email) {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email)) {
@@ -130,15 +138,11 @@ export const actualizarUsuario = async (req: Request, res: Response) => {
         }
 
         const data: any = {};
-
         if (nombre !== undefined) data.nombre = nombre;
         if (email !== undefined) data.email = email;
         if (edad !== undefined) data.edad = edad;
         if (ciudad !== undefined) data.ciudad = ciudad;
-
-        if (password) {
-            data.password = await bcrypt.hash(password, 10);
-        }
+        if (password) data.password = await bcrypt.hash(password, 10);
 
         const usuario = await prisma.usuario.update({
             where: { id },
