@@ -9,3 +9,10 @@ Esre proyecto corresponde al trabajo practico de la materia.El backend esta desa
 - Validaciones en formularios (backend y frontend).
 - Uso de Prisma para la persistencia de datos.
 - Endpoints RESTful organizados en **controllers**.
+##validaciones y Controladores:
+- **Usuarios**: se validan datos obligatorios como nombre, email y contraseña.  
+- **Eventos**: se verifica que contengan título, fecha y descripción antes de persistirlos.  
+- **Inscripciones**: el sistema controla que un usuario no se inscriba dos veces en el mismo evento.  
+- **Desinscripciones**: se gestionan correctamente para mantener integridad de datos.  
+
+Los controladores están organizados de forma modular y separan la lógica de negocio de las rutas.
