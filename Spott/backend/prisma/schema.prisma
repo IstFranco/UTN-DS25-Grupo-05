@@ -11,6 +11,8 @@ model Usuario {
   id            String        @id @default(uuid())
   nombre        String
   email         String        @unique
+  edad          Int
+  ciudad        String?
   creadoEn      DateTime      @default(now())
   actualizadoEn DateTime      @updatedAt
   password      String
@@ -41,9 +43,17 @@ model Evento {
   tematica           String?
   musica             String
   fecha              DateTime
+  horaInicio         String?
   precio             Float?
+  precioVip          Float?
   cupoGeneral        Int?
   cupoVip            Int?
+  edadMinima         Int?
+  estilo             String?
+  accesible          Boolean       @default(false)
+  linkExterno        String?
+  politicaCancelacion String?
+  hashtag            String?
   portada            String?
   imagenes           String[]
   activo             Boolean       @default(true)
