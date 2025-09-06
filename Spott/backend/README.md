@@ -19,6 +19,7 @@ Notas de la entrega:
 - **Desinscripciones**: se gestionan correctamente para mantener integridad de datos.  
 
 Los controladores están organizados de forma modular y separan la lógica de negocio de las rutas.
+
 ## Observaciones relevantes
 
 - Durante las pruebas, se detectó y resolvió un error en el proceso de desinscripción de eventos (se esperaba JSON pero respondía HTML).  
