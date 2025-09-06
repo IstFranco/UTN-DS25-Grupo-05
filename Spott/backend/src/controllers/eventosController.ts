@@ -1,9 +1,15 @@
 // src/controllers/eventosController.ts
 import { Request, Response } from 'express';
+import { z } from 'zod';
 import { prisma } from '../data/prisma.js';
+import { 
+    crearEventoSchema, 
+    actualizarEventoSchema, 
+    filtrosEventoSchema, 
+    inscripcionSchema 
+} from '../validations/eventoSchema.js';
 
 // ---- Tipos auxiliares ----
-// Alternativa más simple sin usar Prisma.InscripcionGetPayload
 type InscripcionConEvento = {
     id: string;
     usuarioId: string;
@@ -21,6 +27,7 @@ type InscripcionConEvento = {
         musica: string;
         fecha: Date;
         precio?: number | null;
+        precioVip?: number | null;
         cupoGeneral?: number | null;
         cupoVip?: number | null;
         portada?: string | null;
@@ -30,28 +37,6 @@ type InscripcionConEvento = {
         fechaActualizacion: Date;
         empresaId: string;
     };
-};
-
-type FiltrosEvento = {
-    ciudad?: string;
-    musica?: string;
-    busqueda?: string;
-    fechaDesde?: string;
-    fechaHasta?: string;
-};
-
-type CrearEventoBody = {
-    nombre: string;
-    descripcionLarga?: string;
-    ciudad: string;
-    barrio?: string;
-    tematica?: string;
-    musica: string;
-    fecha: string;
-    precio?: string | number;
-    cupoGeneral?: string | number;
-    cupoVip?: string | number;
-    empresaId: string;
 };
 
 // Utilidad para mapear al formato que tu front espera
@@ -70,6 +55,7 @@ const toFrontend = (e: any) => ({
     musica: e.musica,
     fecha: e.fecha,
     precio: e.precio,
+    precioVip: e.precioVip,
     cupoGeneral: e.cupoGeneral,
     cupoVip: e.cupoVip,
     imagenes: e.imagenes || [],
@@ -81,14 +67,23 @@ const toFrontend = (e: any) => ({
 export const crearEvento = async (req: Request, res: Response) => {
     try {
         const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-        const body = req.body as CrearEventoBody;
-
-        // Validaciones básicas
-        if (!body.nombre || !body.ciudad || !body.musica || !body.fecha || !body.empresaId) {
+        
+        // Validar datos del formulario con Zod
+        const validationResult = crearEventoSchema.safeParse(req.body);
+        
+        if (!validationResult.success) {
+            const errors = validationResult.error.issues.map(err => ({
+                field: err.path.join('.'),
+                message: err.message
+            }));
+            
             return res.status(400).json({ 
-                message: 'nombre, ciudad, musica, fecha y empresaId son requeridos' 
+                message: 'Datos de entrada inválidos',
+                errors 
             });
         }
+
+        const body = validationResult.data;
 
         // Manejo seguro de archivos
         const portada = files?.portada?.[0] ? `/uploads/${files.portada[0].filename}` : null;
@@ -102,10 +97,18 @@ export const crearEvento = async (req: Request, res: Response) => {
                 barrio: body.barrio || null,
                 tematica: body.tematica || null,
                 musica: body.musica,
-                fecha: new Date(body.fecha),
-                precio: body.precio ? Number(body.precio) : null,
-                cupoGeneral: body.cupoGeneral ? Number(body.cupoGeneral) : null,
-                cupoVip: body.cupoVip ? Number(body.cupoVip) : null,
+                fecha: body.fecha,
+                horaInicio: body.horaInicio || null,
+                precio: body.precio || null,
+                precioVip: body.precioVip || null,
+                cupoGeneral: body.cupoGeneral || null,
+                cupoVip: body.cupoVip || null,
+                edadMinima: body.edadMinima || null,
+                estilo: body.estilo || null,
+                accesible: body.accesible,
+                linkExterno: body.linkExterno || null,
+                politicaCancelacion: body.politicaCancelacion || null,
+                hashtag: body.hashtag || null,
                 portada,
                 imagenes,
                 empresaId: body.empresaId,
@@ -127,7 +130,22 @@ export const crearEvento = async (req: Request, res: Response) => {
 
 export const obtenerEventos = async (req: Request, res: Response) => {
     try {
-        const q = req.query as FiltrosEvento;
+        // Validar filtros con Zod
+        const validationResult = filtrosEventoSchema.safeParse(req.query);
+        
+        if (!validationResult.success) {
+            const errors = validationResult.error.issues.map(err => ({
+                field: err.path.join('.'),
+                message: err.message
+            }));
+            
+            return res.status(400).json({ 
+                message: 'Filtros inválidos',
+                errors 
+            });
+        }
+
+        const q = validationResult.data;
 
         const whereClause: any = {
             activo: true,
@@ -149,11 +167,11 @@ export const obtenerEventos = async (req: Request, res: Response) => {
         }
 
         if (q.fechaDesde) {
-            whereClause.fecha = { ...whereClause.fecha, gte: new Date(q.fechaDesde) };
+            whereClause.fecha = { ...whereClause.fecha, gte: q.fechaDesde };
         }
 
         if (q.fechaHasta) {
-            whereClause.fecha = { ...whereClause.fecha, lte: new Date(q.fechaHasta) };
+            whereClause.fecha = { ...whereClause.fecha, lte: q.fechaHasta };
         }
 
         const eventos = await prisma.evento.findMany({
@@ -181,6 +199,13 @@ export const obtenerEventos = async (req: Request, res: Response) => {
 export const obtenerEventoPorId = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
+        
+        // Validar que el ID sea un UUID válido
+        const idValidation = z.string().uuid().safeParse(id);
+        if (!idValidation.success) {
+            return res.status(400).json({ message: 'ID de evento inválido' });
+        }
+        
         const evento = await prisma.evento.findFirst({ 
             where: { id, activo: true },
             include: {
@@ -208,8 +233,31 @@ export const obtenerEventoPorId = async (req: Request, res: Response) => {
 export const actualizarEvento = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
+        
+        // Validar que el ID sea un UUID válido
+        const idValidation = z.string().uuid().safeParse(id);
+        if (!idValidation.success) {
+            return res.status(400).json({ message: 'ID de evento inválido' });
+        }
+
         const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-        const body = req.body as Partial<CrearEventoBody>;
+        
+        // Validar datos del formulario con Zod
+        const validationResult = actualizarEventoSchema.safeParse(req.body);
+        
+        if (!validationResult.success) {
+            const errors = validationResult.error.errors.map(err => ({
+                field: err.path.join('.'),
+                message: err.message
+            }));
+            
+            return res.status(400).json({ 
+                message: 'Datos de entrada inválidos',
+                errors 
+            });
+        }
+
+        const body = validationResult.data;
 
         const portada = files?.portada?.[0] ? `/uploads/${files.portada[0].filename}` : undefined;
         const nuevasImgs = files?.imagenes?.map((f) => `/uploads/${f.filename}`);
@@ -222,10 +270,10 @@ export const actualizarEvento = async (req: Request, res: Response) => {
         if (body.barrio !== undefined) updateData.barrio = body.barrio;
         if (body.tematica !== undefined) updateData.tematica = body.tematica;
         if (body.musica !== undefined) updateData.musica = body.musica;
-        if (body.fecha !== undefined) updateData.fecha = new Date(body.fecha);
         if (body.precio !== undefined) updateData.precio = body.precio ? Number(body.precio) : null;
-        if (body.cupoGeneral !== undefined) updateData.cupoGeneral = body.cupoGeneral ? Number(body.cupoGeneral) : null;
-        if (body.cupoVip !== undefined) updateData.cupoVip = body.cupoVip ? Number(body.cupoVip) : null;
+        if (body.precioVip !== undefined) updateData.precioVip = body.precioVip ? Number(body.precioVip) : null;
+        if (body.cupoGeneral !== undefined) updateData.cupoGeneral = body.cupoGeneral;
+        if (body.cupoVip !== undefined) updateData.cupoVip = body.cupoVip;
         if (portada !== undefined) updateData.portada = portada;
         if (nuevasImgs !== undefined) updateData.imagenes = nuevasImgs;
 
@@ -250,6 +298,13 @@ export const actualizarEvento = async (req: Request, res: Response) => {
 export const eliminarEvento = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
+        
+        // Validar que el ID sea un UUID válido
+        const idValidation = z.string().uuid().safeParse(id);
+        if (!idValidation.success) {
+            return res.status(400).json({ message: 'ID de evento inválido' });
+        }
+        
         await prisma.evento.update({ 
             where: { id }, 
             data: { activo: false } 
@@ -267,6 +322,13 @@ export const eliminarEvento = async (req: Request, res: Response) => {
 export const obtenerEventosPorEmpresa = async (req: Request, res: Response) => {
     try {
         const { empresaId } = req.params;
+        
+        // Validar que el ID sea un UUID válido
+        const idValidation = z.string().uuid().safeParse(empresaId);
+        if (!idValidation.success) {
+            return res.status(400).json({ message: 'ID de empresa inválido' });
+        }
+        
         const eventos = await prisma.evento.findMany({
             where: { empresaId, activo: true },
             orderBy: { fecha: 'asc' },
@@ -291,15 +353,29 @@ export const obtenerEventosPorEmpresa = async (req: Request, res: Response) => {
 export const inscribirseEvento = async (req: Request, res: Response) => {
     try {
         const { id: eventoId } = req.params;
-        const { usuarioId, tipoEntrada } = req.body as { usuarioId: string; tipoEntrada: 'general' | 'vip' };
-
-        if (!usuarioId) {
-            return res.status(400).json({ message: 'usuarioId es requerido' });
+        
+        // Validar que el ID del evento sea un UUID válido
+        const idValidation = z.string().uuid().safeParse(eventoId);
+        if (!idValidation.success) {
+            return res.status(400).json({ message: 'ID de evento inválido' });
         }
 
-        if (!['general', 'vip'].includes(tipoEntrada)) {
-            return res.status(400).json({ message: "tipoEntrada debe ser 'general' o 'vip'" });
+        // Validar datos de inscripción con Zod
+        const validationResult = inscripcionSchema.safeParse(req.body);
+        
+        if (!validationResult.success) {
+            const errors = validationResult.error.errors.map(err => ({
+                field: err.path.join('.'),
+                message: err.message
+            }));
+            
+            return res.status(400).json({ 
+                message: 'Datos de inscripción inválidos',
+                errors 
+            });
         }
+
+        const { usuarioId, tipoEntrada } = validationResult.data;
 
         // 1. OBTENER EL EVENTO Y VERIFICAR QUE EXISTE
         const evento = await prisma.evento.findFirst({
@@ -404,8 +480,12 @@ export const desinscribirseEvento = async (req: Request, res: Response) => {
     try {
         const { eventoId, usuarioId } = req.params;
 
-        if (!usuarioId) {
-            return res.status(400).json({ message: 'usuarioId es requerido' });
+        // Validar que los IDs sean UUIDs válidos
+        const eventoIdValidation = z.string().uuid().safeParse(eventoId);
+        const usuarioIdValidation = z.string().uuid().safeParse(usuarioId);
+        
+        if (!eventoIdValidation.success || !usuarioIdValidation.success) {
+            return res.status(400).json({ message: 'IDs inválidos' });
         }
 
         const inscActiva = await prisma.inscripcion.findFirst({
@@ -434,6 +514,12 @@ export const obtenerEventosInscritos = async (req: Request, res: Response) => {
         console.log('🔥 Params:', req.params);
         const { usuarioId } = req.params;
 
+        // Validar que el ID sea un UUID válido
+        const idValidation = z.string().uuid().safeParse(usuarioId);
+        if (!idValidation.success) {
+            return res.status(400).json({ message: 'ID de usuario inválido' });
+        }
+
         const inscs = await prisma.inscripcion.findMany({
             where: { 
                 usuarioId, 
@@ -458,6 +544,12 @@ export const obtenerEventosInscritos = async (req: Request, res: Response) => {
 export const obtenerEstadisticasEvento = async (req: Request, res: Response) => {
     try {
         const { id: eventoId } = req.params;
+        
+        // Validar que el ID sea un UUID válido
+        const idValidation = z.string().uuid().safeParse(eventoId);
+        if (!idValidation.success) {
+            return res.status(400).json({ message: 'ID de evento inválido' });
+        }
         
         const evento = await prisma.evento.findFirst({
             where: { id: eventoId, activo: true }
