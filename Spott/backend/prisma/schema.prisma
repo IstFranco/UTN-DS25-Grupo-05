@@ -11,7 +11,7 @@ model Usuario {
   id            String        @id @default(uuid())
   nombre        String
   email         String        @unique
-  edad          Int
+  edad          Int?
   ciudad        String?
   creadoEn      DateTime      @default(now())
   actualizadoEn DateTime      @updatedAt
