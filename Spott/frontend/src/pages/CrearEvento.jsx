@@ -24,6 +24,7 @@ export default function CrearEvento() {
         tematica: '',
         musica: '',
         precio: '',
+        precioVip: '',
         descripcionLarga: '',
         edadMinima: '',
         entradasGenerales: '',
@@ -224,7 +225,7 @@ export default function CrearEvento() {
                         <option value="classical">Clásica</option>
                     </select>
 
-                    <label>Precio estimado:</label>
+                    <label>Precio entrada general:</label>
                     <input
                         type="number"
                         name="precio"
@@ -237,6 +238,17 @@ export default function CrearEvento() {
 
                     <label>Cupo entradas generales:</label>
                     <input type="number" name="entradasGenerales" value={formulario.entradasGenerales} onChange={handleChange} min="0" />
+
+                    <label>Precio entrada VIP:</label>
+                    <input
+                        type="number"
+                        name="precioVip"
+                        value={formulario.precioVip}
+                        onChange={handleChange}
+                        step="0.01"
+                        min="0"
+                        placeholder="Ingrese el precio..."
+                    />
 
                     <label>Cupo entradas VIP:</label>
                     <input type="number" name="entradasVIP" value={formulario.entradasVIP} onChange={handleChange} min="0" />
