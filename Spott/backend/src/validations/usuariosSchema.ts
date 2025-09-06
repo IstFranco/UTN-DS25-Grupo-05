@@ -12,6 +12,7 @@ export const usuarioRegisterSchema = z.object({
     nombre: z.string().trim().min(1, "El nombre es obligatorio"),
     email: z.string().trim().toLowerCase().email("Email inválido"),
     password: passwordSchema,
+    edad: z.coerce.number().int().min(1, "La edad debe ser mayor a 0").max(120, "La edad no puede ser mayor a 120"),
     ciudad: z.string().trim().optional(),
 });
 

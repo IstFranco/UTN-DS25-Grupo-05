@@ -10,6 +10,7 @@ export const crearEventoSchema = z.object({
     fecha: z.coerce.date(),
     horaInicio: z.string().optional().nullable(),
     precio: z.coerce.number().min(0, "El precio no puede ser negativo").optional().nullable(),
+    precioVip: z.coerce.number().min(0, "El precio VIP no puede ser negativo").optional().nullable(),
     cupoGeneral: z.coerce.number().int().min(0, "El cupo general no puede ser negativo").optional().default(0),
     cupoVip: z.coerce.number().int().min(0, "El cupo VIP no puede ser negativo").optional().default(0),
     edadMinima: z.coerce.number().int().min(0).max(100, "La edad mínima debe estar entre 0 y 100").optional().nullable(),
@@ -35,6 +36,17 @@ export const crearEventoSchema = z.object({
 }, {
     message: "La fecha del evento no puede ser en el pasado",
     path: ["fecha"]
+}).refine((data) => {
+    // VALIDACIÓN: Si hay cupo VIP, debe haber precio VIP
+    const cupoVip = data.cupoVip || 0;
+    const precioVip = data.precioVip;
+    if (cupoVip > 0 && (!precioVip || precioVip <= 0)) {
+        return false;
+    }
+    return true;
+}, {
+    message: "Si hay cupo VIP, debe especificar un precio VIP válido",
+    path: ["precioVip"]
 });
 
 export const actualizarEventoSchema = z.object({
@@ -47,12 +59,13 @@ export const actualizarEventoSchema = z.object({
     fecha: z.coerce.date().optional(),
     horaInicio: z.string().optional().nullable(),
     precio: z.coerce.number().min(0).optional().nullable(),
+    precioVip: z.coerce.number().min(0).optional().nullable(),
     cupoGeneral: z.coerce.number().int().min(0).optional(),
     cupoVip: z.coerce.number().int().min(0).optional(),
     edadMinima: z.coerce.number().int().min(0).max(100).optional().nullable(),
     estilo: z.string().optional().nullable(),
     accesible: z.coerce.boolean().optional(),
-    linkExterno: z.string().url().optional().nullable(),
+    linkExterno: z.string().url().optional().nullable().or(z.literal("")),
     politicaCancelacion: z.string().max(500).optional().nullable(),
     hashtag: z.string().max(50).optional().nullable(),
 }).refine((data) => {
@@ -64,6 +77,15 @@ export const actualizarEventoSchema = z.object({
 }, {
     message: "Debe especificar al menos entrada general",
     path: ["cupoGeneral"]
+}).refine((data) => {
+    // VALIDACIÓN: Si hay cupo VIP, debe haber precio VIP
+    if (data.cupoVip !== undefined && data.cupoVip > 0) {
+        return data.precioVip !== undefined && data.precioVip !== null && data.precioVip > 0;
+    }
+    return true;
+}, {
+    message: "Si hay cupo VIP, debe especificar un precio VIP válido",
+    path: ["precioVip"]
 });
 
 export const filtrosEventoSchema = z.object({
