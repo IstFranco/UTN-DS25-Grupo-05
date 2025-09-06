@@ -40,9 +40,38 @@ export default function Registro() {
       return;
     }
 
-    if (rol === "usuario" && (!edad || edad < 1 || edad > 120)) {
-      setError("Debe ingresar una edad válida (1-120 años)");
+    // Validación de email para dominios permitidos
+    if (!/^[\w.+-]+@(gmail\.com|hotmail\.com|outlook\.com)$/.test(email)) {
+      setError("Solo se permiten correos @gmail.com, @hotmail.com o @outlook.com");
       return;
+    }
+
+    // Validación de contraseña mínima, máxima y contenido
+    if (password.trim().length < 6) {
+      setError("La contraseña debe tener al menos 6 caracteres");
+      return;
+    }
+    if (password.trim().length > 72) {
+      setError("La contraseña no puede superar 72 caracteres");
+      return;
+    }
+    if (!/[A-Za-z]/.test(password)) {
+      setError("La contraseña debe incluir al menos una letra");
+      return;
+    }
+    if (!/\d/.test(password)) {
+      setError("La contraseña debe incluir al menos un número");
+      return;
+    }
+
+    // Validación de edad solo para usuarios
+    let edadNumber;
+    if (rol === "usuario") {
+      edadNumber = parseInt(edad, 10);
+      if (isNaN(edadNumber) || edadNumber < 1 || edadNumber > 120) {
+        setError("Debe ingresar una edad válida (1-120 años)");
+        return;
+      }
     }
 
     try {
@@ -56,7 +85,7 @@ export default function Registro() {
       const bodyData =
         rol === "empresa"
           ? { nombre, email, password, ciudad }
-          : { nombre, email, password, edad: parseInt(edad), ciudad };
+          : { nombre, email, password, edad: edadNumber, ciudad };
 
       const res = await fetch(url, {
         method: "POST",
