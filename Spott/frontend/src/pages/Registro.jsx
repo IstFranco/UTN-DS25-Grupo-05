@@ -3,160 +3,133 @@ import { useState } from "react";
 import "../app.css";
 
 function extractZodMessage(data) {
-  // Tu validate.ts devuelve: { message, errors: err.flatten(), details: err.issues }
-    try {
+  try {
     if (data?.errors?.fieldErrors) {
-        const firstKey = Object.keys(data.errors.fieldErrors)[0];
-        const msgs = data.errors.fieldErrors[firstKey];
-        if (Array.isArray(msgs) && msgs.length) return msgs[0];
+      const firstKey = Object.keys(data.errors.fieldErrors)[0];
+      const msgs = data.errors.fieldErrors[firstKey];
+      if (Array.isArray(msgs) && msgs.length) return msgs[0];
     }
     if (Array.isArray(data?.details) && data.details.length) {
-        return data.details[0]?.message || "Error de validación";
+      return data.details[0]?.message || "Error de validación";
     }
     if (typeof data?.message === "string" && data.message.trim()) {
-        return data.message;
+      return data.message;
     }
-    } catch {}
-    return "Error de validación";
+  } catch {}
+  return "Error de validación";
 }
 
 export default function Registro() {
-    const { rol } = useParams();
-    const navigate = useNavigate();
+  const { rol } = useParams();
+  const navigate = useNavigate();
 
-    const [nombre, setNombre] = useState("");
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState(""); // NUEVO (solo se usa para usuario)
-    const [ciudad, setCiudad] = useState("");
-    const [error, setError] = useState("");
-    const [loading, setLoading] = useState(false);
+  const [nombre, setNombre] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [edad, setEdad] = useState(""); // solo para usuario
+  const [ciudad, setCiudad] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-    const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
-    // Reglas mínimas en el front (el back también valida)
     if (!nombre || !email || !password) {
-        setError("Todos los campos obligatorios deben estar completos");
-        return;
+      setError("Todos los campos son obligatorios");
+      return;
     }
-    if (password.trim().length < 6) {
-        setError("La contraseña debe tener al menos 6 caracteres");
-        return;
-    }
-    // Solo exigimos confirmación para usuarios (no empresas)
-    if (rol !== "empresa" && password !== confirmPassword) {
-        setError("Las contraseñas no coinciden");
-        return;
+
+    if (rol === "usuario" && (!edad || edad < 1 || edad > 120)) {
+      setError("Debe ingresar una edad válida (1-120 años)");
+      return;
     }
 
     try {
-        setLoading(true);
+      setLoading(true);
 
-        const url =
+      const url =
         rol === "empresa"
-            ? "http://localhost:3001/api/empresas/registro"
-            : "http://localhost:3001/api/usuarios/registro";
+          ? "http://localhost:3001/api/empresas/registro"
+          : "http://localhost:3001/api/usuarios/registro";
 
-      // Enviamos confirmPassword solo para usuario (para que Zod la pueda validar si la pedimos)
-        const payload =
+      const bodyData =
         rol === "empresa"
-            ? { nombre, email, password, ciudad }
-            : { nombre, email, password, confirmPassword, ciudad };
+          ? { nombre, email, password, ciudad }
+          : { nombre, email, password, edad: parseInt(edad), ciudad };
 
-        const res = await fetch(url, {
+      const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-        });
+        body: JSON.stringify(bodyData),
+      });
 
-      // Si hay error, mostramos mensaje del backend (Zod o genérico)
-        if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
+      const data = await res.json();
+
+      if (!res.ok) {
         setError(extractZodMessage(data) || "Error en registro");
         return;
-        }
+      }
 
-        const data = await res.json();
-
-      // Guardar según rol
-        if (rol === "empresa") {
+      if (rol === "empresa") {
         localStorage.setItem("empresa", JSON.stringify(data.empresa));
         navigate("/empresa");
-        } else {
+      } else {
         localStorage.setItem("usuario", JSON.stringify(data.usuario));
         navigate("/usuario");
-        }
+      }
     } catch (err) {
-        setError("No se pudo conectar al servidor");
+      setError("No se pudo conectar al servidor");
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-    };
+  };
 
-    return (
+  return (
     <div className="login-container">
-        <div className="login-box">
+      <div className="login-box">
         <h2>Registro de {rol === "empresa" ? "Empresa" : "Usuario"}</h2>
         {error && <p className="login-error">{error}</p>}
-
-        <form onSubmit={handleSubmit} className="login-form" noValidate>
-            <input
+        <form onSubmit={handleSubmit} className="login-form">
+          <input
             type="text"
             placeholder="Nombre"
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
-            required
-            autoComplete="name"
-            />
-
-            <input
+          />
+          <input
             type="email"
             placeholder="Correo electrónico"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required
-            autoComplete="email"
-            />
-
-            <input
+          />
+          <input
             type="password"
-            placeholder="Contraseña (mínimo 6)"
+            placeholder="Contraseña"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={6}
-            maxLength={72}
-            autoComplete="new-password"
-            />
-
-            {rol !== "empresa" && (
+          />
+          {rol === "usuario" && (
             <input
-                type="password"
-                placeholder="Confirmar contraseña"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                minLength={6}
-                maxLength={72}
-                autoComplete="new-password"
+              type="number"
+              placeholder="Edad"
+              value={edad}
+              onChange={(e) => setEdad(e.target.value)}
+              min="1"
+              max="120"
             />
-            )}
-
-            <input
+          )}
+          <input
             type="text"
             placeholder="Ciudad"
             value={ciudad}
             onChange={(e) => setCiudad(e.target.value)}
-            autoComplete="address-level2"
-            />
-
-            <button type="submit" disabled={loading}>
+          />
+          <button type="submit" disabled={loading}>
             {loading ? "Creando cuenta..." : "Registrarse"}
-            </button>
+          </button>
         </form>
-        </div>
+      </div>
     </div>
-    );
+  );
 }

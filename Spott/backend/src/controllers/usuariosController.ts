@@ -4,8 +4,6 @@ import { prisma } from '../data/prisma.js';
 import { usuarioRegisterSchema } from '../validations/usuariosSchema.js';
 import bcrypt from 'bcryptjs';
 
-
-
 // Crear usuario
 export const crearUsuario = async (req: Request, res: Response) => {
     try {
@@ -19,7 +17,7 @@ export const crearUsuario = async (req: Request, res: Response) => {
             });
         }
 
-        const { nombre, email, password } = validationResult.data;
+        const { nombre, email, password, edad, ciudad } = validationResult.data;
 
         // Verificar si el usuario ya existe
         const usuarioExistente = await prisma.usuario.findUnique({ where: { email } });
@@ -35,6 +33,8 @@ export const crearUsuario = async (req: Request, res: Response) => {
                 nombre,
                 email,
                 password: hashedPassword,
+                edad,
+                ciudad: ciudad || null,
             },
         });
 
@@ -56,23 +56,23 @@ export const loginUsuario = async (req: Request, res: Response) => {
         const { email, password } = req.body;
 
         if (!email || !password) {
-        return res.status(400).json({ message: 'Email y password son requeridos' });
+            return res.status(400).json({ message: 'Email y password son requeridos' });
         }
 
         const usuario = await prisma.usuario.findUnique({ where: { email } });
         if (!usuario) {
-        return res.status(401).json({ message: 'Credenciales inválidas' });
+            return res.status(401).json({ message: 'Credenciales inválidas' });
         }
 
         const esPasswordValido = await bcrypt.compare(password, usuario.password);
         if (!esPasswordValido) {
-        return res.status(401).json({ message: 'Credenciales inválidas' });
+            return res.status(401).json({ message: 'Credenciales inválidas' });
         }
 
         const { password: _, ...usuarioSinPassword } = usuario;
         return res.json({
-        message: 'Login exitoso',
-        usuario: usuarioSinPassword,
+            message: 'Login exitoso',
+            usuario: usuarioSinPassword,
         });
     } catch (error) {
         console.error('Error en login:', error);
@@ -87,7 +87,7 @@ export const obtenerUsuario = async (req: Request, res: Response) => {
         const usuario = await prisma.usuario.findUnique({ where: { id } });
 
         if (!usuario) {
-        return res.status(404).json({ message: 'Usuario no encontrado' });
+            return res.status(404).json({ message: 'Usuario no encontrado' });
         }
 
         const { password: _, ...usuarioSinPassword } = usuario;
@@ -102,11 +102,16 @@ export const obtenerUsuario = async (req: Request, res: Response) => {
 export const actualizarUsuario = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const { nombre, email, password } = req.body;
+        const { nombre, email, password, edad, ciudad } = req.body;
 
         // Validar contraseña antes de procesarla
         if (password && password.length < 6) {
             return res.status(400).json({ message: 'La contraseña debe tener al menos 6 caracteres' });
+        }
+
+        // Validar edad si se proporciona
+        if (edad !== undefined && (edad < 1 || edad > 120)) {
+            return res.status(400).json({ message: 'La edad debe estar entre 1 y 120 años' });
         }
 
         // Validar email
@@ -124,28 +129,30 @@ export const actualizarUsuario = async (req: Request, res: Response) => {
             }
         }
 
-        const data: any = {
-            nombre,
-            email,
-        };
+        const data: any = {};
+
+        if (nombre !== undefined) data.nombre = nombre;
+        if (email !== undefined) data.email = email;
+        if (edad !== undefined) data.edad = edad;
+        if (ciudad !== undefined) data.ciudad = ciudad;
 
         if (password) {
             data.password = await bcrypt.hash(password, 10);
         }
 
         const usuario = await prisma.usuario.update({
-        where: { id },
-        data,
+            where: { id },
+            data,
         });
 
         const { password: _, ...usuarioSinPassword } = usuario;
         return res.json({
-        message: 'Usuario actualizado exitosamente',
-        usuario: usuarioSinPassword,
+            message: 'Usuario actualizado exitosamente',
+            usuario: usuarioSinPassword,
         });
     } catch (error: any) {
         if (error.code === 'P2025') {
-        return res.status(404).json({ message: 'Usuario no encontrado' });
+            return res.status(404).json({ message: 'Usuario no encontrado' });
         }
         console.error('Error al actualizar usuario:', error);
         return res.status(500).json({ message: 'Error al actualizar el usuario' });
