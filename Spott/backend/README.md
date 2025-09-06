@@ -1,4 +1,4 @@
-                          BACKEND DEL PROYECTO 
+### BACKEND DEL PROYECTO 
                           
 Notas de la entrega:
 - Este proyecto corresponde al trabajo practico de la materia.El backend esta desarrollado en **Node.js con Express**, con **Prisma** como ORM y conexion a base de datos.El repositorio incluye tanto el frontend como el backend.
@@ -11,7 +11,8 @@ Notas de la entrega:
 - Validaciones en formularios (backend y frontend).
 - Uso de Prisma para la persistencia de datos.
 - Endpoints RESTful organizados en **controllers**.
-##validaciones y Controladores:
+
+### validaciones y Controladores:
 - **Usuarios**: se validan datos obligatorios como nombre, email y contraseña.  
 - **Eventos**: se verifica que contengan título, fecha y descripción antes de persistirlos.  
 - **Inscripciones**: el sistema controla que un usuario no se inscriba dos veces en el mismo evento.  
