@@ -1,5 +1,5 @@
-// src/routes/canciones.ts
-import { Router } from 'express';
+// Spott/backend/src/routes/canciones.ts
+import { Router } from "express";
 import {
     crearCancion,
     obtenerCanciones,
@@ -7,23 +7,25 @@ import {
     actualizarCancion,
     eliminarCancion,
     obtenerTallyCancion,
-    crearCancionDesdeSpotify
-    // NO incluimos recomendarCancionSpotify por ahora
-} from '../controllers/cancionesController.js'; // ← NOTA: .js al final
+    crearCancionDesdeSpotify,
+} from "../controllers/cancionesController.js";
+
+import { validate } from "../middlewares/validate.js";
+import {
+    cancionCreateSchema,
+    cancionUpdateSchema,
+} from "../validations/cancionSchemas.js";
 
 const router = Router();
 
-// Rutas específicas PRIMERO
-router.get('/tally/:id', obtenerTallyCancion);
-router.post('/spotify', crearCancionDesdeSpotify);
+router.get("/tally/:id", obtenerTallyCancion);
+router.post("/spotify", crearCancionDesdeSpotify); // si querés, acá podrías validar un schema propio
 
-// Rutas generales
-router.get('/', obtenerCanciones);
-router.post('/', crearCancion);
+router.get("/", obtenerCanciones);
+router.post("/", validate(cancionCreateSchema), crearCancion);
 
-// Rutas con parámetro dinámico AL FINAL
-router.get('/:id', obtenerCancionPorId);
-router.put('/:id', actualizarCancion);
-router.delete('/:id', eliminarCancion);
+router.get("/:id", obtenerCancionPorId);
+router.put("/:id", validate(cancionUpdateSchema), actualizarCancion);
+router.delete("/:id", eliminarCancion);
 
 export default router;
