@@ -48,7 +48,6 @@ export const upload = multer({
 });
 
 // Rutas
-console.log('📋 Registrando rutas...');
 app.use('/api/eventos', eventosRoutes);
 app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/empresas', empresasRoutes);
@@ -57,7 +56,6 @@ app.use('/api/votos', rutasVotos);
 app.use('/api/spotify', rutasSpotify);
 app.use('/api/favoritos', favoritosRoutes);
 app.use("/api/geo", geoRouter);
-console.log('✅ Todas las rutas registradas');
 
 // Ruta de prueba
 app.get('/api/health', (req, res) => {
@@ -70,14 +68,5 @@ app.use((error: any, req: express.Request, res: express.Response, next: express.
     res.status(500).json({ message: 'Error interno del servidor', error: error.message });
 });
 
-app.listen(PORT, () => {
-    console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
-    console.log('📋 Rutas disponibles:');
-    console.log('   - /api/eventos');
-    console.log('   - /api/usuarios');
-    console.log('   - /api/empresas');
-    console.log('   - /api/canciones');
-    console.log('   - /api/votos');
-    console.log('   - /api/spotify');
-});
+app.listen(PORT);
 

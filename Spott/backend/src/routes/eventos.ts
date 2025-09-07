@@ -18,8 +18,6 @@ import { validate } from '../middlewares/validate.js';
 import { crearEventoSchema, actualizarEventoSchema, filtrosEventoSchema, inscripcionSchema } from '../validations/eventoSchemas.js';
 import { prisma } from '../data/prisma.js';
 
-console.log('📋 Cargando rutas de eventos...');
-
 const router = express.Router();
 
 // Configuración de Multer para subir archivos
@@ -75,7 +73,7 @@ router.get('/check/:eventoId/:usuarioId', async (req, res) => {
 // NUEVA RUTA: Estadísticas del evento
 router.get('/:id/estadisticas', obtenerEstadisticasEvento);
 
-// IMPORTANTE: /:id debe ir AL FINAL de todos los GET específicos
+//! /:id debe ir AL FINAL de todos los GET específicos
 router.get('/:id', obtenerEventoPorId);
 
 // -------- Rutas POST --------

@@ -3,7 +3,6 @@ import { z } from "zod";
 
 const ALLOWED_EMAIL_RE = /@(gmail\.com|hotmail\.com|outlook\.com)$/i;
 
-// 👉 Exportamos passwordSchema para que el import del controller no rompa
 export const passwordSchema = z
     .string()
     .min(6, "La contraseña debe tener al menos 6 caracteres")
@@ -16,11 +15,14 @@ export const empresaRegisterSchema = z
         .string()
         .email("Email inválido")
         .regex(
-        ALLOWED_EMAIL_RE,
-        "Solo se permiten correos @gmail.com, @hotmail.com o @outlook.com"
+            ALLOWED_EMAIL_RE,
+            "Solo se permiten correos @gmail.com, @hotmail.com o @outlook.com"
         ),
-    password: passwordSchema,                 // 👈 usamos el schema exportado
-    confirmPassword: z.string().optional(),   // si viene, debe coincidir
+    password: passwordSchema,
+    confirmPassword: z.string().optional(),
+    descripcion: z.string().optional(),
+    telefono: z.string().optional(),
+    sitioWeb: z.string().url("URL inválida").optional().or(z.literal("")),
     ciudad: z.string().optional(),
     })
     .superRefine((data, ctx) => {
@@ -29,12 +31,28 @@ export const empresaRegisterSchema = z
         data.password !== data.confirmPassword
     ) {
         ctx.addIssue({
-        code: "custom",
-        path: ["confirmPassword"],
-        message: "Las contraseñas no coinciden",
+            code: "custom",
+            path: ["confirmPassword"],
+            message: "Las contraseñas no coinciden",
         });
     }
-    });
+});
+
+export const empresaUpdateSchema = z.object({
+    nombre: z.string().min(1, "El nombre es obligatorio").optional(),
+    email: z
+        .string()
+        .email("Email inválido")
+        .regex(
+            ALLOWED_EMAIL_RE,
+            "Solo se permiten correos @gmail.com, @hotmail.com o @outlook.com"
+        )
+        .optional(),
+    password: passwordSchema.optional(),
+    descripcion: z.string().optional(),
+    telefono: z.string().optional(),
+    sitioWeb: z.string().url("URL inválida").optional().or(z.literal("")),
+});
 
 export const empresaLoginSchema = z.object({
     email: z.string().email("Email inválido"),
