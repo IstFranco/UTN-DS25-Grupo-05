@@ -9,6 +9,7 @@ import rutasCanciones from './routes/canciones.js';
 import rutasVotos from './routes/votos.js';
 import rutasSpotify from './routes/spotify.js';
 import favoritosRoutes from './routes/favoritos.js';
+import geoRouter from "./routes/geo.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -55,6 +56,7 @@ app.use('/api/canciones', rutasCanciones);
 app.use('/api/votos', rutasVotos);  
 app.use('/api/spotify', rutasSpotify);
 app.use('/api/favoritos', favoritosRoutes);
+app.use("/api/geo", geoRouter);
 console.log('✅ Todas las rutas registradas');
 
 // Ruta de prueba
