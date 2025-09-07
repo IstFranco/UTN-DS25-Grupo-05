@@ -19,7 +19,7 @@ import {
 const router = Router();
 
 router.get("/tally/:id", obtenerTallyCancion);
-router.post("/spotify", crearCancionDesdeSpotify); // si querés, acá podrías validar un schema propio
+router.post("/spotify", crearCancionDesdeSpotify);
 
 router.get("/", obtenerCanciones);
 router.post("/", validate(cancionCreateSchema), crearCancion);
