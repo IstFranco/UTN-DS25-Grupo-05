@@ -9,6 +9,7 @@ import rutasCanciones from './routes/canciones.js';
 import rutasVotos from './routes/votos.js';
 import rutasSpotify from './routes/spotify.js';
 import favoritosRoutes from './routes/favoritos.js';
+import geoRouter from "./routes/geo.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -47,7 +48,6 @@ export const upload = multer({
 });
 
 // Rutas
-console.log('📋 Registrando rutas...');
 app.use('/api/eventos', eventosRoutes);
 app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/empresas', empresasRoutes);
@@ -55,7 +55,7 @@ app.use('/api/canciones', rutasCanciones);
 app.use('/api/votos', rutasVotos);  
 app.use('/api/spotify', rutasSpotify);
 app.use('/api/favoritos', favoritosRoutes);
-console.log('✅ Todas las rutas registradas');
+app.use("/api/geo", geoRouter);
 
 // Ruta de prueba
 app.get('/api/health', (req, res) => {
@@ -68,14 +68,5 @@ app.use((error: any, req: express.Request, res: express.Response, next: express.
     res.status(500).json({ message: 'Error interno del servidor', error: error.message });
 });
 
-app.listen(PORT, () => {
-    console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
-    console.log('📋 Rutas disponibles:');
-    console.log('   - /api/eventos');
-    console.log('   - /api/usuarios');
-    console.log('   - /api/empresas');
-    console.log('   - /api/canciones');
-    console.log('   - /api/votos');
-    console.log('   - /api/spotify');
-});
+app.listen(PORT);
 

@@ -25,11 +25,10 @@ export interface Evento {
     empresaId: string;
     fechaCreacion: Date;
     fechaActualizacion: Date;
-    // Campos adicionales para la vista
-    imageSrc: string; // para compatibilidad con el frontend
-    title: string; // para compatibilidad con el frontend
-    description: string; // para compatibilidad con el frontend
-    rating: string; // para compatibilidad con el frontend
+    imageSrc: string;
+    title: string;
+    description: string;
+    rating: string;
     inscripciones?: Inscripcion[];
     activo: boolean;
 }
