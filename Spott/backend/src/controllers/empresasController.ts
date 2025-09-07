@@ -1,23 +1,25 @@
 // src/controllers/empresasController.ts
 import { Request, Response } from 'express';
 import { prisma } from '../data/prisma.js';
-import { empresaRegisterSchema, empresaLoginSchema, passwordSchema } from '../validations/empresaSchema.js';
+import { 
+    empresaRegisterSchema, 
+    empresaLoginSchema, 
+    empresaUpdateSchema
+} from '../validations/empresaSchema.js';
 import bcrypt from 'bcryptjs';
+
+function sanitizeEmpresa(empresa: any) {
+    if (!empresa) return empresa;
+    const { password, ...rest } = empresa;
+    return rest;
+}
 
 // Crear empresa
 export const crearEmpresa = async (req: Request, res: Response) => {
     try {
-        // Validar los datos con Zod
-        const validationResult = empresaRegisterSchema.safeParse(req.body);
         
-        if (!validationResult.success) {
-            return res.status(400).json({ 
-                message: 'Datos inválidos',
-                errors: validationResult.error.issues 
-            });
-        }
-
-        const { nombre, email, password, descripcion, telefono, sitioWeb } = validationResult.data;
+        const validatedData = empresaRegisterSchema.parse(req.body);
+        const { nombre, email, password, descripcion, telefono, sitioWeb } = validatedData;
 
         const empresaExistente = await prisma.empresa.findUnique({ where: { email } });
         if (empresaExistente) {
@@ -31,20 +33,24 @@ export const crearEmpresa = async (req: Request, res: Response) => {
                 nombre,
                 email,
                 password: hashedPassword,
-                descripcion,
-                telefono,
-                sitioWeb,
+                descripcion: descripcion ?? null,
+                telefono: telefono ?? null,
+                sitioWeb: sitioWeb ?? null,
             },
         });
 
-        const { password: _, ...empresaSinPassword } = nuevaEmpresa;
-
         return res.status(201).json({
             message: 'Empresa creada exitosamente',
-            empresa: empresaSinPassword,
+            empresa: sanitizeEmpresa(nuevaEmpresa),
         });
-    } catch (error) {
-        console.error('Error al crear empresa:', error);
+    } catch (e: any) {
+        if (e.name === 'ZodError') {
+            return res.status(400).json({
+                message: 'Datos inválidos',
+                errors: e.errors
+            });
+        }
+        console.error('Error al crear empresa:', e);
         return res.status(500).json({ message: 'Error al crear la empresa' });
     }
 };
@@ -52,17 +58,8 @@ export const crearEmpresa = async (req: Request, res: Response) => {
 // Login empresa
 export const loginEmpresa = async (req: Request, res: Response) => {
     try {
-        // Validar los datos con Zod
-        const validationResult = empresaLoginSchema.safeParse(req.body);
-        
-        if (!validationResult.success) {
-            return res.status(400).json({ 
-                message: 'Datos inválidos',
-                errors: validationResult.error.issues 
-            });
-        }
-
-        const { email, password } = validationResult.data;
+        const validatedData = empresaLoginSchema.parse(req.body);
+        const { email, password } = validatedData;
 
         const empresa = await prisma.empresa.findUnique({ where: { email } });
         if (!empresa) {
@@ -74,13 +71,18 @@ export const loginEmpresa = async (req: Request, res: Response) => {
             return res.status(401).json({ message: 'Credenciales inválidas' });
         }
 
-        const { password: _, ...empresaSinPassword } = empresa;
         return res.json({
             message: 'Login exitoso',
-            empresa: empresaSinPassword,
+            empresa: sanitizeEmpresa(empresa),
         });
-    } catch (error) {
-        console.error('Error en login:', error);
+    } catch (e: any) {
+        if (e.name === 'ZodError') {
+            return res.status(400).json({
+                message: 'Datos inválidos',
+                errors: e.errors
+            });
+        }
+        console.error('Error en login:', e);
         return res.status(500).json({ message: 'Error en el login' });
     }
 };
@@ -95,8 +97,7 @@ export const obtenerEmpresa = async (req: Request, res: Response) => {
             return res.status(404).json({ message: 'Empresa no encontrada' });
         }
 
-        const { password: _, ...empresaSinPassword } = empresa;
-        return res.json({ empresa: empresaSinPassword });
+        return res.json({ empresa: sanitizeEmpresa(empresa) });
     } catch (error) {
         console.error('Error al obtener empresa:', error);
         return res.status(500).json({ message: 'Error al obtener la empresa' });
@@ -107,26 +108,13 @@ export const obtenerEmpresa = async (req: Request, res: Response) => {
 export const actualizarEmpresa = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const { nombre, email, password, descripcion, telefono, sitioWeb } = req.body;
+        
+        // Usar schema de actualización con Zod
+        const validatedData = empresaUpdateSchema.parse(req.body);
+        const { nombre, email, password, descripcion, telefono, sitioWeb } = validatedData;
 
-        // Validar contraseña si se proporciona
-        if (password) {
-            const passwordValidation = passwordSchema.safeParse(password);
-            if (!passwordValidation.success) {
-                return res.status(400).json({ 
-                    message: 'Contraseña inválida',
-                    errors: passwordValidation.error.issues 
-                });
-            }
-        }
-
-        // Validar email si se proporciona
+        // Validar email único si se proporciona
         if (email) {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                return res.status(400).json({ message: 'Formato de email inválido' });
-            }
-
             const empresaExistente = await prisma.empresa.findUnique({ 
                 where: { email } 
             });
@@ -136,11 +124,11 @@ export const actualizarEmpresa = async (req: Request, res: Response) => {
         }
 
         const data: any = {
-            nombre,
-            email,
-            descripcion,
-            telefono,
-            sitioWeb,
+            ...(nombre !== undefined ? { nombre } : {}),
+            ...(email !== undefined ? { email } : {}),
+            ...(descripcion !== undefined ? { descripcion } : {}),
+            ...(telefono !== undefined ? { telefono } : {}),
+            ...(sitioWeb !== undefined ? { sitioWeb } : {}),
         };
 
         if (password) {
@@ -152,17 +140,21 @@ export const actualizarEmpresa = async (req: Request, res: Response) => {
             data,
         });
 
-        const { password: _, ...empresaSinPassword } = empresa;
-
         return res.json({
             message: 'Empresa actualizada exitosamente',
-            empresa: empresaSinPassword,
+            empresa: sanitizeEmpresa(empresa),
         });
-    } catch (error: any) {
-        if (error.code === 'P2025') {
+    } catch (e: any) {
+        if (e.name === 'ZodError') {
+            return res.status(400).json({
+                message: 'Datos inválidos',
+                errors: e.errors
+            });
+        }
+        if (e.code === 'P2025') {
             return res.status(404).json({ message: 'Empresa no encontrada' });
         }
-        console.error('Error al actualizar empresa:', error);
+        console.error('Error al actualizar empresa:', e);
         return res.status(500).json({ message: 'Error al actualizar la empresa' });
     }
 };
