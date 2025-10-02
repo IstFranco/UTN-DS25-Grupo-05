@@ -7,6 +7,7 @@ import {
     empresaUpdateSchema
 } from '../validations/empresaSchema.js';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 function sanitizeEmpresa(empresa: any) {
     if (!empresa) return empresa;
@@ -14,10 +15,23 @@ function sanitizeEmpresa(empresa: any) {
     return rest;
 }
 
+// Función helper para generar token
+function generateToken(empresaId: string, userType: 'empresa') {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+        throw new Error("JWT_SECRET no está configurado");
+    }
+    
+    return jwt.sign(
+        { userId: empresaId, userType },
+        secret,
+        { expiresIn: '7d' }
+    );
+}
+
 // Crear empresa
 export const crearEmpresa = async (req: Request, res: Response) => {
     try {
-        
         const validatedData = empresaRegisterSchema.parse(req.body);
         const { nombre, email, password, descripcion, telefono, sitioWeb } = validatedData;
 
@@ -39,9 +53,13 @@ export const crearEmpresa = async (req: Request, res: Response) => {
             },
         });
 
+        // Generar token al registrarse
+        const token = generateToken(nuevaEmpresa.id, 'empresa');
+
         return res.status(201).json({
             message: 'Empresa creada exitosamente',
             empresa: sanitizeEmpresa(nuevaEmpresa),
+            token
         });
     } catch (e: any) {
         if (e.name === 'ZodError') {
@@ -71,9 +89,13 @@ export const loginEmpresa = async (req: Request, res: Response) => {
             return res.status(401).json({ message: 'Credenciales inválidas' });
         }
 
+        // Generar token al hacer login
+        const token = generateToken(empresa.id, 'empresa');
+
         return res.json({
             message: 'Login exitoso',
             empresa: sanitizeEmpresa(empresa),
+            token
         });
     } catch (e: any) {
         if (e.name === 'ZodError') {
@@ -109,11 +131,9 @@ export const actualizarEmpresa = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
         
-        // Usar schema de actualización con Zod
         const validatedData = empresaUpdateSchema.parse(req.body);
         const { nombre, email, password, descripcion, telefono, sitioWeb } = validatedData;
 
-        // Validar email único si se proporciona
         if (email) {
             const empresaExistente = await prisma.empresa.findUnique({ 
                 where: { email } 

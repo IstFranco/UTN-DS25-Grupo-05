@@ -112,6 +112,10 @@ export default function Registro() {
                 return;
             }
 
+            if (data.token) {
+                localStorage.setItem("token", data.token);
+            }
+
             if (modo === "empresa") {
                 localStorage.setItem("empresa", JSON.stringify(data.empresa));
                 navigate("/empresa");
@@ -134,7 +138,9 @@ export default function Registro() {
 
                 <form onSubmit={handleSubmit} className="login-form" noValidate>
                     <div style={{ marginBottom: '15px' }}>
+                        
                         <p style={{ marginBottom: '8px', fontWeight: 'bold' }}>Selecciona tu tipo de cuenta:</p>
+                        
                         <label style={{ marginRight: '15px', cursor: 'pointer' }}>
                             <input 
                                 type="radio"
@@ -145,6 +151,7 @@ export default function Registro() {
                             />
                             Usuario
                         </label>
+
                         <label style={{ cursor: 'pointer' }}>
                             <input 
                                 type="radio"

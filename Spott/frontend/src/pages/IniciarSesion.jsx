@@ -42,6 +42,11 @@ export default function IniciarSesion() {
                 setError(data.message || "Credenciales inválidas");
                 return;
             }
+
+            //Guarda el token JWT
+            if (data.token) {
+                localStorage.setItem("token", data.token);
+            }
             
             // Guardar datos en localStorage según el tipo
             if (rol === "empresa") {
@@ -66,6 +71,7 @@ export default function IniciarSesion() {
                 {error && <p className="login-error">{error}</p>}
                 
                 <form onSubmit={handleSubmit} className="login-form">
+
                     <input
                         type="email"
                         placeholder="Correo electrónico"
@@ -73,6 +79,7 @@ export default function IniciarSesion() {
                         onChange={(e) => setEmail(e.target.value)}
                         required
                     />
+
                     <input
                         type="password"
                         placeholder="Contraseña"
@@ -80,9 +87,11 @@ export default function IniciarSesion() {
                         onChange={(e) => setPassword(e.target.value)}
                         required
                     />
+
                     <button type="submit" disabled={loading}>
                         {loading ? "Iniciando sesión..." : "Ingresar"}
                     </button>
+                    
                 </form>
                 
                 {/* Botón para ir al registro */}
