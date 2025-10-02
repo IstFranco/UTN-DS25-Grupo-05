@@ -7,6 +7,7 @@ import {
     loginEmpresa,
 } from "../controllers/empresasController.js";
 import { validate } from "../middlewares/validate.js";
+import { authMiddleware } from "../middlewares/auth.middleware.js";
 import {
     empresaRegisterSchema,
     empresaLoginSchema,
@@ -14,10 +15,12 @@ import {
 
 const router = express.Router();
 
+// RUTAS PÚBLICAS sin autenticacion
 router.post("/registro", validate(empresaRegisterSchema), crearEmpresa);
 router.post("/login", validate(empresaLoginSchema), loginEmpresa);
 
-router.get("/:id", obtenerEmpresa);
-router.put("/:id", actualizarEmpresa);
+// RUTAS PRIVADAS requiren autenticacion
+router.get("/:id", authMiddleware, obtenerEmpresa);
+router.put("/:id", authMiddleware, actualizarEmpresa);
 
 export default router;

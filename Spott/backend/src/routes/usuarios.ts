@@ -7,6 +7,7 @@ import {
     loginUsuario,
 } from "../controllers/usuariosController.js";
 import { validate } from "../middlewares/validate.js";
+import { authMiddleware } from "../middlewares/auth.middleware.js";
 import {
     usuarioRegisterSchema,
     usuarioLoginSchema,
@@ -14,11 +15,12 @@ import {
 
 const router = express.Router();
 
-// Validación antes de llegar al controller
+// Rutas publicas sin autenticacion requerida
 router.post("/registro", validate(usuarioRegisterSchema), crearUsuario);
 router.post("/login", validate(usuarioLoginSchema), loginUsuario);
 
-router.get("/:id", obtenerUsuario);
-router.put("/:id", actualizarUsuario);
+// Rutas privadas con autenticacion requerida
+router.get("/:id", authMiddleware, obtenerUsuario);
+router.put("/:id", authMiddleware, actualizarUsuario);
 
 export default router;
