@@ -6,10 +6,14 @@ const ALLOWED_EMAIL_RE = /@(gmail\.com|hotmail\.com|outlook\.com)$/i;
 // Registro de usuario
 export const usuarioRegisterSchema = z
     .object({
-        nombre: z.string().min(1, "El nombre es obligatorio"),
+        nombre: z.string()
+        .min(2, "Minimo 2 caracteres")
+        .max(50, "Maximo 50 caracteres")
+        .trim(),
         email: z
             .string()
             .email("Email inválido")
+            .toLowerCase()
             .regex(
                 ALLOWED_EMAIL_RE,
                 "Solo se permiten correos @gmail.com, @hotmail.com o @outlook.com"
