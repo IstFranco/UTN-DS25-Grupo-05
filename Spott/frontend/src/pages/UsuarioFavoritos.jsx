@@ -24,7 +24,7 @@ export default function UsuarioFavoritos() {
                     return;
                 }
 
-                const response = await fetch(`http://localhost:3001/api/favoritos/usuario/${usuarioId}`);
+                const response = await fetch(`http://localhost:3000/api/favoritos/usuario/${usuarioId}`);
                 
                 if (response.ok) {
                     const data = await response.json();

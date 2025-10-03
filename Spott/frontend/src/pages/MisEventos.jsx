@@ -118,7 +118,7 @@ export default function MisEventos() {
                 return;
             }
             
-            const res = await fetch(`http://localhost:3001/api/eventos/${eventoId}/usuario/${usuarioId}`, {
+            const res = await fetch(`http://localhost:3000/api/eventos/${eventoId}/usuario/${usuarioId}`, {
                 method: "DELETE",
                 headers: { "Content-Type": "application/json" }
             });

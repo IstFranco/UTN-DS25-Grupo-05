@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  # Frontend React
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: spott_frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - spott-network
+
+  # Backend Node.js
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: spott_backend
+    env_file:
+      - ./backend/.env
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - spott-network
+
+  # Base de Datos PostgreSQL
+  db:
+    image: postgres:14-alpine
+    container_name: spott_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: tu_password_segura
+      POSTGRES_DB: spott_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - spott-network
+
+networks:
+  spott-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local

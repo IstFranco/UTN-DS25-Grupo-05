@@ -91,8 +91,8 @@ export default function Registro() {
 
             const url =
                 modo === "empresa"
-                    ? "http://localhost:3001/api/empresas/registro"
-                    : "http://localhost:3001/api/usuarios/registro";
+                    ? "http://localhost:3000/api/empresas/registro"
+                    : "http://localhost:3000/api/usuarios/registro";
 
             const bodyData =
                 modo === "empresa"
