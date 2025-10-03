@@ -37,7 +37,7 @@ export default function MostrarEvento() {
     useEffect(() => {
         const cargarEstadisticas = async () => {
             try {
-                const res = await fetch(`http://localhost:3001/api/eventos/${id}/estadisticas`);
+                const res = await fetch(`http://localhost:3000/api/eventos/${id}/estadisticas`);
                 if (res.ok) {
                     const data = await res.json();
                     setEstadisticasEvento(data);
@@ -62,7 +62,7 @@ export default function MostrarEvento() {
             return;
         }
 
-        fetch(`http://localhost:3001/api/eventos/check/${id}/${usuarioId}`)
+        fetch(`http://localhost:3000/api/eventos/check/${id}/${usuarioId}`)
         .then(res => res.json())
         .then(data => {
             setUsuarioInscrito(data.inscrito);
@@ -70,7 +70,7 @@ export default function MostrarEvento() {
         .catch(err => console.error("Error al verificar inscripción:", err));
 
         // Verificar favorito
-        fetch(`http://localhost:3001/api/favoritos/check/${id}/${usuarioId}`)
+        fetch(`http://localhost:3000/api/favoritos/check/${id}/${usuarioId}`)
         .then(res => res.json())
         .then(data => {
             setEsFavorito(data.esFavorito);
@@ -87,7 +87,7 @@ export default function MostrarEvento() {
                 return;
             }
 
-            const res = await fetch(`http://localhost:3001/api/eventos/${id}/inscribirse`, {
+            const res = await fetch(`http://localhost:3000/api/eventos/${id}/inscribirse`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ usuarioId, tipoEntrada })
@@ -105,7 +105,7 @@ export default function MostrarEvento() {
             alert(`¡Te inscribiste al evento con entrada ${tipoEntrada.toUpperCase()}!`);
             
             // Recargar estadísticas después de la inscripción
-            const statsRes = await fetch(`http://localhost:3001/api/eventos/${id}/estadisticas`);
+            const statsRes = await fetch(`http://localhost:3000/api/eventos/${id}/estadisticas`);
             if (statsRes.ok) {
                 const statsData = await statsRes.json();
                 setEstadisticasEvento(statsData);
@@ -130,7 +130,7 @@ export default function MostrarEvento() {
                 return;
             }
 
-            const res = await fetch(`http://localhost:3001/api/eventos/${id}/usuario/${usuarioId}`, {
+            const res = await fetch(`http://localhost:3000/api/eventos/${id}/usuario/${usuarioId}`, {
                 method: "DELETE",
                 headers: { "Content-Type": "application/json" }
             });
@@ -147,7 +147,7 @@ export default function MostrarEvento() {
             alert("Te has desinscrito del evento exitosamente");
             
             // Recargar estadísticas después de la desinscripción
-            const statsRes = await fetch(`http://localhost:3001/api/eventos/${id}/estadisticas`);
+            const statsRes = await fetch(`http://localhost:3000/api/eventos/${id}/estadisticas`);
             if (statsRes.ok) {
                 const statsData = await statsRes.json();
                 setEstadisticasEvento(statsData);
@@ -169,7 +169,7 @@ export default function MostrarEvento() {
 
             if (esFavorito) {
                 // Eliminar de favoritos
-                const res = await fetch(`http://localhost:3001/api/favoritos/${id}/${usuarioId}`, {
+                const res = await fetch(`http://localhost:3000/api/favoritos/${id}/${usuarioId}`, {
                     method: "DELETE"
                 });
                 if (res.ok) {
@@ -178,7 +178,7 @@ export default function MostrarEvento() {
                 }
             } else {
                 // Agregar a favoritos
-                const res = await fetch(`http://localhost:3001/api/favoritos`, {
+                const res = await fetch(`http://localhost:3000/api/favoritos`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ eventoId: id, usuarioId })

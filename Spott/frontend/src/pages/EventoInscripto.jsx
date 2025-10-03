@@ -44,7 +44,7 @@ export default function EventoInscripto() {
                 return;
             }
 
-            const res = await fetch(`http://localhost:3001/api/eventos/${id}/usuario/${usuarioId}`, {
+            const res = await fetch(`http://localhost:3000/api/eventos/${id}/usuario/${usuarioId}`, {
                 method: "DELETE",
                 headers: { "Content-Type": "application/json" }
             });

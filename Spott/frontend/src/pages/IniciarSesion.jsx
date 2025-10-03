@@ -24,8 +24,8 @@ export default function IniciarSesion() {
             
             // URL diferente según el rol
             const url = rol === "empresa" 
-                ? "http://localhost:3001/api/empresas/login"
-                : "http://localhost:3001/api/usuarios/login";
+                ? "http://localhost:3000/api/empresas/login"
+                : "http://localhost:3000/api/usuarios/login";
             
             const res = await fetch(url, {
                 method: "POST",
@@ -101,7 +101,7 @@ export default function IniciarSesion() {
                         <button
                             type="button"
                             className="link-registro"
-                            onClick={() => navigate(`/registro/${rol}`)}
+                            onClick={() => navigate(`/registro`)}
                         >
                             Registrate
                         </button>
