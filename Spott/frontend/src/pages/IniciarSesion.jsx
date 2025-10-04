@@ -1,113 +1,103 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { loginSchema } from '../validations/loginSchema';
+import { useAuth } from '../contexts/AuthContext';
 import '../app.css';
 
 export default function IniciarSesion() {
-    const { rol } = useParams();
     const navigate = useNavigate();
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
+    const { login } = useAuth();
+    const [serverError, setServerError] = useState('');
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError('');
-        
-        if (!email || !password) {
-            setError('Email y contraseña son obligatorios');
-            return;
+    const {
+        register,
+        handleSubmit,
+        formState: { errors, isSubmitting }
+    } = useForm({
+        resolver: yupResolver(loginSchema),
+        defaultValues: {
+        email: '',
+        password: ''
         }
+    });
 
-        try {
-            setLoading(true);
-            
-            // URL diferente según el rol
-            const url = rol === "empresa" 
-                ? "http://localhost:3000/api/empresas/login"
-                : "http://localhost:3000/api/usuarios/login";
-            
-            const res = await fetch(url, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    email,
-                    password
-                }),
-            });
-            
-            const data = await res.json();
-            
-            if (!res.ok) {
-                setError(data.message || "Credenciales inválidas");
-                return;
-            }
+    const onSubmit = async (data) => {
+    setServerError('');
 
-            //Guarda el token JWT
-            if (data.token) {
-                localStorage.setItem("token", data.token);
-            }
-            
-            // Guardar datos en localStorage según el tipo
-            if (rol === "empresa") {
-                localStorage.setItem("empresa", JSON.stringify(data.empresa));
-                navigate("/empresa");
-            } else {
-                localStorage.setItem("usuario", JSON.stringify(data.usuario));
-                navigate("/usuario");
-            }
-        } catch (err) {
-            setError("No se pudo conectar al servidor");
-        } finally {
-            setLoading(false);
+    // Intentar primero como usuario
+    let result = await login(data.email, data.password, 'usuario');
+
+    // Si falla, intentar como empresa
+    if (!result.success) {
+        result = await login(data.email, data.password, 'empresa');
+    }
+
+    if (result.success) {
+        // Redirigir según el tipo de usuario
+        if (result.userType === 'usuario') {
+        navigate('/usuario');
+        } else if (result.userType === 'empresa') {
+        navigate('/empresa');
         }
+    } else {
+        setServerError('Credenciales inválidas o cuenta no encontrada');
+    }
     };
 
     return (
         <div className="login-container">
-            <div className="login-box">
-                <h2>Iniciar sesión como {rol === 'empresa' ? 'Empresa' : 'Usuario'}</h2>
-                
-                {error && <p className="login-error">{error}</p>}
-                
-                <form onSubmit={handleSubmit} className="login-form">
+        <div className="login-box">
+            <h2>Iniciar sesión</h2>
 
-                    <input
-                        type="email"
-                        placeholder="Correo electrónico"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                    />
+            {serverError && (
+            <p className="login-error">{serverError}</p>
+            )}
 
-                    <input
-                        type="password"
-                        placeholder="Contraseña"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                    />
-
-                    <button type="submit" disabled={loading}>
-                        {loading ? "Iniciando sesión..." : "Ingresar"}
-                    </button>
-                    
-                </form>
-                
-                {/* Botón para ir al registro */}
-                <div style={{ marginTop: '15px' }}>
-                    <p className="signin-footer">
-                        ¿No tenés cuenta?{' '}
-                        <button
-                            type="button"
-                            className="link-registro"
-                            onClick={() => navigate(`/registro`)}
-                        >
-                            Registrate
-                        </button>
-                    </p>
-                </div>
+            <form onSubmit={handleSubmit(onSubmit)} className="login-form">
+            <div>
+                <input
+                type="email"
+                placeholder="Correo electrónico"
+                {...register('email')}
+                className={errors.email ? 'input-error' : ''}
+                />
+                {errors.email && (
+                <span className="field-error">{errors.email.message}</span>
+                )}
             </div>
+
+            <div>
+                <input
+                type="password"
+                placeholder="Contraseña"
+                {...register('password')}
+                className={errors.password ? 'input-error' : ''}
+                />
+                {errors.password && (
+                <span className="field-error">{errors.password.message}</span>
+                )}
+            </div>
+
+            <button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Iniciando sesión..." : "Ingresar"}
+            </button>
+            </form>
+
+            <div style={{ marginTop: '15px' }}>
+            <p className="signin-footer">
+                ¿No tenés cuenta?{' '}
+                <button
+                type="button"
+                className="link-registro"
+                onClick={() => navigate('/registro')}
+                >
+                Registrate
+                </button>
+            </p>
+            </div>
+        </div>
         </div>
     );
 }

@@ -53,7 +53,7 @@ export async function crearUsuario(req: Request, res: Response) {
         return res.status(201).json({
             message: "Usuario registrado correctamente",
             usuario: sanitizeUsuario(usuario),
-            token
+            token   // ✅ se envía el token
         });
     } catch (e: any) {
         if (e.name === 'ZodError') {
@@ -88,7 +88,7 @@ export async function loginUsuario(req: Request, res: Response) {
         return res.json({
             message: "Login exitoso",
             usuario: sanitizeUsuario(usuario),
-            token
+            token   // ✅ se envía el token
         });
     } catch (e: any) {
         if (e.name === 'ZodError') {
