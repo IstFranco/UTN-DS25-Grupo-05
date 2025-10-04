@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import Header from '../components/Header';
 import perfilImg from '../img/LogoPerfil.jpeg';
 import notiImg from '../img/LogoNotificaciones.jpeg';
@@ -9,6 +10,7 @@ import '../app.css';
 
 export default function UsuarioFavoritos() {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [favoritos, setFavoritos] = useState([]);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState(null);
@@ -16,16 +18,16 @@ export default function UsuarioFavoritos() {
     useEffect(() => {
         const cargarFavoritos = async () => {
             try {
-                const usuarioData = JSON.parse(localStorage.getItem('usuario') || '{}');
-                const usuarioId = usuarioData.id;
-
-                if (!usuarioId) {
+                if (!user || !user.userId) {
                     setError('No se encontró información del usuario');
+                    setCargando(false);
                     return;
                 }
 
+                const usuarioId = user.userId;
+
                 const response = await fetch(`http://localhost:3000/api/favoritos/usuario/${usuarioId}`);
-                
+
                 if (response.ok) {
                     const data = await response.json();
                     setFavoritos(data.eventos || []);
@@ -41,7 +43,7 @@ export default function UsuarioFavoritos() {
         };
 
         cargarFavoritos();
-    }, []);
+    }, [user]);
 
     const handleEventoClick = (evento) => {
         navigate('/evento', { state: { evento } });
@@ -54,10 +56,9 @@ export default function UsuarioFavoritos() {
                 leftButton={{ type: 'image', content: perfilImg, to: '/usuario/perfil' }}
                 rightButton={{ type: 'image', content: notiImg, to: '/usuario/notificaciones' }}
             />
-       
+
             <div className="favoritos">
                 <h2 className="section-title">Mis Favoritos</h2>
-                
                 {error && (
                     <div style={{ color: '#ff4444', textAlign: 'center', padding: '20px' }}>
                         {error}
@@ -65,7 +66,7 @@ export default function UsuarioFavoritos() {
                 )}
 
                 {cargando && <p style={{ color: 'white', textAlign: 'center' }}>Cargando favoritos...</p>}
-                
+
                 {!cargando && !error && favoritos.length === 0 && (
                     <p style={{ color: 'white', textAlign: 'center' }}>
                         No tienes eventos favoritos aún.

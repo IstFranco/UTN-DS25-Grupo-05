@@ -1,5 +1,6 @@
 import { useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext'; 
 import Header from '../components/Header';
 import FooterUsuario from '../components/FooterUsuario';
 import SongVoting from '../components/SongVoting';
@@ -8,8 +9,8 @@ import notiImg from '../img/LogoNotificaciones.jpeg';
 
 export default function MostrarEvento() {
     const { state } = useLocation();
+    const { user } = useAuth(); 
     const [usuarioInscrito, setUsuarioInscrito] = useState(false);
-    const [usuarioData, setUsuarioData] = useState(null);
     const [esFavorito, setEsFavorito] = useState(false);
     const [showTicketModal, setShowTicketModal] = useState(false);
     const [estadisticasEvento, setEstadisticasEvento] = useState(null);
@@ -52,15 +53,13 @@ export default function MostrarEvento() {
 
     // Verificar si el usuario ya está inscrito al cargar el componente
     useEffect(() => {
-        const userData = JSON.parse(localStorage.getItem("usuario") || "{}");
-        setUsuarioData(userData);
-        
-        const usuarioId = userData.id;
-
-        if (!usuarioId) {
+        // Verificar que el usuario esté autenticado
+        if (!user || !user.userId) {
             console.error("No se encontró ID de usuario");
             return;
         }
+
+        const usuarioId = user.userId;
 
         fetch(`http://localhost:3000/api/eventos/check/${id}/${usuarioId}`)
         .then(res => res.json())
@@ -76,16 +75,16 @@ export default function MostrarEvento() {
             setEsFavorito(data.esFavorito);
         })
         .catch(err => console.error("Error al verificar favorito:", err));
-    }, [id]);
+    }, [id, user]);
 
     const handleTicketSelection = async (tipoEntrada) => {
         try {
-            const usuarioId = usuarioData?.id;
-
-            if (!usuarioId) {
+            if (!user || !user.userId) {
                 alert("Error: No se encontró información del usuario. Inicia sesión nuevamente.");
                 return;
             }
+
+            const usuarioId = user.userId;
 
             const res = await fetch(`http://localhost:3000/api/eventos/${id}/inscribirse`, {
                 method: "POST",
@@ -123,12 +122,12 @@ export default function MostrarEvento() {
         }
         
         try {
-            const usuarioId = usuarioData?.id;
-
-            if (!usuarioId) {
+            if (!user || !user.userId) {
                 alert("Error: No se encontró información del usuario. Inicia sesión nuevamente.");
                 return;
             }
+
+            const usuarioId = user.userId;
 
             const res = await fetch(`http://localhost:3000/api/eventos/${id}/usuario/${usuarioId}`, {
                 method: "DELETE",
@@ -161,11 +160,12 @@ export default function MostrarEvento() {
     // Función para manejar favoritos
     const toggleFavorito = async () => {
         try {
-            const usuarioId = usuarioData?.id;
-            if (!usuarioId) {
+            if (!user || !user.userId) {
                 alert("Error: No se encontró información del usuario.");
                 return;
             }
+
+            const usuarioId = user.userId;
 
             if (esFavorito) {
                 // Eliminar de favoritos
@@ -336,7 +336,7 @@ export default function MostrarEvento() {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                             {/* Entrada General */}
                             <div 
-                                onClick={() => handleTicketSelection('general')}
+                                onClick={() => estadisticasEvento?.disponibles.disponiblesGeneral > 0 && handleTicketSelection('general')}
                                 style={{
                                     border: estadisticasEvento?.disponibles.disponiblesGeneral > 0 ? '2px solid #ddd' : '2px solid #ffcccb',
                                     borderRadius: '8px',
@@ -345,18 +345,6 @@ export default function MostrarEvento() {
                                     backgroundColor: estadisticasEvento?.disponibles.disponiblesGeneral > 0 ? 'white' : '#f5f5f5',
                                     opacity: estadisticasEvento?.disponibles.disponiblesGeneral > 0 ? 1 : 0.6,
                                     transition: 'all 0.2s ease'
-                                }}
-                                onMouseEnter={(e) => {
-                                    if (estadisticasEvento?.disponibles.disponiblesGeneral > 0) {
-                                        e.target.style.borderColor = '#007bff';
-                                        e.target.style.backgroundColor = '#f8f9fa';
-                                    }
-                                }}
-                                onMouseLeave={(e) => {
-                                    if (estadisticasEvento?.disponibles.disponiblesGeneral > 0) {
-                                        e.target.style.borderColor = '#ddd';
-                                        e.target.style.backgroundColor = 'white';
-                                    }
                                 }}
                             >
                                 <h4 style={{ margin: '0 0 8px 0', color: '#333' }}>🎫 Entrada General</h4>
@@ -383,7 +371,7 @@ export default function MostrarEvento() {
 
                             {/* Entrada VIP */}
                             <div 
-                                onClick={() => handleTicketSelection('vip')}
+                                onClick={() => estadisticasEvento?.disponibles.disponiblesVip > 0 && handleTicketSelection('vip')}
                                 style={{
                                     border: estadisticasEvento?.disponibles.disponiblesVip > 0 ? '2px solid #ffd700' : '2px solid #ffcccb',
                                     borderRadius: '8px',
@@ -392,18 +380,6 @@ export default function MostrarEvento() {
                                     backgroundColor: estadisticasEvento?.disponibles.disponiblesVip > 0 ? '#fffef7' : '#f5f5f5',
                                     opacity: estadisticasEvento?.disponibles.disponiblesVip > 0 ? 1 : 0.6,
                                     transition: 'all 0.2s ease'
-                                }}
-                                onMouseEnter={(e) => {
-                                    if (estadisticasEvento?.disponibles.disponiblesVip > 0) {
-                                        e.target.style.borderColor = '#ffb700';
-                                        e.target.style.backgroundColor = '#fffbf0';
-                                    }
-                                }}
-                                onMouseLeave={(e) => {
-                                    if (estadisticasEvento?.disponibles.disponiblesVip > 0) {
-                                        e.target.style.borderColor = '#ffd700';
-                                        e.target.style.backgroundColor = '#fffef7';
-                                    }
                                 }}
                             >
                                 <h4 style={{ margin: '0 0 8px 0', color: '#333' }}>👑 Entrada VIP</h4>
@@ -453,7 +429,7 @@ export default function MostrarEvento() {
             <SongVoting 
                 eventoId={id} 
                 usuarioInscrito={usuarioInscrito} 
-                userId={usuarioData?.id}
+                userId={user?.userId}
                 generoEvento={musica} 
             />
 

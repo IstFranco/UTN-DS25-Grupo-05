@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useForm, Controller } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { crearEventoSchema } from '../validations/eventoSchema';
+import { useAuth } from '../contexts/AuthContext';
 import perfilImg from '../img/LogoPerfil.jpeg';
 import notiImg from '../img/LogoNotificaciones.jpeg';
 import Header from '../components/Header';
@@ -10,23 +14,42 @@ import '../app.css';
 
 export default function CrearEvento() {
     const navigate = useNavigate();
+    const { userId, isEmpresa } = useAuth();
     const [cargando, setCargando] = useState(false);
-    const [error, setError] = useState(null);
+    const [serverError, setServerError] = useState(null);
 
-    const [formulario, setFormulario] = useState({
+    // Estados para provincias y localidades
+    const [provincias, setProvincias] = useState([]);
+    const [localidades, setLocalidades] = useState([]);
+    const [loadingProv, setLoadingProv] = useState(false);
+    const [loadingLoc, setLoadingLoc] = useState(false);
+    const [errorLoc, setErrorLoc] = useState('');
+
+    // Estados para archivos (fuera de RHF)
+    const [portada, setPortada] = useState(null);
+    const [imagenes, setImagenes] = useState([]);
+
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+        watch,
+        setValue,
+        control
+    } = useForm({
+        resolver: yupResolver(crearEventoSchema),
+        defaultValues: {
         nombre: '',
-        portada: null,
-        imagenes: [],
-        fecha: '',
-        horaInicio: '',
-        ciudad: '',          
-        barrio: '',          
+        descripcionLarga: '',
+        ciudad: '',
+        barrio: '',
         estilo: '',
         tematica: '',
         musica: '',
+        fecha: '',
+        horaInicio: '',
         precio: '',
         precioVip: '',
-        descripcionLarga: '',
         edadMinima: '',
         entradasGenerales: '',
         entradasVIP: '',
@@ -34,16 +57,12 @@ export default function CrearEvento() {
         linkExterno: '',
         politicaCancelacion: '',
         hashtag: ''
+        }
     });
 
-    // ====== Estados auxiliares para selects dependientes ======
-    const [provincias, setProvincias] = useState([]);
-    const [localidades, setLocalidades] = useState([]);
-    const [loadingProv, setLoadingProv] = useState(false);
-    const [loadingLoc, setLoadingLoc] = useState(false);
-    const [errorLoc, setErrorLoc] = useState('');
+    const ciudadSeleccionada = watch('ciudad');
 
-    // ====== Cargar provincias al montar ======
+    // Cargar provincias al montar
     useEffect(() => {
         (async () => {
         try {
@@ -58,21 +77,18 @@ export default function CrearEvento() {
         })();
     }, []);
 
-    // ====== Cargar localidades cuando cambia la provincia (ciudad) ======
+    // Cargar localidades cuando cambia la ciudad
     useEffect(() => {
-        const provinciaNombre = formulario.ciudad;
-
-        // actualizar barrio y limpiar lista cada vez que cambia la provincia
-        setFormulario((f) => ({ ...f, barrio: '' }));
+        setValue('barrio', '');
         setLocalidades([]);
         setErrorLoc('');
 
-        if (!provinciaNombre) return;
+        if (!ciudadSeleccionada) return;
 
         (async () => {
         try {
             setLoadingLoc(true);
-            const data = await getLocalidades(provinciaNombre);
+            const data = await getLocalidades(ciudadSeleccionada);
             setLocalidades(data);
         } catch (e) {
             console.error(e);
@@ -81,29 +97,15 @@ export default function CrearEvento() {
             setLoadingLoc(false);
         }
         })();
-    }, [formulario.ciudad]);
+    }, [ciudadSeleccionada, setValue]);
 
-    // ====== Handlers ======
-    const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        setFormulario((prev) => ({
-        ...prev,
-        [name]: type === 'checkbox' ? checked : value
-        }));
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const onSubmit = async (data) => {
         setCargando(true);
-        setError(null);
+        setServerError(null);
 
         try {
-        // Obtener empresaId
-        const empresaData = JSON.parse(localStorage.getItem('empresa') || '{}');
-        const empresaId = empresaData.id;
-
-        if (!empresaId) {
-            setError('No se encontró información de la empresa. Inicia sesión nuevamente.');
+        if (!userId) {
+            setServerError('No se encontró información de la empresa. Inicia sesión nuevamente.');
             setCargando(false);
             return;
         }
@@ -111,127 +113,136 @@ export default function CrearEvento() {
         // Construir FormData
         const formData = new FormData();
 
-        // Agregar todos los campos del formulario
-        Object.keys(formulario).forEach((key) => {
-            if (key === 'portada' && formulario.portada) {
-            formData.append('portada', formulario.portada);
-            } else if (key === 'imagenes' && formulario.imagenes.length > 0) {
-            formulario.imagenes.forEach((imagen) => {
-                formData.append('imagenes', imagen);
-            });
-            } else if (key !== 'portada' && key !== 'imagenes') {
-            formData.append(key, formulario[key]);
+        // Agregar campos del formulario
+        Object.keys(data).forEach((key) => {
+            if (data[key] !== '' && data[key] !== null && data[key] !== undefined) {
+            formData.append(key, data[key]);
             }
         });
 
-        // Mapear a lo que espera el backend
-        formData.append('provincia', formulario.ciudad);   // ciudad → provincia
-        formData.append('localidad', formulario.barrio);   // barrio → localidad
+        // Agregar archivos
+        if (portada) {
+            formData.append('portada', portada);
+        }
+        imagenes.forEach((imagen) => {
+            formData.append('imagenes', imagen);
+        });
 
-        // Campos de cupos 
-        formData.append('empresaId', empresaId);
-        if (formulario.entradasGenerales) {
-            formData.append('cupoGeneral', formulario.entradasGenerales);
-        }
-        if (formulario.entradasVIP) {
-            formData.append('cupoVip', formulario.entradasVIP);
-        }
+        // Mapear campos al formato del backend
+        formData.append('provincia', data.ciudad);
+        formData.append('localidad', data.barrio);
+        formData.append('empresaId', userId);
+        formData.append('cupoGeneral', data.entradasGenerales);
+        formData.append('cupoVip', data.entradasVIP || 0);
 
         const response = await ApiService.crearEvento(formData);
 
         if (response.evento) {
-            // Persisto opcionalmente y redirijo
-            const eventosGuardados = JSON.parse(localStorage.getItem('misEventos')) || [];
-            eventosGuardados.push(response.evento);
-            localStorage.setItem('misEventos', JSON.stringify(eventosGuardados));
             navigate('/empresa');
         }
         } catch (error) {
         console.error('Error al crear evento:', error);
-        setError(error.message || 'Error al crear el evento');
+        setServerError(error.message || 'Error al crear el evento');
         } finally {
         setCargando(false);
         }
     };
 
-    // ====== Render ======
     return (
         <div className="inicio">
-        {/* Header */}
         <Header
             title="Spott"
             leftButton={{ type: 'image', content: perfilImg, to: '/empresa/perfil' }}
             rightButton={{ type: 'image', content: notiImg, to: '/empresa/notificaciones' }}
         />
 
-        {/* Errores */}
-        {error && (
-            <div
-            style={{
-                backgroundColor: '#ff4444',
-                color: 'white',
-                padding: '10px',
-                margin: '10px',
-                borderRadius: '5px'
-            }}
-            >
-            {error}
+        {serverError && (
+            <div style={{
+            backgroundColor: '#ff4444',
+            color: 'white',
+            padding: '10px',
+            margin: '10px',
+            borderRadius: '5px'
+            }}>
+            {serverError}
             </div>
         )}
 
-        {/* Formulario */}
         <div className="form-box">
-            <form className="crear-evento-form" onSubmit={handleSubmit}>
+            <form className="crear-evento-form" onSubmit={handleSubmit(onSubmit)}>
             <h2>Crear nuevo evento</h2>
 
+            {/* Nombre */}
             <label>Nombre del evento:</label>
-            <input type="text" name="nombre" value={formulario.nombre} onChange={handleChange} required />
+            <input 
+                type="text" 
+                {...register('nombre')} 
+                className={errors.nombre ? 'input-error' : ''}
+            />
+            {errors.nombre && (
+                <span className="field-error">{errors.nombre.message}</span>
+            )}
 
+            {/* Descripción */}
             <label>Descripción detallada:</label>
-            <textarea name="descripcionLarga" value={formulario.descripcionLarga} onChange={handleChange} />
+            <textarea 
+                {...register('descripcionLarga')}
+                className={errors.descripcionLarga ? 'input-error' : ''}
+            />
+            {errors.descripcionLarga && (
+                <span className="field-error">{errors.descripcionLarga.message}</span>
+            )}
 
+            {/* Edad Mínima */}
             <label>Edad mínima:</label>
-            <input type="number" name="edadMinima" value={formulario.edadMinima} onChange={handleChange} min="0" />
+            <input 
+                type="number" 
+                {...register('edadMinima')} 
+                min="0"
+                className={errors.edadMinima ? 'input-error' : ''}
+            />
+            {errors.edadMinima && (
+                <span className="field-error">{errors.edadMinima.message}</span>
+            )}
 
+            {/* Portada */}
             <label>Imagen de portada:</label>
             <input
                 type="file"
                 accept="image/*"
-                onChange={(e) =>
-                setFormulario((prev) => ({
-                    ...prev,
-                    portada: e.target.files[0] || null
-                }))
-                }
+                onChange={(e) => setPortada(e.target.files[0] || null)}
             />
 
+            {/* Galería */}
             <label>Galería de imágenes:</label>
             <input
                 type="file"
                 accept="image/*"
                 multiple
-                onChange={(e) =>
-                setFormulario((prev) => ({
-                    ...prev,
-                    imagenes: Array.from(e.target.files)
-                }))
-                }
+                onChange={(e) => setImagenes(Array.from(e.target.files))}
             />
 
+            {/* Fecha */}
             <label>Fecha:</label>
-            <input type="date" name="fecha" value={formulario.fecha} onChange={handleChange} required />
+            <input 
+                type="date" 
+                {...register('fecha')}
+                className={errors.fecha ? 'input-error' : ''}
+            />
+            {errors.fecha && (
+                <span className="field-error">{errors.fecha.message}</span>
+            )}
 
+            {/* Hora */}
             <label>Hora de inicio:</label>
-            <input type="time" name="horaInicio" value={formulario.horaInicio} onChange={handleChange} />
+            <input type="time" {...register('horaInicio')} />
 
             {/* Ciudad (Provincia) */}
             <label>Ciudad:</label>
             <select
-                name="ciudad"
-                value={formulario.ciudad}
-                onChange={handleChange}
-                required
+                {...register('ciudad')}
                 disabled={loadingProv}
+                className={errors.ciudad ? 'input-error' : ''}
             >
                 <option value="">Seleccioná una provincia…</option>
                 {provincias.map((p) => (
@@ -240,17 +251,19 @@ export default function CrearEvento() {
                 </option>
                 ))}
             </select>
+            {errors.ciudad && (
+                <span className="field-error">{errors.ciudad.message}</span>
+            )}
 
             {/* Barrio (Localidad) */}
             <label>Barrio/Zona:</label>
             <select
-                name="barrio"
-                value={formulario.barrio}
-                onChange={handleChange}
-                disabled={!formulario.ciudad || loadingLoc || !!errorLoc}
+                {...register('barrio')}
+                disabled={!ciudadSeleccionada || loadingLoc || !!errorLoc}
+                className={errors.barrio ? 'input-error' : ''}
             >
                 <option value="">
-                {!formulario.ciudad
+                {!ciudadSeleccionada
                     ? 'Elegí primero una provincia…'
                     : loadingLoc
                     ? 'Cargando localidades…'
@@ -258,17 +271,16 @@ export default function CrearEvento() {
                     ? 'Error al cargar localidades'
                     : 'Seleccioná una localidad…'}
                 </option>
-                {!loadingLoc &&
-                !errorLoc &&
-                localidades.map((l) => (
-                    <option key={l.nombre} value={l.nombre}>
+                {!loadingLoc && !errorLoc && localidades.map((l) => (
+                <option key={l.nombre} value={l.nombre}>
                     {l.nombre}
-                    </option>
+                </option>
                 ))}
             </select>
 
+            {/* Estilo */}
             <label>Estilo general:</label>
-            <select name="estilo" value={formulario.estilo} onChange={handleChange}>
+            <select {...register('estilo')}>
                 <option value="">Seleccione un estilo...</option>
                 <option>Casual</option>
                 <option>Elegante</option>
@@ -277,17 +289,20 @@ export default function CrearEvento() {
                 <option>Alternativo</option>
             </select>
 
+            {/* Temática */}
             <label>Temática:</label>
             <input
                 type="text"
-                name="tematica"
-                value={formulario.tematica}
-                onChange={handleChange}
+                {...register('tematica')}
                 placeholder="Ej: Neon party, Halloween, etc."
             />
 
+            {/* Música */}
             <label>Género musical:</label>
-            <select name="musica" value={formulario.musica} onChange={handleChange} required>
+            <select 
+                {...register('musica')}
+                className={errors.musica ? 'input-error' : ''}
+            >
                 <option value="">Seleccione un género...</option>
                 <option value="electronic">Electrónica</option>
                 <option value="reggaeton">Reggaetón</option>
@@ -307,77 +322,105 @@ export default function CrearEvento() {
                 <option value="country">Country</option>
                 <option value="classical">Clásica</option>
             </select>
+            {errors.musica && (
+                <span className="field-error">{errors.musica.message}</span>
+            )}
 
+            {/* Precio General */}
             <label>Precio entrada general:</label>
             <input
                 type="number"
-                name="precio"
-                value={formulario.precio}
-                onChange={handleChange}
+                {...register('precio')}
                 step="0.01"
                 min="0"
                 placeholder="Ingrese el precio..."
+                className={errors.precio ? 'input-error' : ''}
             />
+            {errors.precio && (
+                <span className="field-error">{errors.precio.message}</span>
+            )}
 
+            {/* Cupo General */}
             <label>Cupo entradas generales:</label>
             <input
                 type="number"
-                name="entradasGenerales"
-                value={formulario.entradasGenerales}
-                onChange={handleChange}
+                {...register('entradasGenerales')}
                 min="0"
+                className={errors.entradasGenerales ? 'input-error' : ''}
             />
+            {errors.entradasGenerales && (
+                <span className="field-error">{errors.entradasGenerales.message}</span>
+            )}
 
+            {/* Precio VIP */}
             <label>Precio entrada VIP:</label>
             <input
                 type="number"
-                name="precioVip"
-                value={formulario.precioVip}
-                onChange={handleChange}
+                {...register('precioVip')}
                 step="0.01"
                 min="0"
                 placeholder="Ingrese el precio..."
+                className={errors.precioVip ? 'input-error' : ''}
             />
+            {errors.precioVip && (
+                <span className="field-error">{errors.precioVip.message}</span>
+            )}
 
+            {/* Cupo VIP */}
             <label>Cupo entradas VIP:</label>
             <input
                 type="number"
-                name="entradasVIP"
-                value={formulario.entradasVIP}
-                onChange={handleChange}
+                {...register('entradasVIP')}
                 min="0"
+                className={errors.entradasVIP ? 'input-error' : ''}
             />
+            {errors.entradasVIP && (
+                <span className="field-error">{errors.entradasVIP.message}</span>
+            )}
 
+            {/* Accesible */}
             <label>
-                <input type="checkbox" name="accesible" checked={formulario.accesible} onChange={handleChange} />
+                <input 
+                type="checkbox" 
+                {...register('accesible')} 
+                />
                 Evento accesible
             </label>
 
+            {/* Link Externo */}
             <label>Enlace externo (tickets / más info):</label>
             <input
                 type="url"
-                name="linkExterno"
-                value={formulario.linkExterno}
-                onChange={handleChange}
+                {...register('linkExterno')}
                 placeholder="https://..."
+                className={errors.linkExterno ? 'input-error' : ''}
             />
+            {errors.linkExterno && (
+                <span className="field-error">{errors.linkExterno.message}</span>
+            )}
 
+            {/* Política de Cancelación */}
             <label>Política de cancelación:</label>
             <textarea
-                name="politicaCancelacion"
-                value={formulario.politicaCancelacion}
-                onChange={handleChange}
+                {...register('politicaCancelacion')}
                 placeholder="Describe las condiciones de cancelación..."
+                className={errors.politicaCancelacion ? 'input-error' : ''}
             />
+            {errors.politicaCancelacion && (
+                <span className="field-error">{errors.politicaCancelacion.message}</span>
+            )}
 
+            {/* Hashtag */}
             <label>Etiqueta o hashtag del evento:</label>
             <input
                 type="text"
-                name="hashtag"
-                value={formulario.hashtag}
-                onChange={handleChange}
+                {...register('hashtag')}
                 placeholder="#fiestaElectro2025"
+                className={errors.hashtag ? 'input-error' : ''}
             />
+            {errors.hashtag && (
+                <span className="field-error">{errors.hashtag.message}</span>
+            )}
 
             <button type="submit" disabled={cargando}>
                 {cargando ? 'Creando evento...' : 'Crear evento'}
@@ -385,7 +428,6 @@ export default function CrearEvento() {
             </form>
         </div>
 
-        {/* Footer Inferior */}
         <FooterEmpresa />
         </div>
     );
