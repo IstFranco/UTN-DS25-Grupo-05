@@ -4,11 +4,11 @@ import Header from '../components/Header';
 import FooterUsuario from '../components/FooterUsuario';
 import FooterEmpresa from '../components/FooterEmpresa';
 import FiltrosBusqueda from '../components/FiltrosBusqueda';
+import PresentCard from '../components/PresentCard';
 import ApiService from '../services/api';
 import perfilImg from '../img/LogoPerfil.jpeg';
 import notiImg from '../img/LogoNotificaciones.jpeg';
 import { useAuth } from '../contexts/AuthContext';
-import '../app.css';
 
 export default function MisEventos() {
     const [eventosInscritos, setEventosInscritos] = useState([]);
@@ -18,7 +18,6 @@ export default function MisEventos() {
     const [filtros, setFiltros] = useState({});
     const navigate = useNavigate();
 
-    // 👇 ahora usamos AuthContext
     const { user, userType } = useAuth();
     const esEmpresa = userType === 'empresa';
     const rol = esEmpresa ? 'empresa' : 'usuario';
@@ -51,7 +50,6 @@ export default function MisEventos() {
             } catch (error) {
                 console.error('Error al cargar eventos:', error);
                 setError('Error al cargar eventos');
-                // fallback local (solo si quisieras mantenerlo)
                 const clave = rol === 'empresa' ? 'misEventos' : 'eventosUsuario';
                 const guardados = JSON.parse(localStorage.getItem(clave)) || [];
                 setEventosInscritos(guardados);
@@ -60,7 +58,7 @@ export default function MisEventos() {
             }
         };
 
-        if (user) { // 👈 solo carga si ya hay usuario logueado
+        if (user) {
             cargarEventos();
         }
     }, [rol, esEmpresa, filtros, user]);
@@ -84,7 +82,8 @@ export default function MisEventos() {
         }
     };
 
-    const handleEliminarEvento = async (eventoId) => {
+    const handleEliminarEvento = async (eventoId, e) => {
+        e.stopPropagation();
         if (!window.confirm('¿Estás seguro de que deseas eliminar este evento?')) return;
         try {
             await ApiService.eliminarEvento(eventoId);
@@ -95,7 +94,8 @@ export default function MisEventos() {
         }
     };
 
-    const handleDesinscribirse = async (eventoId) => {
+    const handleDesinscribirse = async (eventoId, e) => {
+        e.stopPropagation();
         if (!window.confirm('¿Estás seguro de que deseas desinscribirte de este evento?')) return;
         try {
             const usuarioId = user?.userId;
@@ -122,98 +122,70 @@ export default function MisEventos() {
     };
 
     return (
-        <div>
+        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 pb-24 pt-20">
             <Header
                 title="Spott"
                 leftButton={{ type: 'image', content: perfilImg, to: `/${rol}/perfil` }}
                 rightButton={{ type: 'image', content: notiImg, to: `/${rol}/notificaciones` }}
             />
 
-            <div className='inicio'>
+            <div className="max-w-7xl mx-auto px-4 py-6">
                 {error && (
-                    <div style={{ backgroundColor: '#ff4444', color: 'white', padding: '10px', margin: '10px', borderRadius: '5px' }}>
+                    <div className="bg-red-500/20 border border-red-500/50 text-red-200 p-4 rounded-lg text-center mb-4">
                         {error}
                     </div>
                 )}
 
-                {/* Barra de búsqueda y filtros */}
                 <FiltrosBusqueda 
                     busqueda={busqueda} 
                     setBusqueda={setBusqueda} 
                     onAplicarFiltros={setFiltros} 
                 />
 
-                {/* Mis eventos */}
-                <div className='misEventos'>
-                    <h2 className="section-title">
+                <div className="mt-6">
+                    <h2 className="text-2xl font-bold text-white mb-4">
                         {esEmpresa ? 'Mis eventos creados' : 'Eventos inscritos'}
                     </h2>
                     
-                    {cargando && <p style={{ color: 'white', textAlign: 'center' }}>Cargando eventos...</p>}
+                    {cargando && (
+                        <div className="text-center py-12">
+                            <p className="text-slate-300">Cargando eventos...</p>
+                        </div>
+                    )}
                     
-                    {!cargando && eventosFiltrados.length === 0 ? (
-                        <p style={{ color: 'white', textAlign: 'center' }}>
-                            {esEmpresa ? 'No has creado eventos aún.' : 'No estás inscrito en ningún evento.'}
-                        </p>
-                    ) : (
-                        eventosFiltrados.map((evento, i) => (
-                            <div
-                                key={evento.id || `evento-${i}`}
-                                className="evento-item"
-                                style={{ position: 'relative' }}
-                            >
-                                <div 
-                                    onClick={() => handleEventoClick(evento)}
-                                    style={{ cursor: 'pointer', display: 'flex', width: '100%' }}
-                                >
-                                    <div className="evento-imagen">
-                                        <img 
-                                            src={evento.imageSrc || evento.portada || '/placeholder-image.jpg'} 
-                                            alt={evento.title || evento.nombre} 
-                                            onError={(e) => { e.target.src = '/placeholder-image.jpg'; }}
-                                        />
-                                    </div>
-                                    <div className="evento-info">
-                                        <div>
-                                            <h3 className="evento-titulo">{evento.title || evento.nombre}</h3>
-                                            <p className="evento-musica">
-                                                {evento.musica} 
-                                                {evento.fecha && ` • ${new Date(evento.fecha).toLocaleDateString()}`}
-                                                {evento.ciudad && ` • ${evento.ciudad}`}
-                                            </p>
-                                            <p className="evento-descripcion">
-                                                {evento.description || evento.descripcionLarga || 'Sin descripción'}
-                                            </p>
-                                        </div>
-                                        <div className="evento-rating">⭐ {evento.rating}</div>
-                                    </div>
+                    {!cargando && eventosFiltrados.length === 0 && (
+                        <div className="bg-purple-900/30 backdrop-blur-sm border border-purple-700/20 rounded-xl p-8 text-center">
+                            <p className="text-slate-300">
+                                {esEmpresa ? 'No has creado eventos aún.' : 'No estás inscrito en ningún evento.'}
+                            </p>
+                        </div>
+                    )}
+                    
+                    {!cargando && eventosFiltrados.length > 0 && (
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            {eventosFiltrados.map((evento, i) => (
+                                <div key={evento.id || `evento-${i}`} className="relative">
+                                    <PresentCard
+                                        imageSrc={evento.imageSrc || evento.portada}
+                                        title={evento.title || evento.nombre}
+                                        description={evento.description || evento.descripcionLarga || 'Sin descripción'}
+                                        rating={evento.rating}
+                                        onClick={() => handleEventoClick(evento)}
+                                    />
+                                    <button
+                                        onClick={(e) => esEmpresa ? handleEliminarEvento(evento.id, e) : handleDesinscribirse(evento.id, e)}
+                                        className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-3 py-1 rounded-lg transition z-10"
+                                    >
+                                        {esEmpresa ? 'Eliminar' : 'Desinscribirse'}
+                                    </button>
                                 </div>
-                                
-                                {/* Botones de acción */}
-                                <div style={{ position: 'absolute', top: '10px', right: '10px', display: 'flex', gap: '10px' }}>
-                                    {esEmpresa ? (
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); handleEliminarEvento(evento.id); }}
-                                            style={{ background: '#ff4444', color: 'white', border: 'none', borderRadius: '5px', padding: '5px 10px', cursor: 'pointer', fontSize: '12px' }}
-                                        >
-                                            Eliminar
-                                        </button>
-                                    ) : (
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); handleDesinscribirse(evento.id); }}
-                                            style={{ background: '#ff4444', color: 'white', border: 'none', borderRadius: '5px', padding: '5px 10px', cursor: 'pointer', fontSize: '12px' }}
-                                        >
-                                            Desinscribirse
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        ))
+                            ))}
+                        </div>
                     )}
                 </div>
-
-                {rol === 'empresa' ? <FooterEmpresa /> : <FooterUsuario />}
             </div>
+
+            {rol === 'empresa' ? <FooterEmpresa /> : <FooterUsuario />}
         </div>
     );
 }

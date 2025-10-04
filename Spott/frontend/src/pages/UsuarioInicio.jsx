@@ -7,11 +7,9 @@ import FooterUsuario from '../components/FooterUsuario';
 import PresentCard from '../components/PresentCard';
 import ApiService from '../services/api';
 import FiltrosBusqueda from "../components/FiltrosBusqueda";
-import '../app.css';
 
 export default function UsuarioInicio() {
     const navigate = useNavigate();
-
     const [eventos, setEventos] = useState([]);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState(null);
@@ -41,7 +39,6 @@ export default function UsuarioInicio() {
         "work-out", "world-music"
     ];
 
-    // Cargar eventos desde el backend y como fallback desde Ticketmaster
     useEffect(() => {
         const cargarEventos = async () => {
             setCargando(true);
@@ -135,7 +132,6 @@ export default function UsuarioInicio() {
         cargarEventos();
     }, [busqueda, filtros]);
 
-    // Cargar eventos inscritos del usuario
     useEffect(() => {
         const cargarEventosInscritos = async () => {
             try {
@@ -161,40 +157,53 @@ export default function UsuarioInicio() {
     };
 
     return (
-        <div>
+        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 pb-24 pt-20">
             <Header
                 title="Spott"
                 leftButton={{ type: 'image', content: perfilImg, to: '/usuario/perfil' }}
                 rightButton={{ type: 'image', content: notiImg, to: '/usuario/notificaciones' }}
             />
-            <div className='inicio'>
-                
-                {/* 🔎 Nuevo componente de búsqueda y filtros */}
+
+            <div className="max-w-7xl mx-auto px-4 py-6">
                 <FiltrosBusqueda 
                     busqueda={busqueda} 
                     setBusqueda={setBusqueda} 
                     onAplicarFiltros={setFiltros} 
                 />
 
-                {/* Eventos destacados */}
-                <div className="destacados">
-                    <h2 className="section-title">Eventos Destacados</h2>
-                    {cargando && <p>Cargando eventos...</p>}
-                    {error && <p style={{ color: '#ff4444' }}>Error: {error}</p>}
-                    {!cargando && !error && eventos.map((evento, i) => (
-                        <PresentCard
-                            key={evento.id || `evento-${i}`}
-                            imageSrc={evento.imageSrc}
-                            title={evento.title}
-                            description={evento.description}
-                            rating={evento.rating}
-                            onClick={() => handleEventoClick(evento)}
-                        />
-                    ))}
+                <div className="mt-6">
+                    <h2 className="text-2xl font-bold text-white mb-4">Eventos Destacados</h2>
+                    
+                    {cargando && (
+                        <div className="text-center py-12">
+                            <p className="text-slate-300">Cargando eventos...</p>
+                        </div>
+                    )}
+                    
+                    {error && (
+                        <div className="bg-red-500/20 border border-red-500/50 text-red-200 p-4 rounded-lg text-center">
+                            Error: {error}
+                        </div>
+                    )}
+                    
+                    {!cargando && !error && (
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            {eventos.map((evento, i) => (
+                                <PresentCard
+                                    key={evento.id || `evento-${i}`}
+                                    imageSrc={evento.imageSrc}
+                                    title={evento.title}
+                                    description={evento.description}
+                                    rating={evento.rating}
+                                    onClick={() => handleEventoClick(evento)}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </div>
-
-                <FooterUsuario />
             </div>
+
+            <FooterUsuario />
         </div>
     );
 }

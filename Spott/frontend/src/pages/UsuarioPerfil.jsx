@@ -3,53 +3,63 @@ import perfilImg from '../img/LogoPerfil.jpeg';
 import Header from '../components/Header';
 import notiImg from '../img/LogoNotificaciones.jpeg';
 import FooterUsuario from '../components/FooterUsuario';
-import '../app.css';
 
 export default function UsuarioPerfil() {
     const navigate = useNavigate();
 
     return (
-        <div>
-                <Header
-                    title="Spott"
-                    leftButton={{ type: 'image', content: perfilImg, to: '/usuario/perfil' }}
-                    rightButton={{ type: 'image', content: notiImg, to: '/usuario/notificaciones' }}
-                />
-            
-            <div className="container">
+        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 pb-24 pt-20">
+            <Header
+                title="Spott"
+                leftButton={{ type: 'image', content: perfilImg, to: '/usuario/perfil' }}
+                rightButton={{ type: 'image', content: notiImg, to: '/usuario/notificaciones' }}
+            />
 
-                <div className="perfil">
-                    <div>
-                        <img src={perfilImg} alt="Foto de perfil" className="fotoPerfil" />
-                        <h2>Usuario Spott</h2>
-                        <p>usuario@spott.com</p>
+            <div className="max-w-md mx-auto px-4 py-8">
+                <div className="bg-purple-900/30 backdrop-blur-sm border border-purple-700/20 rounded-xl p-8 shadow-2xl">
+                    {/* Foto y datos del perfil */}
+                    <div className="text-center mb-8">
+                        <img 
+                            src={perfilImg} 
+                            alt="Foto de perfil" 
+                            className="w-32 h-32 rounded-full mx-auto mb-4 border-4 border-purple-600/50 object-cover"
+                        />
+                        <h2 className="text-2xl font-bold text-white mb-1">Usuario Spott</h2>
+                        <p className="text-slate-400">usuario@spott.com</p>
                     </div>
-                    <div className="botones">
-                        <button className="quick-btn">
-                            <span className="icon">⚙️</span>
-                            <span className="text">Configuración</span>
+
+                    {/* Botones de opciones */}
+                    <div className="space-y-3">
+                        <button className="w-full bg-slate-900/50 border border-purple-700/50 rounded-lg p-4 hover:bg-slate-800/50 transition flex items-center gap-3">
+                            <span className="text-2xl">⚙️</span>
+                            <span className="text-white font-medium">Configuración</span>
                         </button>
-                        <button className="quick-btn">
-                            <span className="icon">🔒</span>
-                            <span className="text">Privacidad</span>
+
+                        <button className="w-full bg-slate-900/50 border border-purple-700/50 rounded-lg p-4 hover:bg-slate-800/50 transition flex items-center gap-3">
+                            <span className="text-2xl">🔒</span>
+                            <span className="text-white font-medium">Privacidad</span>
                         </button>
-                        <button className="quick-btn" onClick={() => navigate('/usuario/ayuda')}>
-                            <span className="icon">❓</span>
-                            <span className="text">Ayuda</span>
-                        </button>
-                        <button
-                            className="quick-btn"
-                            onClick={() => navigate('/')}
+
+                        <button 
+                            onClick={() => navigate('/usuario/ayuda')}
+                            className="w-full bg-slate-900/50 border border-purple-700/50 rounded-lg p-4 hover:bg-slate-800/50 transition flex items-center gap-3"
                         >
-                            <span className="icon">🚪</span>
-                            <span className="text">Cerrar sesión</span>
+                            <span className="text-2xl">❓</span>
+                            <span className="text-white font-medium">Ayuda</span>
+                        </button>
+
+                        <button
+                            onClick={() => navigate('/')}
+                            className="w-full bg-red-600/20 border border-red-500/50 rounded-lg p-4 hover:bg-red-600/30 transition flex items-center gap-3"
+                        >
+                            <span className="text-2xl">🚪</span>
+                            <span className="text-white font-medium">Cerrar sesión</span>
                         </button>
                     </div>
                 </div>
-
-                {/* Footer Inferior */}
-                <FooterUsuario />
             </div>
+
+            <FooterUsuario />
         </div>
     );
 }

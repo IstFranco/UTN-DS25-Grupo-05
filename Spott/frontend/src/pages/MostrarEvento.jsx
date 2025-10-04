@@ -16,7 +16,11 @@ export default function MostrarEvento() {
     const [estadisticasEvento, setEstadisticasEvento] = useState(null);
 
     if (!state?.evento) {
-        return <p>No hay datos del evento.</p>;
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 flex items-center justify-center">
+                <p className="text-slate-300">No hay datos del evento.</p>
+            </div>
+        );
     }
 
     const {
@@ -34,7 +38,6 @@ export default function MostrarEvento() {
         imagenes = []
     } = state.evento;
 
-    // Cargar estadísticas del evento al montar
     useEffect(() => {
         const cargarEstadisticas = async () => {
             try {
@@ -51,9 +54,7 @@ export default function MostrarEvento() {
         cargarEstadisticas();
     }, [id]);
 
-    // Verificar si el usuario ya está inscrito al cargar el componente
     useEffect(() => {
-        // Verificar que el usuario esté autenticado
         if (!user || !user.userId) {
             console.error("No se encontró ID de usuario");
             return;
@@ -68,7 +69,6 @@ export default function MostrarEvento() {
         })
         .catch(err => console.error("Error al verificar inscripción:", err));
 
-        // Verificar favorito
         fetch(`http://localhost:3000/api/favoritos/check/${id}/${usuarioId}`)
         .then(res => res.json())
         .then(data => {
@@ -98,12 +98,10 @@ export default function MostrarEvento() {
                 throw new Error(data.message || "Error al inscribirse");
             }
 
-            console.log("Inscripción realizada:", data);
             setUsuarioInscrito(true);
             setShowTicketModal(false);
             alert(`¡Te inscribiste al evento con entrada ${tipoEntrada.toUpperCase()}!`);
             
-            // Recargar estadísticas después de la inscripción
             const statsRes = await fetch(`http://localhost:3000/api/eventos/${id}/estadisticas`);
             if (statsRes.ok) {
                 const statsData = await statsRes.json();
@@ -116,7 +114,6 @@ export default function MostrarEvento() {
     };
 
     const desinscribirme = async () => {
-        console.log('🔴 BOTÓN DESINSCRIBIRSE CLICKEADO');
         if (!window.confirm('¿Estás seguro de que deseas desinscribirte de este evento?')) {
             return;
         }
@@ -139,13 +136,9 @@ export default function MostrarEvento() {
                 throw new Error(errorData.message || "Error al desinscribirse");
             }
 
-            const data = await res.json();
-            console.log("Desinscripción realizada:", data);
-
             setUsuarioInscrito(false);
             alert("Te has desinscrito del evento exitosamente");
             
-            // Recargar estadísticas después de la desinscripción
             const statsRes = await fetch(`http://localhost:3000/api/eventos/${id}/estadisticas`);
             if (statsRes.ok) {
                 const statsData = await statsRes.json();
@@ -157,7 +150,6 @@ export default function MostrarEvento() {
         }
     };
 
-    // Función para manejar favoritos
     const toggleFavorito = async () => {
         try {
             if (!user || !user.userId) {
@@ -168,7 +160,6 @@ export default function MostrarEvento() {
             const usuarioId = user.userId;
 
             if (esFavorito) {
-                // Eliminar de favoritos
                 const res = await fetch(`http://localhost:3000/api/favoritos/${id}/${usuarioId}`, {
                     method: "DELETE"
                 });
@@ -177,7 +168,6 @@ export default function MostrarEvento() {
                     alert("Eliminado de favoritos");
                 }
             } else {
-                // Agregar a favoritos
                 const res = await fetch(`http://localhost:3000/api/favoritos`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -194,106 +184,112 @@ export default function MostrarEvento() {
     };
 
     return (
-        <div>
+        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 pb-24 pt-20">
             <Header
                 title="Spott"
                 leftButton={{ type: 'image', content: perfilImg, to: '/usuario/perfil' }}
                 rightButton={{ type: 'image', content: notiImg, to: '/usuario/notificaciones' }}
             />
 
-            <div className="mostrar-evento">
-                <div className="evento-card">
-                    {/* Encabezado con logo y título */}
-                    <div className="evento-header">
-                        <img className="evento-logo" src={imageSrc} alt="Logo evento" />
-                        <div className="evento-titulo-box">
-                            <h2 className="evento-titulo">{title}</h2>
-                            <p className="evento-inscriptos">{inscriptos} inscriptos</p>
+            <div className="max-w-4xl mx-auto px-4 py-6">
+                <div className="bg-purple-900/30 backdrop-blur-sm border border-purple-700/20 rounded-xl p-6 shadow-2xl">
+                    {/* Header con imagen más grande, título y favorito */}
+                    <div className="flex items-start gap-4 mb-6">
+                        <img 
+                            src={imageSrc} 
+                            alt="Logo evento" 
+                            className="w-40 h-40 rounded-lg object-cover border-2 border-purple-600/50"
+                        />
+                        <div className="flex-1">
+                            <h2 className="text-2xl font-bold text-white mb-2">{title}</h2>
+                            <p className="text-slate-400 mb-3">{inscriptos} inscriptos</p>
+                            
+                            {/* Descripción aquí */}
+                            <p className="text-slate-300 text-sm leading-relaxed">{description}</p>
                         </div>
                         <button 
                             onClick={toggleFavorito}
-                            style={{
-                                background: 'none',
-                                border: 'none',
-                                fontSize: '24px',
-                                cursor: 'pointer'
-                            }}
+                            className="text-3xl hover:scale-110 transition"
                         >
                             {esFavorito ? '❤️' : '🤍'}
                         </button>
                     </div>
 
                     {/* Info del evento */}
-                    <div className="evento-info">
-                        <p className="evento-rating">⭐ {rating}</p>
-                        <p className="evento-ubicacion">📍 {barrio}, {ciudad}</p>
-                        <p className="evento-tematica">🎭 {tematica}</p>
-                        <p className="evento-genero">🎵 {musica}</p>
+                    <div className="grid grid-cols-2 gap-3 mb-6">
+                        <div className="bg-slate-900/50 rounded-lg p-3">
+                            <p className="text-slate-400 text-sm">Rating</p>
+                            <p className="text-white font-semibold">⭐ {rating}</p>
+                        </div>
+                        <div className="bg-slate-900/50 rounded-lg p-3">
+                            <p className="text-slate-400 text-sm">Ubicación</p>
+                            <p className="text-white font-semibold">📍 {barrio}, {ciudad}</p>
+                        </div>
+                        <div className="bg-slate-900/50 rounded-lg p-3">
+                            <p className="text-slate-400 text-sm">Temática</p>
+                            <p className="text-white font-semibold">🎭 {tematica}</p>
+                        </div>
+                        <div className="bg-slate-900/50 rounded-lg p-3">
+                            <p className="text-slate-400 text-sm">Música</p>
+                            <p className="text-white font-semibold">🎵 {musica}</p>
+                        </div>
                     </div>
 
                     {/* Disponibilidad de entradas */}
                     {estadisticasEvento && (
-                        <div className="disponibilidad-entradas" style={{ 
-                            background: '#f5f5f5', 
-                            padding: '15px', 
-                            borderRadius: '8px', 
-                            margin: '15px 0' 
-                        }}>
-                            <h3 style={{ margin: '0 0 10px 0', fontSize: '16px' }}>Disponibilidad de Entradas</h3>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                        <div className="bg-slate-900/50 rounded-lg p-4 mb-6">
+                            <h3 className="text-white font-bold mb-3">Disponibilidad de Entradas</h3>
+                            <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <strong>General:</strong> {estadisticasEvento.disponibles.disponiblesGeneral} / {estadisticasEvento.cupos.cupoGeneral} disponibles
+                                    <p className="text-slate-400 text-sm">General</p>
+                                    <p className="text-white font-semibold">
+                                        {estadisticasEvento.disponibles.disponiblesGeneral} / {estadisticasEvento.cupos.cupoGeneral} disponibles
+                                    </p>
                                 </div>
                                 <div>
-                                    <strong>VIP:</strong> {estadisticasEvento.disponibles.disponiblesVip} / {estadisticasEvento.cupos.cupoVip} disponibles
+                                    <p className="text-slate-400 text-sm">VIP</p>
+                                    <p className="text-white font-semibold">
+                                        {estadisticasEvento.disponibles.disponiblesVip} / {estadisticasEvento.cupos.cupoVip} disponibles
+                                    </p>
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    {/* Descripción amplia */}
-                    <div>
-                        <h3>Descripción</h3>
-                        <p>{description}</p>
-                    </div>
-
-                    {/* Galería de imágenes */}
-                    <div className="evento-galeria">
-                        <h3>Fotos del evento</h3>
-                        <div className="galeria-scroll">
-                            {imagenes.map((img, index) => (
-                                <img key={index} src={img} alt={`foto-${index}`} className="galeria-img" />
-                            ))}
+                    {/* Galería de fotos extra */}
+                    {imagenes.length > 0 && (
+                        <div className="mb-6">
+                            <h3 className="text-white font-bold mb-3">Galería del evento</h3>
+                            <div className="flex gap-3 overflow-x-auto pb-2">
+                                {imagenes.map((img, index) => (
+                                    <img 
+                                        key={index} 
+                                        src={img} 
+                                        alt={`foto-${index}`} 
+                                        className="h-40 rounded-lg object-cover border-2 border-purple-600/50 flex-shrink-0"
+                                    />
+                                ))}
+                            </div>
                         </div>
-                    </div>
+                    )}
 
-                    {/* Botón de inscripción */}
-                    <div className="evento-inscribirse">
+                    {/* Botones de inscripción */}
+                    <div>
                         {!usuarioInscrito ? (
                             <button 
-                                className="btn-inscribirse" 
                                 onClick={() => setShowTicketModal(true)}
+                                className="w-full bg-gradient-to-r from-purple-700 to-violet-700 hover:from-purple-600 hover:to-violet-600 text-white font-semibold py-3 px-4 rounded-lg transition shadow-lg"
                             >
                                 Inscribirme al evento
                             </button>
                         ) : (
-                            <div>
-                                <div className="inscripcion-confirmada" style={{ marginBottom: '10px' }}>
+                            <div className="space-y-3">
+                                <div className="bg-green-600/20 border border-green-500/50 text-green-200 p-3 rounded-lg text-center font-semibold">
                                     ✅ ¡Ya estás inscrito!
                                 </div>
                                 <button 
-                                    className="btn-desinscribirse" 
                                     onClick={desinscribirme}
-                                    style={{
-                                        background: '#ff4444',
-                                        color: 'white',
-                                        border: 'none',
-                                        borderRadius: '8px',
-                                        padding: '12px 24px',
-                                        cursor: 'pointer',
-                                        fontSize: '16px',
-                                        width: '100%'
-                                    }}
+                                    className="w-full bg-red-600/20 border border-red-500/50 hover:bg-red-600/30 text-white font-semibold py-3 px-4 rounded-lg transition"
                                 >
                                     Desinscribirme del evento
                                 </button>
@@ -301,67 +297,53 @@ export default function MostrarEvento() {
                         )}
                     </div>
                 </div>
+
+                {/* Componente de votación - solo si está inscrito */}
+                {usuarioInscrito && (
+                    <SongVoting 
+                        eventoId={id} 
+                        usuarioInscrito={usuarioInscrito} 
+                        userId={user?.userId}
+                        generoEvento={musica} 
+                    />
+                )}
             </div>
 
-            {/* Modal de selección de tipo de entrada */}
+            {/* Modal de selección de tickets */}
             {showTicketModal && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    zIndex: 1000
-                }}>
-                    <div style={{
-                        backgroundColor: 'white',
-                        borderRadius: '12px',
-                        padding: '20px',
-                        maxWidth: '400px',
-                        width: '90%',
-                        maxHeight: '80vh',
-                        overflowY: 'auto'
-                    }}>
-                        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-                            <h3 style={{ margin: '0 0 10px 0' }}>Selecciona tu tipo de entrada</h3>
-                            <p style={{ color: '#666', fontSize: '14px', margin: 0 }}>
-                                Elige el tipo de entrada que prefieras para este evento
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-purple-900/40 backdrop-blur-md border border-purple-700/30 rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+                        <div className="text-center mb-6">
+                            <h3 className="text-2xl font-bold text-white mb-2">Selecciona tu entrada</h3>
+                            <p className="text-slate-300 text-sm">
+                                Elige el tipo de entrada que prefieras
                             </p>
                         </div>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                        <div className="space-y-4">
                             {/* Entrada General */}
                             <div 
                                 onClick={() => estadisticasEvento?.disponibles.disponiblesGeneral > 0 && handleTicketSelection('general')}
-                                style={{
-                                    border: estadisticasEvento?.disponibles.disponiblesGeneral > 0 ? '2px solid #ddd' : '2px solid #ffcccb',
-                                    borderRadius: '8px',
-                                    padding: '15px',
-                                    cursor: estadisticasEvento?.disponibles.disponiblesGeneral > 0 ? 'pointer' : 'not-allowed',
-                                    backgroundColor: estadisticasEvento?.disponibles.disponiblesGeneral > 0 ? 'white' : '#f5f5f5',
-                                    opacity: estadisticasEvento?.disponibles.disponiblesGeneral > 0 ? 1 : 0.6,
-                                    transition: 'all 0.2s ease'
-                                }}
+                                className={`border-2 rounded-lg p-4 transition ${
+                                    estadisticasEvento?.disponibles.disponiblesGeneral > 0
+                                        ? 'border-purple-600 cursor-pointer hover:border-purple-500 bg-slate-900/50'
+                                        : 'border-red-500/50 cursor-not-allowed bg-slate-900/30 opacity-60'
+                                }`}
                             >
-                                <h4 style={{ margin: '0 0 8px 0', color: '#333' }}>🎫 Entrada General</h4>
-                                <p style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: 'bold' }}>
+                                <h4 className="text-white font-bold mb-2">🎫 Entrada General</h4>
+                                <p className="text-2xl font-bold text-white mb-2">
                                     ${precio || 'Gratis'}
                                 </p>
-                                <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#666' }}>
-                                    • Acceso completo al evento<br/>
-                                    • Participación en votación de música<br/>
-                                    • Zona general del venue
-                                </p>
-                                <p style={{ 
-                                    margin: 0, 
-                                    fontSize: '12px', 
-                                    color: estadisticasEvento?.disponibles.disponiblesGeneral > 0 ? '#28a745' : '#dc3545',
-                                    fontWeight: 'bold'
-                                }}>
+                                <ul className="text-slate-300 text-sm space-y-1 mb-2">
+                                    <li>• Acceso completo al evento</li>
+                                    <li>• Participación en votación de música</li>
+                                    <li>• Zona general del venue</li>
+                                </ul>
+                                <p className={`text-xs font-bold ${
+                                    estadisticasEvento?.disponibles.disponiblesGeneral > 0 
+                                        ? 'text-green-400' 
+                                        : 'text-red-400'
+                                }`}>
                                     {estadisticasEvento?.disponibles.disponiblesGeneral > 0 
                                         ? `${estadisticasEvento.disponibles.disponiblesGeneral} entradas disponibles`
                                         : 'Sin disponibilidad'
@@ -372,32 +354,27 @@ export default function MostrarEvento() {
                             {/* Entrada VIP */}
                             <div 
                                 onClick={() => estadisticasEvento?.disponibles.disponiblesVip > 0 && handleTicketSelection('vip')}
-                                style={{
-                                    border: estadisticasEvento?.disponibles.disponiblesVip > 0 ? '2px solid #ffd700' : '2px solid #ffcccb',
-                                    borderRadius: '8px',
-                                    padding: '15px',
-                                    cursor: estadisticasEvento?.disponibles.disponiblesVip > 0 ? 'pointer' : 'not-allowed',
-                                    backgroundColor: estadisticasEvento?.disponibles.disponiblesVip > 0 ? '#fffef7' : '#f5f5f5',
-                                    opacity: estadisticasEvento?.disponibles.disponiblesVip > 0 ? 1 : 0.6,
-                                    transition: 'all 0.2s ease'
-                                }}
+                                className={`border-2 rounded-lg p-4 transition ${
+                                    estadisticasEvento?.disponibles.disponiblesVip > 0
+                                        ? 'border-yellow-500 cursor-pointer hover:border-yellow-400 bg-yellow-500/10'
+                                        : 'border-red-500/50 cursor-not-allowed bg-slate-900/30 opacity-60'
+                                }`}
                             >
-                                <h4 style={{ margin: '0 0 8px 0', color: '#333' }}>👑 Entrada VIP</h4>
-                                <p style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: 'bold' }}>
+                                <h4 className="text-white font-bold mb-2">👑 Entrada VIP</h4>
+                                <p className="text-2xl font-bold text-white mb-2">
                                     ${(precio ? precio * 1.5 : 50).toFixed(0)}
                                 </p>
-                                <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#666' }}>
-                                    • Todo lo de entrada general<br/>
-                                    • Área VIP exclusiva<br/>
-                                    • Bebida de bienvenida<br/>
-                                    • Acceso prioritario
-                                </p>
-                                <p style={{ 
-                                    margin: 0, 
-                                    fontSize: '12px', 
-                                    color: estadisticasEvento?.disponibles.disponiblesVip > 0 ? '#28a745' : '#dc3545',
-                                    fontWeight: 'bold'
-                                }}>
+                                <ul className="text-slate-300 text-sm space-y-1 mb-2">
+                                    <li>• Todo lo de entrada general</li>
+                                    <li>• Área VIP exclusiva</li>
+                                    <li>• Bebida de bienvenida</li>
+                                    <li>• Acceso prioritario</li>
+                                </ul>
+                                <p className={`text-xs font-bold ${
+                                    estadisticasEvento?.disponibles.disponiblesVip > 0 
+                                        ? 'text-green-400' 
+                                        : 'text-red-400'
+                                }`}>
                                     {estadisticasEvento?.disponibles.disponiblesVip > 0 
                                         ? `${estadisticasEvento.disponibles.disponiblesVip} entradas disponibles`
                                         : 'Sin disponibilidad'
@@ -408,30 +385,13 @@ export default function MostrarEvento() {
 
                         <button 
                             onClick={() => setShowTicketModal(false)}
-                            style={{
-                                marginTop: '20px',
-                                width: '100%',
-                                padding: '12px',
-                                border: '1px solid #ddd',
-                                borderRadius: '8px',
-                                backgroundColor: 'white',
-                                cursor: 'pointer',
-                                fontSize: '16px'
-                            }}
+                            className="mt-6 w-full bg-slate-900/50 border border-purple-700/50 text-white font-semibold py-3 px-4 rounded-lg hover:bg-slate-800/50 transition"
                         >
                             Cancelar
                         </button>
                     </div>
                 </div>
             )}
-
-            {/* Componente de votación de canciones */}
-            <SongVoting 
-                eventoId={id} 
-                usuarioInscrito={usuarioInscrito} 
-                userId={user?.userId}
-                generoEvento={musica} 
-            />
 
             <FooterUsuario />
         </div>
