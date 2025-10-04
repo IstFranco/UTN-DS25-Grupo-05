@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import FooterUsuario from '../components/FooterUsuario';
 import FooterEmpresa from '../components/FooterEmpresa';
@@ -7,6 +7,7 @@ import FiltrosBusqueda from '../components/FiltrosBusqueda';
 import ApiService from '../services/api';
 import perfilImg from '../img/LogoPerfil.jpeg';
 import notiImg from '../img/LogoNotificaciones.jpeg';
+import { useAuth } from '../contexts/AuthContext';
 import '../app.css';
 
 export default function MisEventos() {
@@ -17,11 +18,11 @@ export default function MisEventos() {
     const [filtros, setFiltros] = useState({});
     const navigate = useNavigate();
 
-    const location = useLocation();
-    const esEmpresa = location.pathname.startsWith('/empresa');
+    // 👇 ahora usamos AuthContext
+    const { user, userType } = useAuth();
+    const esEmpresa = userType === 'empresa';
     const rol = esEmpresa ? 'empresa' : 'usuario';
 
-    // Cargar eventos desde el backend
     useEffect(() => {
         const cargarEventos = async () => {
             setCargando(true);
@@ -30,27 +31,19 @@ export default function MisEventos() {
             try {
                 let eventos = [];
                 if (esEmpresa) {
-                    // Obtener empresaId del objeto completo
-                    const empresaData = JSON.parse(localStorage.getItem('empresa') || '{}');
-                    const empresaId = empresaData.id;
-                    
+                    const empresaId = user?.userId;
                     if (!empresaId) {
                         setError('No se encontró información de la empresa');
                         return;
                     }
-                    
                     const response = await ApiService.obtenerEventosPorEmpresa(empresaId);
                     eventos = response.eventos || [];
                 } else {
-                    // Obtener usuarioId del objeto completo
-                    const usuarioData = JSON.parse(localStorage.getItem('usuario') || '{}');
-                    const usuarioId = usuarioData.id;
-                    
+                    const usuarioId = user?.userId;
                     if (!usuarioId) {
                         setError('No se encontró información del usuario');
                         return;
                     }
-                    
                     const response = await ApiService.obtenerEventosInscritos(usuarioId);
                     eventos = response.eventos || [];
                 }
@@ -58,7 +51,7 @@ export default function MisEventos() {
             } catch (error) {
                 console.error('Error al cargar eventos:', error);
                 setError('Error al cargar eventos');
-                // Fallback a localStorage
+                // fallback local (solo si quisieras mantenerlo)
                 const clave = rol === 'empresa' ? 'misEventos' : 'eventosUsuario';
                 const guardados = JSON.parse(localStorage.getItem(clave)) || [];
                 setEventosInscritos(guardados);
@@ -67,8 +60,10 @@ export default function MisEventos() {
             }
         };
 
-        cargarEventos();
-    }, [rol, esEmpresa, filtros]);
+        if (user) { // 👈 solo carga si ya hay usuario logueado
+            cargarEventos();
+        }
+    }, [rol, esEmpresa, filtros, user]);
 
     const eventosFiltrados = eventosInscritos.filter(evento =>
         evento.title?.toLowerCase().includes(busqueda.toLowerCase()) ||
@@ -79,13 +74,11 @@ export default function MisEventos() {
         if (esEmpresa) {
             navigate('/empresa/editar-evento', { state: { evento } });
         } else {
-            const usuarioData = JSON.parse(localStorage.getItem('usuario') || '{}');
-            const usuarioId = usuarioData.id;
             navigate('/evento-inscripto', { 
                 state: { 
                     evento, 
                     usuarioInscrito: true, 
-                    userId: usuarioId 
+                    userId: user?.userId 
                 } 
             });
         }
@@ -96,10 +89,6 @@ export default function MisEventos() {
         try {
             await ApiService.eliminarEvento(eventoId);
             setEventosInscritos(prev => prev.filter(evento => evento.id !== eventoId));
-            const clave = 'misEventos';
-            const guardados = JSON.parse(localStorage.getItem(clave)) || [];
-            const actualizados = guardados.filter(evento => evento.id !== eventoId);
-            localStorage.setItem(clave, JSON.stringify(actualizados));
         } catch (error) {
             console.error('Error al eliminar evento:', error);
             setError('Error al eliminar el evento');
@@ -107,17 +96,14 @@ export default function MisEventos() {
     };
 
     const handleDesinscribirse = async (eventoId) => {
-        console.log('🔴 BOTÓN DESINSCRIBIRSE CLICKEADO');
         if (!window.confirm('¿Estás seguro de que deseas desinscribirte de este evento?')) return;
         try {
-            const usuarioData = JSON.parse(localStorage.getItem('usuario') || '{}');
-            const usuarioId = usuarioData.id;
-            
+            const usuarioId = user?.userId;
             if (!usuarioId) {
                 setError('No se encontró información del usuario');
                 return;
             }
-            
+
             const res = await fetch(`http://localhost:3000/api/eventos/${eventoId}/usuario/${usuarioId}`, {
                 method: "DELETE",
                 headers: { "Content-Type": "application/json" }
@@ -129,10 +115,6 @@ export default function MisEventos() {
             }
             
             setEventosInscritos(prev => prev.filter(evento => evento.id !== eventoId));
-            const clave = 'eventosUsuario';
-            const guardados = JSON.parse(localStorage.getItem(clave)) || [];
-            const actualizados = guardados.filter(evento => evento.id !== eventoId);
-            localStorage.setItem(clave, JSON.stringify(actualizados));
         } catch (error) {
             console.error('Error al desinscribirse:', error);
             setError('Error al desinscribirse del evento');
