@@ -196,7 +196,7 @@ export default function MostrarEvento() {
                     {/* Header con imagen más grande, título y favorito */}
                     <div className="flex items-start gap-4 mb-6">
                         <img 
-                            src={imageSrc} 
+                            src={`http://localhost:3000${imageSrc}`} 
                             alt="Logo evento" 
                             className="w-40 h-40 rounded-lg object-cover border-2 border-purple-600/50"
                         />
@@ -264,7 +264,7 @@ export default function MostrarEvento() {
                                 {imagenes.map((img, index) => (
                                     <img 
                                         key={index} 
-                                        src={img} 
+                                        src={`http://localhost:3000${img}`} 
                                         alt={`foto-${index}`} 
                                         className="h-40 rounded-lg object-cover border-2 border-purple-600/50 flex-shrink-0"
                                     />
