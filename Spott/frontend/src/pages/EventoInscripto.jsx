@@ -11,11 +11,14 @@ export default function EventoInscripto() {
     const { state } = useLocation();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
-
-    const { user } = useAuth(); 
+    const { user } = useAuth();
 
     if (!state?.evento) {
-        return <p>No hay datos del evento.</p>;
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 flex items-center justify-center">
+                <p className="text-slate-300">No hay datos del evento.</p>
+            </div>
+        );
     }
 
     const {
@@ -34,30 +37,22 @@ export default function EventoInscripto() {
         if (!window.confirm('¿Estás seguro de que deseas desinscribirte de este evento?')) {
             return;
         }
-
         try {
             if (!user?.userId) {
                 alert("Error: No se encontró información del usuario. Inicia sesión nuevamente.");
                 return;
             }
-
             setLoading(true);
-
             const res = await fetch(`http://localhost:3000/api/eventos/${id}/usuario/${user.userId}`, {
                 method: "DELETE",
                 headers: { "Content-Type": "application/json" }
             });
-
             if (!res.ok) {
                 const errorData = await res.json();
                 throw new Error(errorData.message || "Error al desinscribirse");
             }
-
-            const data = await res.json();
-            console.log("✅ Desinscripción realizada:", data);
-
             alert("Te has desinscrito del evento exitosamente");
-            navigate('/usuario'); // Redirigir al inicio del usuario
+            navigate('/usuario');
         } catch (err) {
             console.error(err);
             alert(`Error al desinscribirse del evento: ${err.message}`);
@@ -67,45 +62,68 @@ export default function EventoInscripto() {
     };
 
     return (
-        <div>
+        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 pb-24 pt-20">
             <Header
                 title="Spott"
                 leftButton={{ type: 'image', content: perfilImg, to: '/usuario/perfil' }}
                 rightButton={{ type: 'image', content: notiImg, to: '/usuario/notificaciones' }}
             />
 
-            <div className="mostrar-evento">
-                <div className="evento-card">
-                    <div className="evento-header">
-                        <img className="evento-logo" src={imageSrc} alt="Logo evento" />
-                        <div className="evento-titulo-box">
-                            <h2 className="evento-titulo">{title}</h2>
+            <div className="max-w-4xl mx-auto px-4 py-6">
+                <div className="bg-purple-900/30 backdrop-blur-sm border border-purple-700/20 rounded-xl p-6 shadow-2xl">
+                    {/* Header */}
+                    <div className="flex items-start gap-4 mb-6">
+                        <img 
+                            src={imageSrc} 
+                            alt="Logo evento" 
+                            className="w-24 h-24 rounded-lg object-cover border-2 border-purple-600/50"
+                        />
+                        <div className="flex-1">
+                            <h2 className="text-2xl font-bold text-white mb-1">{title}</h2>
+                            <div className="bg-green-600/20 border border-green-500/50 text-green-200 px-3 py-1 rounded-lg text-sm font-semibold inline-block mt-2">
+                                ✅ Estás inscrito
+                            </div>
                         </div>
                     </div>
 
-                    <div className="evento-info">
-                        <p className="evento-rating">⭐ {rating}</p>
-                        <p className="evento-ubicacion">📍 {barrio}, {ciudad}</p>
-                        <p className="evento-tematica">🎭 {tematica}</p>
-                        <p className="evento-genero">🎵 {musica}</p>
+                    {/* Info del evento */}
+                    <div className="grid grid-cols-2 gap-3 mb-6">
+                        <div className="bg-slate-900/50 rounded-lg p-3">
+                            <p className="text-slate-400 text-sm">Rating</p>
+                            <p className="text-white font-semibold">⭐ {rating}</p>
+                        </div>
+                        <div className="bg-slate-900/50 rounded-lg p-3">
+                            <p className="text-slate-400 text-sm">Ubicación</p>
+                            <p className="text-white font-semibold">📍 {barrio}, {ciudad}</p>
+                        </div>
+                        <div className="bg-slate-900/50 rounded-lg p-3">
+                            <p className="text-slate-400 text-sm">Temática</p>
+                            <p className="text-white font-semibold">🎭 {tematica}</p>
+                        </div>
+                        <div className="bg-slate-900/50 rounded-lg p-3">
+                            <p className="text-slate-400 text-sm">Música</p>
+                            <p className="text-white font-semibold">🎵 {musica}</p>
+                        </div>
                     </div>
 
-                    <h3>Descripción</h3>
-                    <p>{description}</p>
-
-                    <div className="evento-inscribirse">
-                        <button 
-                            className="btn-inscribirse" 
-                            onClick={desinscribirme}
-                            disabled={loading}
-                        >
-                            {loading ? "Procesando..." : "Desinscribirme"}
-                        </button>
+                    {/* Descripción */}
+                    <div className="mb-6">
+                        <h3 className="text-white font-bold mb-2">Descripción</h3>
+                        <p className="text-slate-300">{description}</p>
                     </div>
+
+                    {/* Botón desinscribirse */}
+                    <button
+                        onClick={desinscribirme}
+                        disabled={loading}
+                        className="w-full bg-red-600/20 border border-red-500/50 hover:bg-red-600/30 text-white font-semibold py-3 px-4 rounded-lg transition disabled:opacity-50"
+                    >
+                        {loading ? "Procesando..." : "Desinscribirme del evento"}
+                    </button>
                 </div>
             </div>
 
-            
+            {/* Votación de canciones */}
             <SongVoting
                 eventoId={id}
                 usuarioInscrito={state?.usuarioInscrito ?? true}
