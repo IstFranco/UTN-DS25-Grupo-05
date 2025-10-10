@@ -202,7 +202,7 @@ export default function MostrarEvento() {
                         />
                         <div className="flex-1">
                             <h2 className="text-2xl font-bold text-white mb-2">{title}</h2>
-                            <p className="text-slate-400 mb-3">{inscriptos} inscriptos</p>
+                            <p className="text-slate-300 mb-3">{inscriptos} inscriptos</p>
                             
                             {/* Descripción aquí */}
                             <p className="text-slate-300 text-sm leading-relaxed">{description}</p>

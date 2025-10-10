@@ -8,7 +8,7 @@ export default function PresentCard({ imageSrc = "", title, description, rating,
             <div className="relative h-48 overflow-hidden bg-slate-900/50">
                 {imageSrc ? (
                     <img 
-                        src={imageSrc} 
+                        src={`http://localhost:3000${imageSrc}`} 
                         alt={title}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                     />
@@ -32,7 +32,7 @@ export default function PresentCard({ imageSrc = "", title, description, rating,
                 <h3 className="text-white font-bold text-lg mb-2 line-clamp-1">
                     {title}
                 </h3>
-                <p className="text-slate-400 text-sm line-clamp-2">
+                <p className="text-slate-300 text-sm line-clamp-2">
                     {description}
                 </p>
             </div>
