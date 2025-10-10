@@ -1,14 +1,15 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import Header from '../components/Header';
 import perfilImg from '../img/LogoPerfil.jpeg';
 import notiImg from '../img/LogoNotificaciones.jpeg';
 import FooterUsuario from '../components/FooterUsuario';
 import PresentCard from '../components/PresentCard';
-import '../app.css';
 
 export default function UsuarioFavoritos() {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [favoritos, setFavoritos] = useState([]);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState(null);
@@ -16,16 +17,13 @@ export default function UsuarioFavoritos() {
     useEffect(() => {
         const cargarFavoritos = async () => {
             try {
-                const usuarioData = JSON.parse(localStorage.getItem('usuario') || '{}');
-                const usuarioId = usuarioData.id;
-
-                if (!usuarioId) {
+                if (!user || !user.userId) {
                     setError('No se encontró información del usuario');
+                    setCargando(false);
                     return;
                 }
-
-                const response = await fetch(`http://localhost:3001/api/favoritos/usuario/${usuarioId}`);
-                
+                const usuarioId = user.userId;
+                const response = await fetch(`http://localhost:3000/api/favoritos/usuario/${usuarioId}`);
                 if (response.ok) {
                     const data = await response.json();
                     setFavoritos(data.eventos || []);
@@ -39,53 +37,59 @@ export default function UsuarioFavoritos() {
                 setCargando(false);
             }
         };
-
         cargarFavoritos();
-    }, []);
+    }, [user]);
 
     const handleEventoClick = (evento) => {
         navigate('/evento', { state: { evento } });
     };
 
     return (
-        <div>
+        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 pb-24 pt-20">
             <Header
                 title="Spott"
                 leftButton={{ type: 'image', content: perfilImg, to: '/usuario/perfil' }}
                 rightButton={{ type: 'image', content: notiImg, to: '/usuario/notificaciones' }}
             />
-       
-            <div className="favoritos">
-                <h2 className="section-title">Mis Favoritos</h2>
-                
+
+            <div className="max-w-7xl mx-auto px-4 py-6">
+                <h2 className="text-2xl font-bold text-white mb-4">Mis Favoritos</h2>
+
                 {error && (
-                    <div style={{ color: '#ff4444', textAlign: 'center', padding: '20px' }}>
+                    <div className="bg-red-500/20 border border-red-500/50 text-red-200 p-4 rounded-lg text-center">
                         {error}
                     </div>
                 )}
 
-                {cargando && <p style={{ color: 'white', textAlign: 'center' }}>Cargando favoritos...</p>}
-                
-                {!cargando && !error && favoritos.length === 0 && (
-                    <p style={{ color: 'white', textAlign: 'center' }}>
-                        No tienes eventos favoritos aún.
-                    </p>
+                {cargando && (
+                    <div className="text-center py-12">
+                        <p className="text-slate-300">Cargando favoritos...</p>
+                    </div>
                 )}
 
-                {!cargando && favoritos.length > 0 && favoritos.map((evento, i) => (
-                    <PresentCard
-                        key={evento.id || `favorito-${i}`}
-                        imageSrc={evento.portada || evento.imageSrc}
-                        title={evento.nombre || evento.title}
-                        description={evento.descripcionLarga || evento.description}
-                        rating={evento.rating || (4 + Math.random()).toFixed(1)}
-                        onClick={() => handleEventoClick(evento)}
-                    />
-                ))}
+                {!cargando && !error && favoritos.length === 0 && (
+                    <div className="bg-purple-900/30 backdrop-blur-sm border border-purple-700/20 rounded-xl p-8 text-center">
+                        <p className="text-slate-300">No tienes eventos favoritos aún.</p>
+                    </div>
+                )}
 
-                <div className="footer-spacer"></div>
-                <FooterUsuario />
+                {!cargando && favoritos.length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {favoritos.map((evento, i) => (
+                            <PresentCard
+                                key={evento.id || `favorito-${i}`}
+                                imageSrc={evento.portada || evento.imageSrc}
+                                title={evento.nombre || evento.title}
+                                description={evento.descripcionLarga || evento.description}
+                                rating={evento.rating || (4 + Math.random()).toFixed(1)}
+                                onClick={() => handleEventoClick(evento)}
+                            />
+                        ))}
+                    </div>
+                )}
             </div>
+
+            <FooterUsuario />
         </div>
     );
 }

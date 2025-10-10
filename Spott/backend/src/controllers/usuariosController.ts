@@ -1,7 +1,8 @@
-// Spott/backend/src/controllers/usuariosController.ts
+// backend/src/controllers/usuariosController.ts
 import type { Request, Response } from "express";
 import { prisma } from "../data/prisma.js";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import { usuarioRegisterSchema, usuarioLoginSchema } from "../validations/usuariosSchema.js";
 
 function sanitizeUsuario(u: any) {
@@ -10,12 +11,25 @@ function sanitizeUsuario(u: any) {
     return rest;
 }
 
+// Función helper para generar token
+function generateToken(userId: string, userType: 'usuario' | 'empresa') {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+        throw new Error("JWT_SECRET no está configurado");
+    }
+    
+    return jwt.sign(
+        { userId, userType },
+        secret,
+        { expiresIn: '7d' } // Token válido por 7 días
+    );
+}
+
 export async function crearUsuario(req: Request, res: Response) {
     try {
         const validatedData = usuarioRegisterSchema.parse(req.body);
         const { nombre, email, password, ciudad, edad } = validatedData;
 
-        //email único
         const exists = await prisma.usuario.findUnique({ where: { email } });
         if (exists) {
             return res.status(400).json({ message: "El email ya está registrado" });
@@ -23,7 +37,6 @@ export async function crearUsuario(req: Request, res: Response) {
 
         const hashed = await bcrypt.hash(password, 10);
 
-        console.log('Tipo de edad:', typeof edad, 'Valor:', edad);
         const usuario = await prisma.usuario.create({
             data: {
                 nombre,
@@ -34,15 +47,19 @@ export async function crearUsuario(req: Request, res: Response) {
             },
         });
 
+        // Generar token al registrarse
+        const token = generateToken(usuario.id, 'usuario');
+
         return res.status(201).json({
             message: "Usuario registrado correctamente",
             usuario: sanitizeUsuario(usuario),
+            token   // ✅ se envía el token
         });
     } catch (e: any) {
         if (e.name === 'ZodError') {
-            return res.status(400).json({ 
-                message: "Datos inválidos", 
-                errors: e.errors 
+            return res.status(400).json({
+                message: "Datos inválidos",
+                errors: e.errors
             });
         }
         console.error("crearUsuario", e);
@@ -65,15 +82,19 @@ export async function loginUsuario(req: Request, res: Response) {
             return res.status(401).json({ message: "Credenciales inválidas" });
         }
 
+        // Generar token al hacer login
+        const token = generateToken(usuario.id, 'usuario');
+
         return res.json({
             message: "Login exitoso",
             usuario: sanitizeUsuario(usuario),
+            token   // ✅ se envía el token
         });
     } catch (e: any) {
         if (e.name === 'ZodError') {
-            return res.status(400).json({ 
-                message: "Datos inválidos", 
-                errors: e.errors 
+            return res.status(400).json({
+                message: "Datos inválidos",
+                errors: e.errors
             });
         }
         console.error("loginUsuario", e);

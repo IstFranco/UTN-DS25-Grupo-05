@@ -4,12 +4,10 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   server: {
-    proxy: {
-      "/ticketmaster": {
-        target: "https://app.ticketmaster.com",
-        changeOrigin: true,
-        rewrite: path => path.replace(/^\/ticketmaster/, "")
-      }
+    host: true,
+    port: 5173,
+    watch: {
+      usePolling: true,
     }
   }
 });

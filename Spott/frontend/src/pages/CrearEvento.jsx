@@ -1,392 +1,602 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { crearEventoSchema } from '../validations/eventoSchema';
+import { useAuth } from '../contexts/AuthContext';
 import perfilImg from '../img/LogoPerfil.jpeg';
 import notiImg from '../img/LogoNotificaciones.jpeg';
 import Header from '../components/Header';
 import FooterEmpresa from '../components/FooterEmpresa';
 import ApiService from '../services/api';
 import { getProvincias, getLocalidades } from '../api/localidad';
-import '../app.css';
 
 export default function CrearEvento() {
     const navigate = useNavigate();
+    const { userId, isEmpresa } = useAuth();
     const [cargando, setCargando] = useState(false);
-    const [error, setError] = useState(null);
+    const [serverError, setServerError] = useState(null);
 
-    const [formulario, setFormulario] = useState({
-        nombre: '',
-        portada: null,
-        imagenes: [],
-        fecha: '',
-        horaInicio: '',
-        ciudad: '',          
-        barrio: '',          
-        estilo: '',
-        tematica: '',
-        musica: '',
-        precio: '',
-        precioVip: '',
-        descripcionLarga: '',
-        edadMinima: '',
-        entradasGenerales: '',
-        entradasVIP: '',
-        accesible: false,
-        linkExterno: '',
-        politicaCancelacion: '',
-        hashtag: ''
-    });
-
-    // ====== Estados auxiliares para selects dependientes ======
     const [provincias, setProvincias] = useState([]);
     const [localidades, setLocalidades] = useState([]);
     const [loadingProv, setLoadingProv] = useState(false);
     const [loadingLoc, setLoadingLoc] = useState(false);
     const [errorLoc, setErrorLoc] = useState('');
 
-    // ====== Cargar provincias al montar ======
+    const [portada, setPortada] = useState(null);
+    const [imagenes, setImagenes] = useState([]);
+
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+        watch,
+        setValue,
+    } = useForm({
+        resolver: yupResolver(crearEventoSchema),
+        defaultValues: {
+            nombre: '',
+            descripcionLarga: '',
+            ciudad: '',
+            barrio: '',
+            estilo: '',
+            tematica: '',
+            musica: '',
+            fecha: '',
+            horaInicio: '',
+            precio: '',
+            precioVip: '',
+            edadMinima: '',
+            entradasGenerales: '',
+            entradasVIP: '',
+            accesible: false,
+            linkExterno: '',
+            politicaCancelacion: '',
+            hashtag: ''
+        }
+    });
+
+    const ciudadSeleccionada = watch('ciudad');
+
     useEffect(() => {
         (async () => {
-        try {
-            setLoadingProv(true);
-            const data = await getProvincias();
-            setProvincias(data);
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoadingProv(false);
-        }
+            try {
+                setLoadingProv(true);
+                const data = await getProvincias();
+                setProvincias(data);
+            } catch (e) {
+                console.error(e);
+            } finally {
+                setLoadingProv(false);
+            }
         })();
     }, []);
 
-    // ====== Cargar localidades cuando cambia la provincia (ciudad) ======
     useEffect(() => {
-        const provinciaNombre = formulario.ciudad;
-
-        // actualizar barrio y limpiar lista cada vez que cambia la provincia
-        setFormulario((f) => ({ ...f, barrio: '' }));
+        setValue('barrio', '');
         setLocalidades([]);
         setErrorLoc('');
 
-        if (!provinciaNombre) return;
+        if (!ciudadSeleccionada) return;
 
         (async () => {
-        try {
-            setLoadingLoc(true);
-            const data = await getLocalidades(provinciaNombre);
-            setLocalidades(data);
-        } catch (e) {
-            console.error(e);
-            setErrorLoc('No se pudieron cargar las localidades.');
-        } finally {
-            setLoadingLoc(false);
-        }
+            try {
+                setLoadingLoc(true);
+                const data = await getLocalidades(ciudadSeleccionada);
+                setLocalidades(data);
+            } catch (e) {
+                console.error(e);
+                setErrorLoc('No se pudieron cargar las localidades.');
+            } finally {
+                setLoadingLoc(false);
+            }
         })();
-    }, [formulario.ciudad]);
+    }, [ciudadSeleccionada, setValue]);
 
-    // ====== Handlers ======
-    const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        setFormulario((prev) => ({
-        ...prev,
-        [name]: type === 'checkbox' ? checked : value
-        }));
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const onSubmit = async (data) => {
         setCargando(true);
-        setError(null);
+        setServerError(null);
 
         try {
-        // Obtener empresaId
-        const empresaData = JSON.parse(localStorage.getItem('empresa') || '{}');
-        const empresaId = empresaData.id;
+            if (!userId) {
+                setServerError('No se encontró información de la empresa. Inicia sesión nuevamente.');
+                setCargando(false);
+                return;
+            }
 
-        if (!empresaId) {
-            setError('No se encontró información de la empresa. Inicia sesión nuevamente.');
-            setCargando(false);
-            return;
-        }
+            const formData = new FormData();
 
-        // Construir FormData
-        const formData = new FormData();
+            Object.keys(data).forEach((key) => {
+                if (data[key] !== '' && data[key] !== null && data[key] !== undefined) {
+                    formData.append(key, data[key]);
+                }
+            });
 
-        // Agregar todos los campos del formulario
-        Object.keys(formulario).forEach((key) => {
-            if (key === 'portada' && formulario.portada) {
-            formData.append('portada', formulario.portada);
-            } else if (key === 'imagenes' && formulario.imagenes.length > 0) {
-            formulario.imagenes.forEach((imagen) => {
+            if (portada) {
+                formData.append('portada', portada);
+            }
+            imagenes.forEach((imagen) => {
                 formData.append('imagenes', imagen);
             });
-            } else if (key !== 'portada' && key !== 'imagenes') {
-            formData.append(key, formulario[key]);
+
+            formData.append('provincia', data.ciudad);
+            formData.append('localidad', data.barrio);
+            formData.append('empresaId', userId);
+            formData.append('cupoGeneral', data.entradasGenerales);
+            formData.append('cupoVip', data.entradasVIP || 0);
+
+            const response = await ApiService.crearEvento(formData);
+
+            if (response.evento) {
+                navigate('/empresa');
             }
-        });
-
-        // Mapear a lo que espera el backend
-        formData.append('provincia', formulario.ciudad);   // ciudad → provincia
-        formData.append('localidad', formulario.barrio);   // barrio → localidad
-
-        // Campos de cupos 
-        formData.append('empresaId', empresaId);
-        if (formulario.entradasGenerales) {
-            formData.append('cupoGeneral', formulario.entradasGenerales);
-        }
-        if (formulario.entradasVIP) {
-            formData.append('cupoVip', formulario.entradasVIP);
-        }
-
-        const response = await ApiService.crearEvento(formData);
-
-        if (response.evento) {
-            // Persisto opcionalmente y redirijo
-            const eventosGuardados = JSON.parse(localStorage.getItem('misEventos')) || [];
-            eventosGuardados.push(response.evento);
-            localStorage.setItem('misEventos', JSON.stringify(eventosGuardados));
-            navigate('/empresa');
-        }
         } catch (error) {
-        console.error('Error al crear evento:', error);
-        setError(error.message || 'Error al crear el evento');
+            console.error('Error al crear evento:', error);
+            setServerError(error.message || 'Error al crear el evento');
         } finally {
-        setCargando(false);
+            setCargando(false);
         }
     };
 
-    // ====== Render ======
     return (
-        <div className="inicio">
-        {/* Header */}
-        <Header
-            title="Spott"
-            leftButton={{ type: 'image', content: perfilImg, to: '/empresa/perfil' }}
-            rightButton={{ type: 'image', content: notiImg, to: '/empresa/notificaciones' }}
-        />
+        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 pb-24 pt-20">
+            <Header
+                title="Spott"
+                leftButton={{ type: 'image', content: perfilImg, to: '/empresa/perfil' }}
+                rightButton={{ type: 'image', content: notiImg, to: '/empresa/notificaciones' }}
+            />
 
-        {/* Errores */}
-        {error && (
-            <div
-            style={{
-                backgroundColor: '#ff4444',
-                color: 'white',
-                padding: '10px',
-                margin: '10px',
-                borderRadius: '5px'
-            }}
-            >
-            {error}
+            {serverError && (
+                <div className="mx-4 mt-4 bg-red-500/20 border border-red-500/50 text-red-200 p-3 rounded-lg text-center text-sm">
+                    {serverError}
+                </div>
+            )}
+
+            <div className="max-w-2xl mx-auto px-4 py-6">
+                <div className="bg-purple-900/30 backdrop-blur-sm p-6 rounded-xl shadow-2xl border border-purple-700/20">
+                    <h2 className="text-2xl font-bold text-white mb-6 text-center">
+                        Crear nuevo evento
+                    </h2>
+
+                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                        {/* Nombre */}
+                        <div>
+                            <label className="block text-slate-300 text-sm font-medium mb-1">
+                                Nombre del evento:
+                            </label>
+                            <input
+                                type="text"
+                                {...register('nombre')}
+                                className={`w-full px-4 py-2.5 rounded-lg bg-slate-900/50 border text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition ${
+                                    errors.nombre
+                                        ? 'border-red-500 focus:ring-red-500'
+                                        : 'border-purple-700/50 focus:ring-purple-600'
+                                }`}
+                            />
+                            {errors.nombre && (
+                                <span className="text-red-400 text-sm block mt-1">
+                                    {errors.nombre.message}
+                                </span>
+                            )}
+                        </div>
+
+                        {/* Descripción */}
+                        <div>
+                            <label className="block text-slate-300 text-sm font-medium mb-1">
+                                Descripción detallada:
+                            </label>
+                            <textarea
+                                {...register('descripcionLarga')}
+                                rows="4"
+                                className={`w-full px-4 py-2.5 rounded-lg bg-slate-900/50 border text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition resize-none ${
+                                    errors.descripcionLarga
+                                        ? 'border-red-500 focus:ring-red-500'
+                                        : 'border-purple-700/50 focus:ring-purple-600'
+                                }`}
+                            />
+                            {errors.descripcionLarga && (
+                                <span className="text-red-400 text-sm block mt-1">
+                                    {errors.descripcionLarga.message}
+                                </span>
+                            )}
+                        </div>
+
+                        {/* Edad Mínima */}
+                        <div>
+                            <label className="block text-slate-300 text-sm font-medium mb-1">
+                                Edad mínima:
+                            </label>
+                            <input
+                                type="number"
+                                {...register('edadMinima')}
+                                min="0"
+                                className={`w-full px-4 py-2.5 rounded-lg bg-slate-900/50 border text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition ${
+                                    errors.edadMinima
+                                        ? 'border-red-500 focus:ring-red-500'
+                                        : 'border-purple-700/50 focus:ring-purple-600'
+                                }`}
+                            />
+                            {errors.edadMinima && (
+                                <span className="text-red-400 text-sm block mt-1">
+                                    {errors.edadMinima.message}
+                                </span>
+                            )}
+                        </div>
+
+                        {/* Portada */}
+                        <div>
+                            <label className="block text-slate-300 text-sm font-medium mb-1">
+                                Imagen de portada:
+                            </label>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => setPortada(e.target.files[0] || null)}
+                                className="w-full px-4 py-2.5 rounded-lg bg-slate-900/50 border border-purple-700/50 text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-purple-700 file:text-white hover:file:bg-purple-600 transition"
+                            />
+                        </div>
+
+                        {/* Galería */}
+                        <div>
+                            <label className="block text-slate-300 text-sm font-medium mb-1">
+                                Galería de imágenes:
+                            </label>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                onChange={(e) => setImagenes(Array.from(e.target.files))}
+                                className="w-full px-4 py-2.5 rounded-lg bg-slate-900/50 border border-purple-700/50 text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-purple-700 file:text-white hover:file:bg-purple-600 transition"
+                            />
+                        </div>
+
+                        {/* Fecha y Hora en una fila */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-slate-300 text-sm font-medium mb-1">
+                                    Fecha:
+                                </label>
+                                <input
+                                    type="date"
+                                    {...register('fecha')}
+                                    className={`w-full px-4 py-2.5 rounded-lg bg-slate-900/50 border text-white focus:outline-none focus:ring-2 transition ${
+                                        errors.fecha
+                                            ? 'border-red-500 focus:ring-red-500'
+                                            : 'border-purple-700/50 focus:ring-purple-600'
+                                    }`}
+                                />
+                                {errors.fecha && (
+                                    <span className="text-red-400 text-sm block mt-1">
+                                        {errors.fecha.message}
+                                    </span>
+                                )}
+                            </div>
+
+                            <div>
+                                <label className="block text-slate-300 text-sm font-medium mb-1">
+                                    Hora de inicio:
+                                </label>
+                                <input
+                                    type="time"
+                                    {...register('horaInicio')}
+                                    className="w-full px-4 py-2.5 rounded-lg bg-slate-900/50 border border-purple-700/50 text-white focus:outline-none focus:ring-2 focus:ring-purple-600 transition"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Ciudad */}
+                        <div>
+                            <label className="block text-slate-300 text-sm font-medium mb-1">
+                                Ciudad:
+                            </label>
+                            <select
+                                {...register('ciudad')}
+                                disabled={loadingProv}
+                                className={`w-full px-4 py-2.5 rounded-lg bg-slate-900/50 border text-white focus:outline-none focus:ring-2 transition ${
+                                    errors.ciudad
+                                        ? 'border-red-500 focus:ring-red-500'
+                                        : 'border-purple-700/50 focus:ring-purple-600'
+                                }`}
+                            >
+                                <option value="">Seleccioná una provincia…</option>
+                                {provincias.map((p) => (
+                                    <option key={p.nombre} value={p.nombre}>
+                                        {p.nombre}
+                                    </option>
+                                ))}
+                            </select>
+                            {errors.ciudad && (
+                                <span className="text-red-400 text-sm block mt-1">
+                                    {errors.ciudad.message}
+                                </span>
+                            )}
+                        </div>
+
+                        {/* Barrio */}
+                        <div>
+                            <label className="block text-slate-300 text-sm font-medium mb-1">
+                                Barrio/Zona:
+                            </label>
+                            <select
+                                {...register('barrio')}
+                                disabled={!ciudadSeleccionada || loadingLoc || !!errorLoc}
+                                className={`w-full px-4 py-2.5 rounded-lg bg-slate-900/50 border text-white focus:outline-none focus:ring-2 transition ${
+                                    errors.barrio
+                                        ? 'border-red-500 focus:ring-red-500'
+                                        : 'border-purple-700/50 focus:ring-purple-600'
+                                }`}
+                            >
+                                <option value="">
+                                    {!ciudadSeleccionada
+                                        ? 'Elegí primero una provincia…'
+                                        : loadingLoc
+                                        ? 'Cargando localidades…'
+                                        : errorLoc
+                                        ? 'Error al cargar localidades'
+                                        : 'Seleccioná una localidad…'}
+                                </option>
+                                {!loadingLoc && !errorLoc && localidades.map((l) => (
+                                    <option key={l.nombre} value={l.nombre}>
+                                        {l.nombre}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Estilo */}
+                        <div>
+                            <label className="block text-slate-300 text-sm font-medium mb-1">
+                                Estilo general:
+                            </label>
+                            <select
+                                {...register('estilo')}
+                                className="w-full px-4 py-2.5 rounded-lg bg-slate-900/50 border border-purple-700/50 text-white focus:outline-none focus:ring-2 focus:ring-purple-600 transition"
+                            >
+                                <option value="">Seleccione un estilo...</option>
+                                <option>Casual</option>
+                                <option>Elegante</option>
+                                <option>Temático</option>
+                                <option>Glam</option>
+                                <option>Alternativo</option>
+                            </select>
+                        </div>
+
+                        {/* Temática */}
+                        <div>
+                            <label className="block text-slate-300 text-sm font-medium mb-1">
+                                Temática:
+                            </label>
+                            <input
+                                type="text"
+                                {...register('tematica')}
+                                placeholder="Ej: Neon party, Halloween, etc."
+                                className="w-full px-4 py-2.5 rounded-lg bg-slate-900/50 border border-purple-700/50 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-600 transition"
+                            />
+                        </div>
+
+                        {/* Música */}
+                        <div>
+                            <label className="block text-slate-300 text-sm font-medium mb-1">
+                                Género musical:
+                            </label>
+                            <select
+                                {...register('musica')}
+                                className={`w-full px-4 py-2.5 rounded-lg bg-slate-900/50 border text-white focus:outline-none focus:ring-2 transition ${
+                                    errors.musica
+                                        ? 'border-red-500 focus:ring-red-500'
+                                        : 'border-purple-700/50 focus:ring-purple-600'
+                                }`}
+                            >
+                                <option value="">Seleccione un género...</option>
+                                <option value="electronic">Electrónica</option>
+                                <option value="reggaeton">Reggaetón</option>
+                                <option value="rock">Rock</option>
+                                <option value="indie">Indie</option>
+                                <option value="pop">Pop</option>
+                                <option value="trap">Trap</option>
+                                <option value="hip-hop">Hip Hop</option>
+                                <option value="jazz">Jazz</option>
+                                <option value="funk">Funk</option>
+                                <option value="soul">Soul</option>
+                                <option value="latin">Música Latina</option>
+                                <option value="alternative">Alternativo</option>
+                                <option value="house">House</option>
+                                <option value="techno">Techno</option>
+                                <option value="r-n-b">R&B</option>
+                                <option value="country">Country</option>
+                                <option value="classical">Clásica</option>
+                            </select>
+                            {errors.musica && (
+                                <span className="text-red-400 text-sm block mt-1">
+                                    {errors.musica.message}
+                                </span>
+                            )}
+                        </div>
+
+                        {/* Precios en una fila */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-slate-300 text-sm font-medium mb-1">
+                                    Precio entrada general:
+                                </label>
+                                <input
+                                    type="number"
+                                    {...register('precio')}
+                                    step="0.01"
+                                    min="0"
+                                    placeholder="0.00"
+                                    className={`w-full px-4 py-2.5 rounded-lg bg-slate-900/50 border text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition ${
+                                        errors.precio
+                                            ? 'border-red-500 focus:ring-red-500'
+                                            : 'border-purple-700/50 focus:ring-purple-600'
+                                    }`}
+                                />
+                                {errors.precio && (
+                                    <span className="text-red-400 text-sm block mt-1">
+                                        {errors.precio.message}
+                                    </span>
+                                )}
+                            </div>
+
+                            <div>
+                                <label className="block text-slate-300 text-sm font-medium mb-1">
+                                    Precio entrada VIP:
+                                </label>
+                                <input
+                                    type="number"
+                                    {...register('precioVip')}
+                                    step="0.01"
+                                    min="0"
+                                    placeholder="0.00"
+                                    className={`w-full px-4 py-2.5 rounded-lg bg-slate-900/50 border text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition ${
+                                        errors.precioVip
+                                            ? 'border-red-500 focus:ring-red-500'
+                                            : 'border-purple-700/50 focus:ring-purple-600'
+                                    }`}
+                                />
+                                {errors.precioVip && (
+                                    <span className="text-red-400 text-sm block mt-1">
+                                        {errors.precioVip.message}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Cupos en una fila */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-slate-300 text-sm font-medium mb-1">
+                                    Cupo entradas generales:
+                                </label>
+                                <input
+                                    type="number"
+                                    {...register('entradasGenerales')}
+                                    min="0"
+                                    className={`w-full px-4 py-2.5 rounded-lg bg-slate-900/50 border text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition ${
+                                        errors.entradasGenerales
+                                            ? 'border-red-500 focus:ring-red-500'
+                                            : 'border-purple-700/50 focus:ring-purple-600'
+                                    }`}
+                                />
+                                {errors.entradasGenerales && (
+                                    <span className="text-red-400 text-sm block mt-1">
+                                        {errors.entradasGenerales.message}
+                                    </span>
+                                )}
+                            </div>
+
+                            <div>
+                                <label className="block text-slate-300 text-sm font-medium mb-1">
+                                    Cupo entradas VIP:
+                                </label>
+                                <input
+                                    type="number"
+                                    {...register('entradasVIP')}
+                                    min="0"
+                                    className={`w-full px-4 py-2.5 rounded-lg bg-slate-900/50 border text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition ${
+                                        errors.entradasVIP
+                                            ? 'border-red-500 focus:ring-red-500'
+                                            : 'border-purple-700/50 focus:ring-purple-600'
+                                    }`}
+                                />
+                                {errors.entradasVIP && (
+                                    <span className="text-red-400 text-sm block mt-1">
+                                        {errors.entradasVIP.message}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Accesible */}
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                {...register('accesible')}
+                                className="w-4 h-4 accent-purple-600"
+                            />
+                            <label className="text-slate-300 text-sm font-medium">
+                                Evento accesible
+                            </label>
+                        </div>
+
+                        {/* Link Externo */}
+                        <div>
+                            <label className="block text-slate-300 text-sm font-medium mb-1">
+                                Enlace externo (tickets / más info):
+                            </label>
+                            <input
+                                type="url"
+                                {...register('linkExterno')}
+                                placeholder="https://..."
+                                className={`w-full px-4 py-2.5 rounded-lg bg-slate-900/50 border text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition ${
+                                    errors.linkExterno
+                                        ? 'border-red-500 focus:ring-red-500'
+                                        : 'border-purple-700/50 focus:ring-purple-600'
+                                }`}
+                            />
+                            {errors.linkExterno && (
+                                <span className="text-red-400 text-sm block mt-1">
+                                    {errors.linkExterno.message}
+                                </span>
+                            )}
+                        </div>
+
+                        {/* Política de Cancelación */}
+                        <div>
+                            <label className="block text-slate-300 text-sm font-medium mb-1">
+                                Política de cancelación:
+                            </label>
+                            <textarea
+                                {...register('politicaCancelacion')}
+                                placeholder="Describe las condiciones de cancelación..."
+                                rows="3"
+                                className={`w-full px-4 py-2.5 rounded-lg bg-slate-900/50 border text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition resize-none ${
+                                    errors.politicaCancelacion
+                                        ? 'border-red-500 focus:ring-red-500'
+                                        : 'border-purple-700/50 focus:ring-purple-600'
+                                }`}
+                            />
+                            {errors.politicaCancelacion && (
+                                <span className="text-red-400 text-sm block mt-1">
+                                    {errors.politicaCancelacion.message}
+                                </span>
+                            )}
+                        </div>
+
+                        {/* Hashtag */}
+                        <div>
+                            <label className="block text-slate-300 text-sm font-medium mb-1">
+                                Etiqueta o hashtag del evento:
+                            </label>
+                            <input
+                                type="text"
+                                {...register('hashtag')}
+                                placeholder="#fiestaElectro2025"
+                                className={`w-full px-4 py-2.5 rounded-lg bg-slate-900/50 border text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition ${
+                                    errors.hashtag
+                                        ? 'border-red-500 focus:ring-red-500'
+                                        : 'border-purple-700/50 focus:ring-purple-600'
+                                }`}
+                            />
+                            {errors.hashtag && (
+                                <span className="text-red-400 text-sm block mt-1">
+                                    {errors.hashtag.message}
+                                </span>
+                            )}
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={cargando}
+                            className="w-full bg-gradient-to-r from-purple-700 to-violet-700 hover:from-purple-600 hover:to-violet-600 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg mt-6"
+                        >
+                            {cargando ? 'Creando evento...' : 'Crear evento'}
+                        </button>
+                    </form>
+                </div>
             </div>
-        )}
 
-        {/* Formulario */}
-        <div className="form-box">
-            <form className="crear-evento-form" onSubmit={handleSubmit}>
-            <h2>Crear nuevo evento</h2>
-
-            <label>Nombre del evento:</label>
-            <input type="text" name="nombre" value={formulario.nombre} onChange={handleChange} required />
-
-            <label>Descripción detallada:</label>
-            <textarea name="descripcionLarga" value={formulario.descripcionLarga} onChange={handleChange} />
-
-            <label>Edad mínima:</label>
-            <input type="number" name="edadMinima" value={formulario.edadMinima} onChange={handleChange} min="0" />
-
-            <label>Imagen de portada:</label>
-            <input
-                type="file"
-                accept="image/*"
-                onChange={(e) =>
-                setFormulario((prev) => ({
-                    ...prev,
-                    portada: e.target.files[0] || null
-                }))
-                }
-            />
-
-            <label>Galería de imágenes:</label>
-            <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={(e) =>
-                setFormulario((prev) => ({
-                    ...prev,
-                    imagenes: Array.from(e.target.files)
-                }))
-                }
-            />
-
-            <label>Fecha:</label>
-            <input type="date" name="fecha" value={formulario.fecha} onChange={handleChange} required />
-
-            <label>Hora de inicio:</label>
-            <input type="time" name="horaInicio" value={formulario.horaInicio} onChange={handleChange} />
-
-            {/* Ciudad (Provincia) */}
-            <label>Ciudad:</label>
-            <select
-                name="ciudad"
-                value={formulario.ciudad}
-                onChange={handleChange}
-                required
-                disabled={loadingProv}
-            >
-                <option value="">Seleccioná una provincia…</option>
-                {provincias.map((p) => (
-                <option key={p.nombre} value={p.nombre}>
-                    {p.nombre}
-                </option>
-                ))}
-            </select>
-
-            {/* Barrio (Localidad) */}
-            <label>Barrio/Zona:</label>
-            <select
-                name="barrio"
-                value={formulario.barrio}
-                onChange={handleChange}
-                disabled={!formulario.ciudad || loadingLoc || !!errorLoc}
-            >
-                <option value="">
-                {!formulario.ciudad
-                    ? 'Elegí primero una provincia…'
-                    : loadingLoc
-                    ? 'Cargando localidades…'
-                    : errorLoc
-                    ? 'Error al cargar localidades'
-                    : 'Seleccioná una localidad…'}
-                </option>
-                {!loadingLoc &&
-                !errorLoc &&
-                localidades.map((l) => (
-                    <option key={l.nombre} value={l.nombre}>
-                    {l.nombre}
-                    </option>
-                ))}
-            </select>
-
-            <label>Estilo general:</label>
-            <select name="estilo" value={formulario.estilo} onChange={handleChange}>
-                <option value="">Seleccione un estilo...</option>
-                <option>Casual</option>
-                <option>Elegante</option>
-                <option>Temático</option>
-                <option>Glam</option>
-                <option>Alternativo</option>
-            </select>
-
-            <label>Temática:</label>
-            <input
-                type="text"
-                name="tematica"
-                value={formulario.tematica}
-                onChange={handleChange}
-                placeholder="Ej: Neon party, Halloween, etc."
-            />
-
-            <label>Género musical:</label>
-            <select name="musica" value={formulario.musica} onChange={handleChange} required>
-                <option value="">Seleccione un género...</option>
-                <option value="electronic">Electrónica</option>
-                <option value="reggaeton">Reggaetón</option>
-                <option value="rock">Rock</option>
-                <option value="indie">Indie</option>
-                <option value="pop">Pop</option>
-                <option value="trap">Trap</option>
-                <option value="hip-hop">Hip Hop</option>
-                <option value="jazz">Jazz</option>
-                <option value="funk">Funk</option>
-                <option value="soul">Soul</option>
-                <option value="latin">Música Latina</option>
-                <option value="alternative">Alternativo</option>
-                <option value="house">House</option>
-                <option value="techno">Techno</option>
-                <option value="r-n-b">R&B</option>
-                <option value="country">Country</option>
-                <option value="classical">Clásica</option>
-            </select>
-
-            <label>Precio entrada general:</label>
-            <input
-                type="number"
-                name="precio"
-                value={formulario.precio}
-                onChange={handleChange}
-                step="0.01"
-                min="0"
-                placeholder="Ingrese el precio..."
-            />
-
-            <label>Cupo entradas generales:</label>
-            <input
-                type="number"
-                name="entradasGenerales"
-                value={formulario.entradasGenerales}
-                onChange={handleChange}
-                min="0"
-            />
-
-            <label>Precio entrada VIP:</label>
-            <input
-                type="number"
-                name="precioVip"
-                value={formulario.precioVip}
-                onChange={handleChange}
-                step="0.01"
-                min="0"
-                placeholder="Ingrese el precio..."
-            />
-
-            <label>Cupo entradas VIP:</label>
-            <input
-                type="number"
-                name="entradasVIP"
-                value={formulario.entradasVIP}
-                onChange={handleChange}
-                min="0"
-            />
-
-            <label>
-                <input type="checkbox" name="accesible" checked={formulario.accesible} onChange={handleChange} />
-                Evento accesible
-            </label>
-
-            <label>Enlace externo (tickets / más info):</label>
-            <input
-                type="url"
-                name="linkExterno"
-                value={formulario.linkExterno}
-                onChange={handleChange}
-                placeholder="https://..."
-            />
-
-            <label>Política de cancelación:</label>
-            <textarea
-                name="politicaCancelacion"
-                value={formulario.politicaCancelacion}
-                onChange={handleChange}
-                placeholder="Describe las condiciones de cancelación..."
-            />
-
-            <label>Etiqueta o hashtag del evento:</label>
-            <input
-                type="text"
-                name="hashtag"
-                value={formulario.hashtag}
-                onChange={handleChange}
-                placeholder="#fiestaElectro2025"
-            />
-
-            <button type="submit" disabled={cargando}>
-                {cargando ? 'Creando evento...' : 'Crear evento'}
-            </button>
-            </form>
-        </div>
-
-        {/* Footer Inferior */}
-        <FooterEmpresa />
+            <FooterEmpresa />
         </div>
     );
 }
