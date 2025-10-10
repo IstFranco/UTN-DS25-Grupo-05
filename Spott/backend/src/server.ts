@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import multer from 'multer';
 import path from 'path';
@@ -14,9 +14,10 @@ import geoRouter from "./routes/geo.js";
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middleware CORS (solo frontend en localhost:5173)
+// Middleware CORS dinámico (localhost o frontend en producción)
+const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
 app.use(cors({
-    origin: "http://localhost:5173",
+    origin: frontendUrl,
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"]
 }));
@@ -63,10 +64,12 @@ app.get('/api/health', (req, res) => {
 });
 
 // Manejo de errores
-app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((error: any, req: Request, res: Response, next: NextFunction) => {
     console.error(error);
     res.status(500).json({ message: 'Error interno del servidor', error: error.message });
 });
 
-app.listen(PORT);
-
+// Arrancar servidor
+app.listen(PORT, () => {
+    console.log(`Backend corriendo en el puerto ${PORT}`);
+});
