@@ -74,6 +74,14 @@ app.use('/api/spotify', rutasSpotify);
 app.use('/api/favoritos', favoritosRoutes);
 app.use('/api/geo', geoRouter);
 
+// Añadir esta ruta a tu servidor antes de app.use('/api/votos', ...)
+app.get('/', (_, res: Response) => {
+  res.json({
+    status: 'ok',
+    message: 'API funcionando. Usa las rutas /api/... para interactuar.'
+  });
+});
+
 // Healthcheck
 app.get('/api/health', (_req: Request, res: Response) => {
     res.json({ message: 'Backend funcionando correctamente' });
