@@ -1,5 +1,5 @@
 // frontend/src/services/api.js
-const API_BASE_URL = import.meta.env.VITE_TM_API || 'http://localhost:3000/api';
+const API_BASE_URL = 'https://utn-ds25-grupo-05-2.onrender.com/api';
 class ApiService {
     // Helper para obtener headers con o sin token
     getHeaders(includeAuth = false) {
