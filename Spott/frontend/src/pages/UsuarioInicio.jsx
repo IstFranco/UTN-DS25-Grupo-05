@@ -40,6 +40,10 @@ export default function UsuarioInicio() {
     ];
 
     useEffect(() => {
+        console.log('🔍 API_URL configurada:', import.meta.env.VITE_TM_API);
+    }, []);
+
+    useEffect(() => {
         const cargarEventos = async () => {
             setCargando(true);
             setError(null);
