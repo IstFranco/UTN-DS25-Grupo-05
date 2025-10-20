@@ -16,25 +16,46 @@ import geoRouter from './routes/geo.js';
 const app = express();
 
 // Puerto: Render inyecta process.env.PORT; en local usamos 3000
-const PORT = Number(process.env.PORT || 3000);
+const PORT = Number(process.env.PORT) || 3000;
 
-// CORS dinámico: primero CORS_ORIGIN (prod), luego FRONTEND_URL, sino localhost
-const FRONTEND =
-    process.env.CORS_ORIGIN ||
-    process.env.FRONTEND_URL ||
-    'http://localhost:5173';
+const allowedOrigins = [
+    'http://localhost:5173',
+    'https://utn-ds-25-grupo-05.vercel.app',
+    process.env.CORS_ORIGIN,
+    process.env.FRONTEND_URL,
+].filter(Boolean);
 
 app.use(
     cors({
-        origin: FRONTEND,
-        methods: ['GET', 'POST', 'PUT', 'DELETE'],
+        origin: (origin, callback) => {
+
+            if (!origin) return callback(null, true);
+            // Permitir si está en la lista O si es un preview deployment de Vercel
+            if (
+                allowedOrigins.includes(origin) ||
+                origin.match(/^https:\/\/utn-ds-?25-grupo-05.*\.vercel\.app$/)
+            ) {
+                callback(null, true);
+            } else {
+                console.warn(`❌ Origen bloqueado por CORS: ${origin}`);
+                callback(new Error('No permitido por CORS'));
+            }
+        },
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization'],
         credentials: true,
     })
 );
 
+app.options('*', cors());
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.use((req: Request, _res: Response, next: NextFunction) => {
+    console.log(`📨 ${req.method} ${req.path} - Origin: ${req.headers.origin || 'sin origin'}`);
+    next();
+});
 
 // Asegurar carpeta de uploads en prod
 const UPLOAD_DIR = 'uploads';
