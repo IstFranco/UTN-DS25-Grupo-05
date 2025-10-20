@@ -4,7 +4,6 @@ import cors from 'cors';
 import multer, { FileFilterCallback } from 'multer';
 import path from 'path';
 import fs from 'fs';
-
 import eventosRoutes from './routes/eventos.js';
 import usuariosRoutes from './routes/usuarios.js';
 import empresasRoutes from './routes/empresas.js';
@@ -16,8 +15,8 @@ import geoRouter from './routes/geo.js';
 
 const app = express();
 
-// Puerto: Render inyecta process.env.PORT; en local usamos 3001
-const PORT = Number(process.env.PORT || 3001);
+// Puerto: Render inyecta process.env.PORT; en local usamos 3000
+const PORT = Number(process.env.PORT || 3000);
 
 // CORS dinámico: primero CORS_ORIGIN (prod), luego FRONTEND_URL, sino localhost
 const FRONTEND =
@@ -76,10 +75,10 @@ app.use('/api/geo', geoRouter);
 
 // Añadir esta ruta a tu servidor antes de app.use('/api/votos', ...)
 app.get('/', (_, res: Response) => {
-  res.json({
-    status: 'ok',
+    res.json({
+        status: 'ok',
     message: 'API funcionando. Usa las rutas /api/... para interactuar.'
-  });
+    });
 });
 
 // Healthcheck
