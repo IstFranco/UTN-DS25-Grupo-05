@@ -23,7 +23,7 @@ export default function UsuarioFavoritos() {
                     return;
                 }
                 const usuarioId = user.userId;
-                const response = await fetch(`http://localhost:3000/api/favoritos/usuario/${usuarioId}`);
+                const response = await fetch(`${import.meta.env.VITE_TM_API}/api/favoritos/usuario/${usuarioId}`);
                 if (response.ok) {
                     const data = await response.json();
                     setFavoritos(data.eventos || []);
