@@ -28,8 +28,8 @@ import {
     const login = async (email, password, userType) => {
         try {
         const url = userType === "empresa"
-            ? "http://localhost:3000/api/empresas/login"
-            : "http://localhost:3000/api/usuarios/login";
+            ? import.meta.env.VITE_TM_API+"/api/empresas/login"
+            : import.meta.env.VITE_TM_API+"/api/usuarios/login";
 
         const res = await fetch(url, {
             method: "POST",
@@ -74,8 +74,8 @@ import {
     const register = async (formData, userType) => {
         try {
         const url = userType === "empresa"
-            ? "http://localhost:3000/api/empresas/registro"
-            : "http://localhost:3000/api/usuarios/registro";
+            ? import.meta.env.VITE_TM_API+"/api/empresas/registro"
+            : import.meta.env.VITE_TM_API+"/api/usuarios/registro";
 
         const res = await fetch(url, {
             method: "POST",

@@ -43,7 +43,7 @@ export default function EventoInscripto() {
                 return;
             }
             setLoading(true);
-            const res = await fetch(`http://localhost:3000/api/eventos/${id}/usuario/${user.userId}`, {
+            const res = await fetch(`${import.meta.env.VITE_TM_API}/api/eventos/${id}/usuario/${user.userId}`, {
                 method: "DELETE",
                 headers: { "Content-Type": "application/json" }
             });

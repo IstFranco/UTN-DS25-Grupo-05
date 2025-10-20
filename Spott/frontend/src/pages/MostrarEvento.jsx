@@ -41,7 +41,7 @@ export default function MostrarEvento() {
     useEffect(() => {
         const cargarEstadisticas = async () => {
             try {
-                const res = await fetch(`http://localhost:3000/api/eventos/${id}/estadisticas`);
+                const res = await fetch(`${import.meta.env.VITE_TM_API}/api/eventos/${id}/estadisticas`);
                 if (res.ok) {
                     const data = await res.json();
                     setEstadisticasEvento(data);
@@ -62,14 +62,14 @@ export default function MostrarEvento() {
 
         const usuarioId = user.userId;
 
-        fetch(`http://localhost:3000/api/eventos/check/${id}/${usuarioId}`)
+        fetch(`${import.meta.env.VITE_TM_API}/api/eventos/check/${id}/${usuarioId}`)
         .then(res => res.json())
         .then(data => {
             setUsuarioInscrito(data.inscrito);
         })
         .catch(err => console.error("Error al verificar inscripción:", err));
 
-        fetch(`http://localhost:3000/api/favoritos/check/${id}/${usuarioId}`)
+        fetch(`${import.meta.env.VITE_TM_API}/api/favoritos/check/${id}/${usuarioId}`)
         .then(res => res.json())
         .then(data => {
             setEsFavorito(data.esFavorito);
@@ -86,7 +86,7 @@ export default function MostrarEvento() {
 
             const usuarioId = user.userId;
 
-            const res = await fetch(`http://localhost:3000/api/eventos/${id}/inscribirse`, {
+            const res = await fetch(`${import.meta.env.VITE_TM_API}/api/eventos/${id}/inscribirse`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ usuarioId, tipoEntrada })
@@ -102,7 +102,7 @@ export default function MostrarEvento() {
             setShowTicketModal(false);
             alert(`¡Te inscribiste al evento con entrada ${tipoEntrada.toUpperCase()}!`);
             
-            const statsRes = await fetch(`http://localhost:3000/api/eventos/${id}/estadisticas`);
+            const statsRes = await fetch(`${import.meta.env.VITE_TM_API}/api/eventos/${id}/estadisticas`);
             if (statsRes.ok) {
                 const statsData = await statsRes.json();
                 setEstadisticasEvento(statsData);
@@ -126,7 +126,7 @@ export default function MostrarEvento() {
 
             const usuarioId = user.userId;
 
-            const res = await fetch(`http://localhost:3000/api/eventos/${id}/usuario/${usuarioId}`, {
+            const res = await fetch(`${import.meta.env.VITE_TM_API}/api/eventos/${id}/usuario/${usuarioId}`, {
                 method: "DELETE",
                 headers: { "Content-Type": "application/json" }
             });
@@ -139,7 +139,7 @@ export default function MostrarEvento() {
             setUsuarioInscrito(false);
             alert("Te has desinscrito del evento exitosamente");
             
-            const statsRes = await fetch(`http://localhost:3000/api/eventos/${id}/estadisticas`);
+            const statsRes = await fetch(`${import.meta.env.VITE_TM_API}/api/eventos/${id}/estadisticas`);
             if (statsRes.ok) {
                 const statsData = await statsRes.json();
                 setEstadisticasEvento(statsData);
@@ -160,7 +160,7 @@ export default function MostrarEvento() {
             const usuarioId = user.userId;
 
             if (esFavorito) {
-                const res = await fetch(`http://localhost:3000/api/favoritos/${id}/${usuarioId}`, {
+                const res = await fetch(`${import.meta.env.VITE_TM_API}/api/favoritos/${id}/${usuarioId}`, {
                     method: "DELETE"
                 });
                 if (res.ok) {
@@ -168,7 +168,7 @@ export default function MostrarEvento() {
                     alert("Eliminado de favoritos");
                 }
             } else {
-                const res = await fetch(`http://localhost:3000/api/favoritos`, {
+                const res = await fetch(`${import.meta.env.VITE_TM_API}/api/favoritos`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ eventoId: id, usuarioId })
@@ -196,7 +196,7 @@ export default function MostrarEvento() {
                     {/* Header con imagen más grande, título y favorito */}
                     <div className="flex items-start gap-4 mb-6">
                         <img 
-                            src={`http://localhost:3000${imageSrc}`} 
+                            src={`${import.meta.env.VITE_TM_API}${imageSrc}`}
                             alt="Logo evento" 
                             className="w-40 h-40 rounded-lg object-cover border-2 border-purple-600/50"
                         />
@@ -264,7 +264,7 @@ export default function MostrarEvento() {
                                 {imagenes.map((img, index) => (
                                     <img 
                                         key={index} 
-                                        src={`http://localhost:3000${img}`} 
+                                        src={`${import.meta.env.VITE_TM_API}${img}`}
                                         alt={`foto-${index}`} 
                                         className="h-40 rounded-lg object-cover border-2 border-purple-600/50 flex-shrink-0"
                                     />
