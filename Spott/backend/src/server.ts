@@ -21,6 +21,7 @@ const PORT = Number(process.env.PORT) || 3000;
 const allowedOrigins = [
     'http://localhost:5173',
     'https://utn-ds-25-grupo-05.vercel.app',
+    'https://utn-ds-25-grupo-05.vercel.app/',
     process.env.CORS_ORIGIN,
     process.env.FRONTEND_URL,
 ].filter(Boolean);
