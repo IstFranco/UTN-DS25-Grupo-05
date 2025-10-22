@@ -39,6 +39,10 @@ export default function MostrarEvento() {
         inscriptos,
         precio,
         precioVip,
+        accesible,
+        politicaCancelacion,
+        linkExterno,
+        hashtag,
         imagenes = []
     } = state.evento;
 
@@ -223,7 +227,9 @@ export default function MostrarEvento() {
                     <div className="grid grid-cols-2 gap-3 mb-6">
                         <div className="bg-slate-900/50 rounded-lg p-3">
                             <p className="text-slate-400 text-sm">Fecha</p>
-                            <p className="text-white font-semibold">📅 {fecha}, {horaInicio}</p>
+                            <p className="text-white font-semibold">
+                                📅 {fecha.split('T')[0]}, {horaInicio}
+                            </p>
                         </div>
                         <div className="bg-slate-900/50 rounded-lg p-3">
                             <p className="text-slate-400 text-sm">Ubicación</p>
@@ -261,7 +267,7 @@ export default function MostrarEvento() {
                                 <div>
                                     <p className="text-slate-400 text-sm">VIP ${precioVip}</p>
                                     <p className="text-white font-semibold">
-                                        {estadisticasEvento.disponibles.disponiblesVip} / {estadisticasEvento.cupos.cupoVip} disponibles {precioVip}
+                                        {estadisticasEvento.disponibles.disponiblesVip} / {estadisticasEvento.cupos.cupoVip} disponibles 
                                     </p>
                                 </div>
                             </div>
@@ -284,6 +290,27 @@ export default function MostrarEvento() {
                             </div>
                         </div>
                     )}
+
+                    <div className="grid grid-cols-2 gap-3 mb-6">
+                        <div className="bg-slate-900/50 rounded-lg p-3">
+                            <p className="text-slate-400 text-sm">Accesible</p>
+                            <p className="text-white font-semibold">
+                                {accesible ? (<p>✅ Evento Accesible</p>): (<p>❌ Evento No Accesible</p>)}
+                            </p>
+                        </div>
+                        <div className="bg-slate-900/50 rounded-lg p-3">
+                            <p className="text-slate-400 text-sm">Politicas de Cancelacion</p>
+                            <p className="text-white font-semibold">❌ {politicaCancelacion}</p>
+                        </div>
+                        <div className="bg-slate-900/50 rounded-lg p-3">
+                            <p className="text-slate-400 text-sm">Links de Interes</p>
+                            <p className="text-white font-semibold">🎭 {linkExterno}</p>
+                        </div>
+                        <div className="bg-slate-900/50 rounded-lg p-3">
+                            <p className="text-slate-400 text-sm">Hashtag</p>
+                            <p className="text-white font-semibold">🤓 {hashtag}</p>
+                        </div>
+                    </div>
 
                     {/* Botones de inscripción */}
                     <div>
