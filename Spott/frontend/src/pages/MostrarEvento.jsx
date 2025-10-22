@@ -282,7 +282,7 @@ export default function MostrarEvento() {
                                 {imagenes.map((img, index) => (
                                     <img 
                                         key={index} 
-                                        src={`${import.meta.env.VITE_API_URL}${img}`}
+                                        src={`${import.meta.env.VITE_TM_API}${img}`}
                                         alt={`foto-${index}`} 
                                         className="h-40 rounded-lg object-cover border-2 border-purple-600/50 flex-shrink-0"
                                     />
