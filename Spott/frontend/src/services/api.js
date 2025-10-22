@@ -123,7 +123,7 @@ class ApiService {
     }
 
     async obtenerEventosInscritos(usuarioId) {
-        return this.request(`/eventos/usuario/${usuarioId}/inscritos`, {}, true);
+        return this.request(`/eventos/usuario/${usuarioId}/inscriptos`, {}, true);
     }
 
     // MÉTODOS DE FAVORITOS (privados)
