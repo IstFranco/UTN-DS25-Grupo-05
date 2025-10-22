@@ -11,17 +11,22 @@ function sanitizeUsuario(u: any) {
     return rest;
 }
 
-// Función helper para generar token
-function generateToken(userId: string, userType: 'usuario' | 'empresa') {
+
+function generateToken(userId: string, userType: 'usuario' | 'empresa', nombre: string, email: string) {
     const secret = process.env.JWT_SECRET;
     if (!secret) {
         throw new Error("JWT_SECRET no está configurado");
     }
     
     return jwt.sign(
-        { userId, userType },
+        { 
+            userId, 
+            userType,
+            nombre,    
+            email      
+        },
         secret,
-        { expiresIn: '7d' } // Token válido por 7 días
+        { expiresIn: '7d' }
     );
 }
 
@@ -47,13 +52,13 @@ export async function crearUsuario(req: Request, res: Response) {
             },
         });
 
-        // Generar token al registrarse
-        const token = generateToken(usuario.id, 'usuario');
+        
+        const token = generateToken(usuario.id, 'usuario', usuario.nombre, usuario.email);
 
         return res.status(201).json({
             message: "Usuario registrado correctamente",
             usuario: sanitizeUsuario(usuario),
-            token   // ✅ se envía el token
+            token
         });
     } catch (e: any) {
         if (e.name === 'ZodError') {
@@ -82,13 +87,13 @@ export async function loginUsuario(req: Request, res: Response) {
             return res.status(401).json({ message: "Credenciales inválidas" });
         }
 
-        // Generar token al hacer login
-        const token = generateToken(usuario.id, 'usuario');
+        
+        const token = generateToken(usuario.id, 'usuario', usuario.nombre, usuario.email);
 
         return res.json({
             message: "Login exitoso",
             usuario: sanitizeUsuario(usuario),
-            token   // ✅ se envía el token
+            token
         });
     } catch (e: any) {
         if (e.name === 'ZodError') {
