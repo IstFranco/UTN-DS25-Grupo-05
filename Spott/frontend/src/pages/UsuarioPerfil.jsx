@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import perfilImg from '../img/LogoPerfil.jpeg';
 import Header from '../components/Header';
 import notiImg from '../img/LogoNotificaciones.jpeg';
@@ -6,6 +7,7 @@ import FooterUsuario from '../components/FooterUsuario';
 
 export default function UsuarioPerfil() {
     const navigate = useNavigate();
+    const { user } = useAuth(); // Obtener datos del usuario desde el contexto
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 pb-24 pt-20">
@@ -14,18 +16,21 @@ export default function UsuarioPerfil() {
                 leftButton={{ type: 'image', content: perfilImg, to: '/usuario/perfil' }}
                 rightButton={{ type: 'image', content: notiImg, to: '/usuario/notificaciones' }}
             />
-
             <div className="max-w-md mx-auto px-4 py-8">
                 <div className="bg-purple-900/30 backdrop-blur-sm border border-purple-700/20 rounded-xl p-8 shadow-2xl">
                     {/* Foto y datos del perfil */}
                     <div className="text-center mb-8">
-                        <img 
-                            src={perfilImg} 
-                            alt="Foto de perfil" 
+                        <img
+                            src={perfilImg}
+                            alt="Foto de perfil"
                             className="w-32 h-32 rounded-full mx-auto mb-4 border-4 border-purple-600/50 object-cover"
                         />
-                        <h2 className="text-2xl font-bold text-white mb-1">Usuario Spott</h2>
-                        <p className="text-slate-400">usuario@spott.com</p>
+                        <h2 className="text-2xl font-bold text-white mb-1">
+                            {user?.nombre || 'Usuario'}
+                        </h2>
+                        <p className="text-slate-400">
+                            {user?.email || 'email@ejemplo.com'}
+                        </p>
                     </div>
 
                     {/* Botones de opciones */}
@@ -34,20 +39,17 @@ export default function UsuarioPerfil() {
                             <span className="text-2xl">⚙️</span>
                             <span className="text-white font-medium">Configuración</span>
                         </button>
-
                         <button className="w-full bg-slate-900/50 border border-purple-700/50 rounded-lg p-4 hover:bg-slate-800/50 transition flex items-center gap-3">
                             <span className="text-2xl">🔒</span>
                             <span className="text-white font-medium">Privacidad</span>
                         </button>
-
-                        <button 
+                        <button
                             onClick={() => navigate('/usuario/ayuda')}
                             className="w-full bg-slate-900/50 border border-purple-700/50 rounded-lg p-4 hover:bg-slate-800/50 transition flex items-center gap-3"
                         >
                             <span className="text-2xl">❓</span>
                             <span className="text-white font-medium">Ayuda</span>
                         </button>
-
                         <button
                             onClick={() => navigate('/')}
                             className="w-full bg-red-600/20 border border-red-500/50 rounded-lg p-4 hover:bg-red-600/30 transition flex items-center gap-3"
@@ -58,7 +60,6 @@ export default function UsuarioPerfil() {
                     </div>
                 </div>
             </div>
-
             <FooterUsuario />
         </div>
     );
