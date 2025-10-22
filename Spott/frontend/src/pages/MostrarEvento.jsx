@@ -34,6 +34,7 @@ export default function MostrarEvento() {
         ciudad,
         barrio,
         tematica,
+        estilo,
         musica,
         inscriptos,
         precio,
