@@ -204,7 +204,7 @@ export default function MostrarEvento() {
                     {/* Header con imagen más grande, título y favorito */}
                     <div className="flex items-start gap-4 mb-6">
                         <img 
-                            src={`${import.meta.env.VITE_TM_API}${imageSrc}`}
+                            src={`${import.meta.env.VITE_API_URL}${imageSrc}`}
                             alt="Logo evento" 
                             className="w-40 h-40 rounded-lg object-cover border-2 border-purple-600/50"
                         />
@@ -282,7 +282,7 @@ export default function MostrarEvento() {
                                 {imagenes.map((img, index) => (
                                     <img 
                                         key={index} 
-                                        src={`${import.meta.env.VITE_TM_API}${img}`}
+                                        src={`${import.meta.env.VITE_API_URL}${img}`}
                                         alt={`foto-${index}`} 
                                         className="h-40 rounded-lg object-cover border-2 border-purple-600/50 flex-shrink-0"
                                     />
@@ -304,11 +304,11 @@ export default function MostrarEvento() {
                         </div>
                         <div className="bg-slate-900/50 rounded-lg p-3">
                             <p className="text-slate-400 text-sm">Links de Interes</p>
-                            <p className="text-white font-semibold">🎭 {linkExterno}</p>
+                            <p className="text-white font-semibold">📌 {linkExterno}</p>
                         </div>
                         <div className="bg-slate-900/50 rounded-lg p-3">
                             <p className="text-slate-400 text-sm">Hashtag</p>
-                            <p className="text-white font-semibold">🤓 {hashtag}</p>
+                            <p className="text-white font-semibold">😎 {hashtag}</p>
                         </div>
                     </div>
 
