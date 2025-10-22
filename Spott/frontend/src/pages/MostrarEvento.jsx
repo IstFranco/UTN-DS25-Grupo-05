@@ -29,7 +29,7 @@ export default function MostrarEvento() {
         title,
         description,
         fecha,
-        hora,
+        horaInicio,
         rating,
         ciudad,
         barrio,
@@ -223,7 +223,7 @@ export default function MostrarEvento() {
                     <div className="grid grid-cols-2 gap-3 mb-6">
                         <div className="bg-slate-900/50 rounded-lg p-3">
                             <p className="text-slate-400 text-sm">Fecha</p>
-                            <p className="text-white font-semibold">📅 {fecha}, {hora}</p>
+                            <p className="text-white font-semibold">📅 {fecha}, {horaInicio}</p>
                         </div>
                         <div className="bg-slate-900/50 rounded-lg p-3">
                             <p className="text-slate-400 text-sm">Ubicación</p>
@@ -253,13 +253,13 @@ export default function MostrarEvento() {
                             <h3 className="text-white font-bold mb-3">Disponibilidad de Entradas</h3>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <p className="text-slate-400 text-sm">General</p>
+                                    <p className="text-slate-400 text-sm">General ${precio}</p>
                                     <p className="text-white font-semibold">
-                                        {estadisticasEvento.disponibles.disponiblesGeneral} / {estadisticasEvento.cupos.cupoGeneral} disponibles {precio}
+                                        {estadisticasEvento.disponibles.disponiblesGeneral} / {estadisticasEvento.cupos.cupoGeneral} disponibles 
                                     </p>
                                 </div>
                                 <div>
-                                    <p className="text-slate-400 text-sm">VIP</p>
+                                    <p className="text-slate-400 text-sm">VIP ${precioVip}</p>
                                     <p className="text-white font-semibold">
                                         {estadisticasEvento.disponibles.disponiblesVip} / {estadisticasEvento.cupos.cupoVip} disponibles {precioVip}
                                     </p>
