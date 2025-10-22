@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
-const API = import.meta?.env?.VITE_API_URL || 'http://localhost:3000';
+const API = import.meta?.env?.VITE_TM_API || 'http://localhost:3000';
 
 function getAnonUserId() {
     const key = 'anonUserId';
