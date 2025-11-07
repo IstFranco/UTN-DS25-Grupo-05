@@ -26,10 +26,17 @@ export default function EventoInscripto() {
         imageSrc,
         title,
         description,
+        fecha,
+        horaInicio,
         rating,
         ciudad,
         barrio,
         tematica,
+        accesible,
+        politicaCancelacion,
+        linkExterno,
+        hashtag,
+        imagenes = [],
         musica
     } = state.evento;
 
