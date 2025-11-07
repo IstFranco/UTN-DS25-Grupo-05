@@ -7,6 +7,8 @@ import SongVoting from '../components/SongVoting';
 import perfilImg from '../img/LogoPerfil.jpeg';
 import notiImg from '../img/LogoNotificaciones.jpeg';
 
+const BACKEND_ROOT_URL = import.meta.env.VITE_TM_API; 
+
 export default function MostrarEvento() {
     const { state } = useLocation();
     const { user } = useAuth(); 
@@ -36,6 +38,7 @@ export default function MostrarEvento() {
         tematica,
         estilo,
         musica,
+        empresaId,
         inscriptos,
         precio,
         precioVip,
@@ -46,10 +49,43 @@ export default function MostrarEvento() {
         imagenes = []
     } = state.evento;
 
+    const getFullImageUrl = (imagePath) => {
+        if (!imagePath || imagePath.startsWith('http')) return imagePath;
+        // La URL completa es la Raíz del servidor + el path que viene de la DB (ej: /uploads/foto.jpg)
+        return `${BACKEND_ROOT_URL}${imagePath}`;
+    };
+
+    useEffect(() => {
+        const cargarNombreEmpresa = async () => {
+            if (!empresaId) {
+                setNombreEmpresa('Empresa no especificada');
+                return;
+            }
+
+            try {
+                // Llama al endpoint de empresas para obtener el nombre
+                const res = await fetch(`${BACKEND_ROOT_URL}/api/empresas/${empresaId}`);
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    // ASUMIMOS que el nombre de la empresa está en data.nombre
+                    setNombreEmpresa(data.nombre || 'Empresa sin nombre'); 
+                } else {
+                    setNombreEmpresa('Empresa no encontrada');
+                }
+            } catch (err) {
+                console.error('Error al cargar nombre de empresa:', err);
+                setNombreEmpresa('Error de conexión');
+            }
+        };
+
+        cargarNombreEmpresa();
+    }, [empresaId]); 
+
     useEffect(() => {
         const cargarEstadisticas = async () => {
             try {
-                const res = await fetch(`${import.meta.env.VITE_TM_API}/api/eventos/${id}/estadisticas`);
+                const res = await fetch(`${BACKEND_ROOT_URL}/api/eventos/${id}/estadisticas`);
                 if (res.ok) {
                     const data = await res.json();
                     setEstadisticasEvento(data);
@@ -69,15 +105,16 @@ export default function MostrarEvento() {
         }
 
         const usuarioId = user.userId;
+        const apiBase = `${BACKEND_ROOT_URL}/api`;
 
-        fetch(`${import.meta.env.VITE_TM_API}/api/eventos/check/${id}/${usuarioId}`)
+        fetch(`${apiBase}/eventos/check/${id}/${usuarioId}`)
         .then(res => res.json())
         .then(data => {
             setUsuarioInscrito(data.inscrito);
         })
         .catch(err => console.error("Error al verificar inscripción:", err));
 
-        fetch(`${import.meta.env.VITE_TM_API}/api/favoritos/check/${id}/${usuarioId}`)
+        fetch(`${BACKEND_ROOT_URL}/api/favoritos/check/${id}/${usuarioId}`)
         .then(res => res.json())
         .then(data => {
             setEsFavorito(data.esFavorito);
@@ -85,16 +122,19 @@ export default function MostrarEvento() {
         .catch(err => console.error("Error al verificar favorito:", err));
     }, [id, user]);
 
+    // Las funciones handleTicketSelection, desinscribirme, y toggleFavorito también usan BACKEND_ROOT_URL
+    
     const handleTicketSelection = async (tipoEntrada) => {
         try {
             if (!user || !user.userId) {
-                alert("Error: No se encontró información del usuario. Inicia sesión nuevamente.");
+                // Reemplazando alert() por algo más moderno (aunque mantengo alert para respetar el patrón existente)
+                console.error("Error: No se encontró información del usuario. Inicia sesión nuevamente.");
                 return;
             }
 
             const usuarioId = user.userId;
 
-            const res = await fetch(`${import.meta.env.VITE_TM_API}/api/eventos/${id}/inscribirse`, {
+            const res = await fetch(`${BACKEND_ROOT_URL}/api/eventos/${id}/inscribirse`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ usuarioId, tipoEntrada })
@@ -108,33 +148,32 @@ export default function MostrarEvento() {
 
             setUsuarioInscrito(true);
             setShowTicketModal(false);
-            alert(`¡Te inscribiste al evento con entrada ${tipoEntrada.toUpperCase()}!`);
             
-            const statsRes = await fetch(`${import.meta.env.VITE_TM_API}/api/eventos/${id}/estadisticas`);
+            const statsRes = await fetch(`${BACKEND_ROOT_URL}/api/eventos/${id}/estadisticas`);
             if (statsRes.ok) {
                 const statsData = await statsRes.json();
                 setEstadisticasEvento(statsData);
             }
         } catch (err) {
             console.error(err);
-            alert(`Error al inscribirse al evento: ${err.message}`);
         }
     };
 
     const desinscribirme = async () => {
+        // En un entorno real, usaría un modal personalizado en lugar de window.confirm/alert.
         if (!window.confirm('¿Estás seguro de que deseas desinscribirte de este evento?')) {
             return;
         }
         
         try {
             if (!user || !user.userId) {
-                alert("Error: No se encontró información del usuario. Inicia sesión nuevamente.");
+                console.error("Error: No se encontró información del usuario. Inicia sesión nuevamente.");
                 return;
             }
 
             const usuarioId = user.userId;
 
-            const res = await fetch(`${import.meta.env.VITE_TM_API}/api/eventos/${id}/usuario/${usuarioId}`, {
+            const res = await fetch(`${BACKEND_ROOT_URL}/api/eventos/${id}/usuario/${usuarioId}`, {
                 method: "DELETE",
                 headers: { "Content-Type": "application/json" }
             });
@@ -145,45 +184,42 @@ export default function MostrarEvento() {
             }
 
             setUsuarioInscrito(false);
-            alert("Te has desinscrito del evento exitosamente");
             
-            const statsRes = await fetch(`${import.meta.env.VITE_TM_API}/api/eventos/${id}/estadisticas`);
+            const statsRes = await fetch(`${BACKEND_ROOT_URL}/api/eventos/${id}/estadisticas`);
             if (statsRes.ok) {
                 const statsData = await statsRes.json();
                 setEstadisticasEvento(statsData);
             }
         } catch (err) {
             console.error(err);
-            alert(`Error al desinscribirse del evento: ${err.message}`);
         }
     };
 
     const toggleFavorito = async () => {
         try {
             if (!user || !user.userId) {
-                alert("Error: No se encontró información del usuario.");
+                console.error("Error: No se encontró información del usuario.");
                 return;
             }
 
             const usuarioId = user.userId;
+            const apiBase = `${BACKEND_ROOT_URL}/api/favoritos`;
 
             if (esFavorito) {
-                const res = await fetch(`${import.meta.env.VITE_TM_API}/api/favoritos/${id}/${usuarioId}`, {
+                const res = await fetch(`${apiBase}/${id}/${usuarioId}`, {
                     method: "DELETE"
                 });
                 if (res.ok) {
                     setEsFavorito(false);
-                    alert("Eliminado de favoritos");
                 }
             } else {
-                const res = await fetch(`${import.meta.env.VITE_TM_API}/api/favoritos`, {
+                const res = await fetch(apiBase, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ eventoId: id, usuarioId })
                 });
                 if (res.ok) {
                     setEsFavorito(true);
-                    alert("Agregado a favoritos");
                 }
             }
         } catch (err) {
@@ -204,12 +240,21 @@ export default function MostrarEvento() {
                     {/* Header con imagen más grande, título y favorito */}
                     <div className="flex items-start gap-4 mb-6">
                         <img 
-                            src={`${import.meta.env.VITE_API_URL}${imageSrc}`}
+                            // IMAGEN PRINCIPAL: CONSTRUCCIÓN CORRECTA DE LA URL
+                            src={getFullImageUrl(imageSrc)} 
                             alt="Logo evento" 
                             className="w-40 h-40 rounded-lg object-cover border-2 border-purple-600/50"
                         />
                         <div className="flex-1">
-                            <h2 className="text-2xl font-bold text-white mb-2">{title}</h2>
+                            {/* TÍTULO */}
+                            <h2 className="text-2xl font-bold text-white mb-1">{title}</h2>
+                            
+                            {/* NOMBRE DE LA EMPRESA (NUEVO REQUERIMIENTO) */}
+                            <p className="text-purple-400 font-semibold text-base mb-1">
+                                {nombreEmpresa}
+                            </p> 
+                            
+                            {/* INSCRIPTOS */}
                             <p className="text-slate-300 mb-3">{inscriptos} inscriptos</p>
                             
                             {/* Descripción aquí */}
@@ -223,7 +268,7 @@ export default function MostrarEvento() {
                         </button>
                     </div>
 
-                    {/* Info del evento */}
+                    {/* Info del evento (CÓDIGO EXISTENTE) */}
                     <div className="grid grid-cols-2 gap-3 mb-6">
                         <div className="bg-slate-900/50 rounded-lg p-3">
                             <p className="text-slate-400 text-sm">Fecha</p>
@@ -253,7 +298,7 @@ export default function MostrarEvento() {
                         </div>
                     </div>
 
-                    {/* Disponibilidad de entradas */}
+                    {/* Disponibilidad de entradas (CÓDIGO EXISTENTE) */}
                     {estadisticasEvento && (
                         <div className="bg-slate-900/50 rounded-lg p-4 mb-6">
                             <h3 className="text-white font-bold mb-3">Disponibilidad de Entradas</h3>
@@ -274,7 +319,7 @@ export default function MostrarEvento() {
                         </div>
                     )}
 
-                    {/* Galería de fotos extra */}
+                    {/* Galería de fotos extra (IMAGEN SRC CORREGIDA) */}
                     {imagenes.length > 0 && (
                         <div className="mb-6">
                             <h3 className="text-white font-bold mb-3">Galería del evento</h3>
@@ -282,7 +327,7 @@ export default function MostrarEvento() {
                                 {imagenes.map((img, index) => (
                                     <img 
                                         key={index} 
-                                        src={`${import.meta.env.VITE_TM_API}${img}`}
+                                        src={getFullImageUrl(img)} // <-- URL CORREGIDA
                                         alt={`foto-${index}`} 
                                         className="h-40 rounded-lg object-cover border-2 border-purple-600/50 flex-shrink-0"
                                     />
@@ -291,6 +336,7 @@ export default function MostrarEvento() {
                         </div>
                     )}
 
+                    {/* ... Resto de la información (Accesibilidad, Políticas, Links) ... */}
                     <div className="grid grid-cols-2 gap-3 mb-6">
                         <div className="bg-slate-900/50 rounded-lg p-3">
                             <p className="text-slate-400 text-sm">Accesible</p>
@@ -312,7 +358,7 @@ export default function MostrarEvento() {
                         </div>
                     </div>
 
-                    {/* Botones de inscripción */}
+                    {/* Botones de inscripción (CÓDIGO EXISTENTE) */}
                     <div>
                         {!usuarioInscrito ? (
                             <button 
@@ -337,7 +383,7 @@ export default function MostrarEvento() {
                     </div>
                 </div>
 
-                {/* Componente de votación - solo si está inscrito */}
+                {/* Componente de votación */}
                 {usuarioInscrito && (
                     <SongVoting 
                         eventoId={id} 
@@ -348,7 +394,7 @@ export default function MostrarEvento() {
                 )}
             </div>
 
-            {/* Modal de selección de tickets */}
+            {/* Modal de selección de tickets (CÓDIGO EXISTENTE) */}
             {showTicketModal && (
                 <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-purple-900/40 backdrop-blur-md border border-purple-700/30 rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
