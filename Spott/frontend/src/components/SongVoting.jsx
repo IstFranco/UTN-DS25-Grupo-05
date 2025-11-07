@@ -38,7 +38,7 @@ export default function SongVoting({
     const effectiveUserId = userId || getAnonUserId();
 
     useEffect(() => {
-        if ((usuarioInscrito && !esReadOnly) || !eventoId) return;
+        if ((!usuarioInscrito && !esReadOnly) || !eventoId) return;
         
         let alive = true;
         (async () => {
