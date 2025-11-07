@@ -121,7 +121,7 @@ export default function EmpresaInicio() {
 
             </div>
 
-            <FooterEmpresa /> 
+            <FooterEmpresa /> {/* <-- Correcto */}
         </div>
     );
 }

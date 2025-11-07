@@ -13,15 +13,10 @@ function getAnonUserId() {
 }
 
 const PLACEHOLDER_IMG = "/placeholder.png";
+
 const normalize = (s) => s?.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
 
-export default function SongVoting({ 
-    eventoId, 
-    usuarioInscrito = false,
-    userId, 
-    generoEvento,
-    esReadOnly = false
-}) {
+export default function SongVoting({ eventoId, usuarioInscrito = false, userId, generoEvento }) {
     const [songs, setSongs] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [showAddSong, setShowAddSong] = useState(false);
@@ -38,8 +33,7 @@ export default function SongVoting({
     const effectiveUserId = userId || getAnonUserId();
 
     useEffect(() => {
-        if ((!usuarioInscrito && !esReadOnly) || !eventoId) return;
-        
+        if (!usuarioInscrito || !eventoId) return;
         let alive = true;
         (async () => {
             try {
@@ -70,70 +64,54 @@ export default function SongVoting({
             }
         })();
         return () => { alive = false; };
-    }, [usuarioInscrito, esReadOnly, eventoId, effectiveUserId]);
+    }, [usuarioInscrito, eventoId, effectiveUserId]);
 
     const filteredSongs = useMemo(() => {
-        if (!searchTerm.trim()) return songs;
-        const normSearch = normalize(searchTerm);
-        return songs.filter(s => 
-            normalize(s.title).includes(normSearch) || 
-            normalize(s.artist).includes(normSearch)
-        );
+        const q = (searchTerm || '').toLowerCase();
+        return songs.filter(s => s.title.toLowerCase().includes(q) || s.artist.toLowerCase().includes(q));
     }, [songs, searchTerm]);
 
     const sortedSongs = useMemo(() => {
         return [...filteredSongs].sort((a, b) => {
             const scoreA = (a.votesUp || 0) - (a.votesDown || 0);
             const scoreB = (b.votesUp || 0) - (b.votesDown || 0);
-            return scoreB - scoreA;
+            if (scoreB !== scoreA) return scoreB - scoreA;
+            return (b.votesUp || 0) - (a.votesUp || 0);
         });
     }, [filteredSongs]);
 
-    if (!usuarioInscrito && !esReadOnly) return null;
+    if (!usuarioInscrito) return null;
 
     const handleAddSong = async () => {
-        if (!newSong.title.trim() || !newSong.artist.trim()) {
-            alert('Por favor completa todos los campos');
-            return;
-        }
-
-        setPosting(true);
+        if (!newSong.title.trim() || !newSong.artist.trim()) return;
         try {
+            setPosting(true);
+            setError(null);
             const res = await fetch(`${API}/api/canciones`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    eventoId,
+                body: JSON.stringify({ 
+                    eventoId, 
                     titulo: newSong.title.trim(),
-                    artista: newSong.artist.trim(),
-                    usuarioId: effectiveUserId
+                    artista: newSong.artist.trim() 
                 })
             });
-
-            if (!res.ok) {
-                const errData = await res.json();
-                throw new Error(errData.message || 'Error al agregar canción');
-            }
-
-            const data = await res.json();
-            const added = {
-                id: data.cancion.id,
-                title: data.cancion.titulo,
-                artist: data.cancion.artista,
+            if (!res.ok) throw new Error('No se pudo crear la canción');
+            const { cancion } = await res.json();
+            setSongs(prev => [...prev, {
+                id: cancion.id,
+                title: cancion.titulo,
+                artist: cancion.artista,
                 votesUp: 0,
                 votesDown: 0,
                 image: PLACEHOLDER_IMG,
                 userVote: null,
-                userVoteId: null
-            };
-
-            setSongs(prev => [...prev, added]);
+                userVoteId: null,
+            }]);
             setNewSong({ title: '', artist: '' });
             setShowAddSong(false);
-            alert('¡Canción agregada exitosamente!');
-        } catch (err) {
-            console.error(err);
-            alert(err.message || 'Error al agregar la canción');
+        } catch (e) {
+            setError(e.message || 'Error al agregar canción');
         } finally {
             setPosting(false);
         }
@@ -141,168 +119,134 @@ export default function SongVoting({
 
     const searchSpotify = async () => {
         if (!spQuery.trim()) return;
-
-        setSpLoading(true);
-        setSpError(null);
-        setSpResults([]);
-
         try {
-            const res = await fetch(
-                `${API}/api/spotify/search?q=${encodeURIComponent(spQuery)}&genre=${encodeURIComponent(generoEvento || '')}`
-            );
-            if (!res.ok) throw new Error('Error en la búsqueda');
-
-            const data = await res.json();
-            setSpResults(data.tracks || []);
-        } catch (err) {
-            console.error(err);
-            setSpError(err.message || 'Error al buscar en Spotify');
+            setSpLoading(true);
+            setSpError(null);
+            const genreParam = generoEvento ? normalize(generoEvento) : '';
+            const url = `${API}/api/spotify/search?title=${encodeURIComponent(spQuery)}&genre=${encodeURIComponent(genreParam)}&limit=8`;
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('No se pudo buscar en Spotify');
+            const { tracks } = await res.json();
+            setSpResults(tracks || []);
+        } catch (e) {
+            setSpError(e.message || 'Error buscando en Spotify');
         } finally {
             setSpLoading(false);
         }
     };
 
     const addFromSpotify = async (track) => {
-        setPosting(true);
         try {
-            const res = await fetch(`${API}/api/canciones`, {
+            setPosting(true);
+            setError(null);
+            const res = await fetch(`${API}/api/canciones/spotify`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     eventoId,
-                    titulo: track.name,
-                    artista: track.artists.map(a => a.name).join(', '),
-                    usuarioId: effectiveUserId,
                     spotifyId: track.id
                 })
             });
-
-            if (!res.ok) {
-                const errData = await res.json();
-                throw new Error(errData.message || 'Error al agregar canción');
-            }
-
-            const data = await res.json();
-            const added = {
-                id: data.cancion.id,
-                title: data.cancion.titulo,
-                artist: data.cancion.artista,
+            if (!res.ok) throw new Error('No se pudo crear desde Spotify');
+            const { cancion } = await res.json();
+            setSongs(prev => [...prev, {
+                id: cancion.id,
+                title: cancion.titulo,
+                artist: cancion.artista,
                 votesUp: 0,
                 votesDown: 0,
-                image: track.album?.images?.[0]?.url || PLACEHOLDER_IMG,
+                image: track?.album?.images?.[0]?.url || PLACEHOLDER_IMG,
                 userVote: null,
-                userVoteId: null
-            };
-
-            setSongs(prev => [...prev, added]);
+                userVoteId: null,
+            }]);
             setShowAddSong(false);
-            setSpQuery('');
             setSpResults([]);
-            alert('¡Canción agregada desde Spotify!');
-        } catch (err) {
-            console.error(err);
-            alert(err.message || 'Error al agregar la canción');
+            setSpQuery('');
+        } catch (e) {
+            setError(e.message || 'Error al agregar desde Spotify');
         } finally {
             setPosting(false);
         }
     };
 
     const handleVote = async (songId, voteType) => {
-        const song = songs.find(s => s.id === songId);
-        if (!song || song._busy) return;
-
-        setSongs(prev => prev.map(s => 
-            s.id === songId ? { ...s, _busy: true } : s
-        ));
-
+        setSongs(prev => prev.map(s => (s.id === songId ? { ...s, _busy: true } : s)));
         try {
-            if (song.userVote === voteType) {
-                const res = await fetch(`${API}/api/votos/${song.userVoteId}`, {
-                    method: 'DELETE'
-                });
+            const song = songs.find(s => s.id === songId);
+            if (!song) return;
+            const current = song.userVote;
+            const currentVoteId = song.userVoteId;
 
-                if (!res.ok) throw new Error('Error al eliminar voto');
-
+            if (current === voteType && currentVoteId) {
+                const res = await fetch(`${API}/api/votos/${currentVoteId}`, { method: 'DELETE' });
+                if (!res.ok) throw new Error('No se pudo eliminar el voto');
+                
+                const data = await res.json();
                 setSongs(prev => prev.map(s => {
                     if (s.id !== songId) return s;
                     return {
                         ...s,
-                        votesUp: voteType === 'like' ? s.votesUp - 1 : s.votesUp,
-                        votesDown: voteType === 'dislike' ? s.votesDown - 1 : s.votesDown,
+                        votesUp: data?.cancion?.votosUp ?? (voteType === 'like' ? Math.max(0, (s.votesUp || 0) - 1) : s.votesUp),
+                        votesDown: data?.cancion?.votosDown ?? (voteType === 'dislike' ? Math.max(0, (s.votesDown || 0) - 1) : s.votesDown),
                         userVote: null,
                         userVoteId: null,
                         _busy: false
                     };
                 }));
-            } else {
-                if (song.userVote) {
-                    await fetch(`${API}/api/votos/${song.userVoteId}`, {
-                        method: 'DELETE'
-                    });
-                }
-
-                const res = await fetch(`${API}/api/votos`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        cancionId: songId,
-                        usuarioId: effectiveUserId,
-                        tipo: voteType === 'like' ? 'up' : 'down'
-                    })
-                });
-
-                if (!res.ok) throw new Error('Error al votar');
-
-                const data = await res.json();
-
-                setSongs(prev => prev.map(s => {
-                    if (s.id !== songId) return s;
-                    
-                    let newUp = s.votesUp;
-                    let newDown = s.votesDown;
-
-                    if (s.userVote === 'like') newUp -= 1;
-                    if (s.userVote === 'dislike') newDown -= 1;
-
-                    if (voteType === 'like') newUp += 1;
-                    if (voteType === 'dislike') newDown += 1;
-
-                    return {
-                        ...s,
-                        votesUp: newUp,
-                        votesDown: newDown,
-                        userVote: voteType,
-                        userVoteId: data.voto.id,
-                        _busy: false
-                    };
-                }));
+                return;
             }
-        } catch (err) {
-            console.error(err);
-            alert(err.message || 'Error al procesar el voto');
-            setSongs(prev => prev.map(s => 
-                s.id === songId ? { ...s, _busy: false } : s
-            ));
+
+            if (current && currentVoteId && current !== voteType) {
+                const del = await fetch(`${API}/api/votos/${currentVoteId}`, { method: 'DELETE' });
+                if (!del.ok) throw new Error('No se pudo cambiar el voto');
+            }
+
+            const res = await fetch(`${API}/api/votos`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    cancionId: songId,
+                    tipo: voteType === 'like' ? 'up' : 'down',
+                    usuarioId: effectiveUserId
+                })
+            });
+            
+            if (!res.ok) throw new Error('No se pudo registrar el voto');
+            
+            const data = await res.json();
+            const newVoteId = data?.voto?.id;
+
+            setSongs(prev => prev.map(s => {
+                if (s.id !== songId) return s;
+                const updated = data?.cancion;
+                return {
+                    ...s,
+                    votesUp: updated?.votosUp ?? s.votesUp,
+                    votesDown: updated?.votosDown ?? s.votesDown,
+                    userVote: voteType,
+                    userVoteId: newVoteId || null,
+                    _busy: false
+                };
+            }));
+        } catch (e) {
+            setError(e.message || 'Error al votar');
+            setSongs(prev => prev.map(s => (s.id === songId ? { ...s, _busy: false } : s)));
         }
     };
 
     return (
         <div className="max-w-4xl mx-auto px-4 py-6 mt-6">
             <div className="bg-purple-900/30 backdrop-blur-sm border border-purple-700/20 rounded-xl p-6 shadow-2xl">
+                {/* Header */}
                 <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-bold text-white">
-                        {esReadOnly ? '🎵 Canciones del Evento' : '🎵 Votación de Canciones'}
-                    </h2>
-
-                    {!esReadOnly && (
-                        <button 
-                            onClick={() => setShowAddSong(true)} 
-                            disabled={posting}
-                            className="px-4 py-2 bg-purple-700 hover:bg-purple-600 text-white font-semibold rounded-lg transition disabled:opacity-50"
-                        >
-                            + Agregar Canción
-                        </button>
-                    )}
+                    <h2 className="text-2xl font-bold text-white">🎵 Votación de Canciones</h2>
+                    <button 
+                        onClick={() => setShowAddSong(true)} 
+                        disabled={posting}
+                        className="px-4 py-2 bg-purple-700 hover:bg-purple-600 text-white font-semibold rounded-lg transition disabled:opacity-50"
+                    >
+                        + Agregar Canción
+                    </button>
                 </div>
 
                 {error && (
@@ -317,16 +261,19 @@ export default function SongVoting({
                     </div>
                 )}
 
+                {/* Búsqueda */}
                 <div className="flex items-center justify-between mb-4">
                     <input
                         type="text"
-                        placeholder="Buscar canción o artista..."
+                        placeholder="Buscar en playlist..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="flex-1 px-4 py-2 bg-slate-900/50 border border-purple-700/50 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-purple-500"
+                        className="flex-1 px-4 py-2 rounded-lg bg-slate-900/50 border border-purple-700/50 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-600 transition"
                     />
+                    <span className="ml-4 text-slate-400 text-sm">{filteredSongs.length} canciones</span>
                 </div>
 
+                {/* Lista de canciones */}
                 <div className="space-y-3">
                     {sortedSongs.map((song, index) => {
                         const score = (song.votesUp || 0) - (song.votesDown || 0);
@@ -335,53 +282,47 @@ export default function SongVoting({
                                 key={song.id} 
                                 className={`flex items-center gap-4 bg-slate-900/50 border border-purple-700/30 rounded-lg p-4 transition ${song._busy ? 'opacity-50' : ''}`}
                             >
-                                <div className="text-slate-400 font-bold text-lg w-8 text-center">
+                                <div className="text-slate-400 font-bold w-8 text-center">
                                     #{index + 1}
                                 </div>
 
                                 <img 
                                     src={song.image} 
-                                    alt={song.title}
-                                    className="w-16 h-16 rounded-lg object-cover border-2 border-purple-600/50"
-                                    onError={(e) => { e.target.src = PLACEHOLDER_IMG; }}
+                                    alt={song.title} 
+                                    className="w-12 h-12 rounded object-cover"
                                 />
 
                                 <div className="flex-1">
-                                    <h3 className="text-white font-bold">{song.title}</h3>
-                                    <p className="text-slate-400 text-sm">{song.artist}</p>
+                                    <div className="text-white font-semibold">{song.title}</div>
+                                    <div className="text-slate-400 text-sm">{song.artist}</div>
                                 </div>
 
                                 <div className="flex items-center gap-3">
                                     <div className="text-white font-bold text-lg w-12 text-center">
                                         {score}
                                     </div>
-
-                                    {!esReadOnly && (
-                                        <>
-                                            <button
-                                                className={`px-3 py-2 rounded-lg transition ${
-                                                    song.userVote === 'like' 
-                                                        ? 'bg-green-600 hover:bg-green-700' 
-                                                        : 'bg-slate-800 hover:bg-slate-700'
-                                                }`}
-                                                disabled={song._busy}
-                                                onClick={() => handleVote(song.id, 'like')}
-                                            >
-                                                👍
-                                            </button>
-                                            <button
-                                                className={`px-3 py-2 rounded-lg transition ${
-                                                    song.userVote === 'dislike' 
-                                                        ? 'bg-red-600 hover:bg-red-700' 
-                                                        : 'bg-slate-800 hover:bg-slate-700'
-                                                }`}
-                                                disabled={song._busy}
-                                                onClick={() => handleVote(song.id, 'dislike')}
-                                            >
-                                                👎
-                                            </button>
-                                        </>
-                                    )}
+                                    <button
+                                        className={`px-3 py-2 rounded-lg transition ${
+                                            song.userVote === 'like' 
+                                                ? 'bg-green-600 hover:bg-green-700' 
+                                                : 'bg-slate-800 hover:bg-slate-700'
+                                        }`}
+                                        disabled={song._busy}
+                                        onClick={() => handleVote(song.id, 'like')}
+                                    >
+                                        👍
+                                    </button>
+                                    <button
+                                        className={`px-3 py-2 rounded-lg transition ${
+                                            song.userVote === 'dislike' 
+                                                ? 'bg-red-600 hover:bg-red-700' 
+                                                : 'bg-slate-800 hover:bg-slate-700'
+                                        }`}
+                                        disabled={song._busy}
+                                        onClick={() => handleVote(song.id, 'dislike')}
+                                    >
+                                        👎
+                                    </button>
                                 </div>
                             </div>
                         );
@@ -389,59 +330,60 @@ export default function SongVoting({
                 </div>
             </div>
 
-            {!esReadOnly && showAddSong && (
+            {/* Modal Agregar Canción */}
+            {showAddSong && (
                 <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-purple-900/40 backdrop-blur-md border border-purple-700/30 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                        <h3 className="text-2xl font-bold text-white mb-4">Agregar Canción</h3>
+                        <h3 className="text-2xl font-bold text-white mb-4">Agregar Nueva Canción</h3>
 
+                        {/* Búsqueda Spotify */}
                         <div className="mb-6">
-                            <h4 className="text-white font-semibold mb-3">Buscar en Spotify</h4>
-                            <div className="flex gap-2 mb-3">
+                            <div className="flex gap-3 mb-3">
                                 <input
                                     type="text"
-                                    placeholder="Buscar canción en Spotify..."
+                                    placeholder={`Buscar en Spotify${generoEvento ? ` (género: ${generoEvento})` : ''}`}
                                     value={spQuery}
                                     onChange={(e) => setSpQuery(e.target.value)}
-                                    onKeyPress={(e) => e.key === 'Enter' && searchSpotify()}
-                                    className="flex-1 px-4 py-2 bg-slate-900/50 border border-purple-700/50 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-purple-500"
+                                    className="flex-1 px-4 py-2 rounded-lg bg-slate-900/50 border border-purple-700/50 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-600"
                                 />
-                                <button
-                                    onClick={searchSpotify}
-                                    disabled={spLoading}
-                                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition disabled:opacity-50"
+                                <button 
+                                    onClick={searchSpotify} 
+                                    disabled={spLoading || !spQuery.trim()}
+                                    className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition disabled:opacity-50"
                                 >
-                                    {spLoading ? 'Buscando...' : 'Buscar'}
+                                    {spLoading ? 'Buscando…' : 'Buscar'}
                                 </button>
                             </div>
 
                             {spError && (
-                                <div className="bg-red-500/20 border border-red-500/50 text-red-200 p-2 rounded-lg mb-3 text-sm">
+                                <div className="bg-red-500/20 border border-red-500/50 text-red-200 p-3 rounded-lg mb-3">
                                     {spError}
                                 </div>
                             )}
 
-                            {spResults.length > 0 && (
+                            {!spLoading && spQuery && spResults.length === 0 && (
+                                <p className="text-slate-400 text-sm">Sin resultados para "{spQuery}"</p>
+                            )}
+
+                            {!!spResults.length && (
                                 <div className="space-y-2 max-h-60 overflow-y-auto">
-                                    {spResults.map(track => (
-                                        <div 
-                                            key={track.id}
-                                            className="flex items-center gap-3 bg-slate-900/50 border border-purple-700/30 rounded-lg p-3 hover:border-purple-500/50 transition"
-                                        >
-                                            <img 
-                                                src={track.album?.images?.[0]?.url || PLACEHOLDER_IMG}
-                                                alt={track.name}
+                                    {spResults.map((t) => (
+                                        <div key={t.id} className="flex items-center gap-3 bg-slate-900/50 rounded-lg p-3">
+                                            <img
+                                                src={t?.album?.images?.[2]?.url || t?.album?.images?.[0]?.url || PLACEHOLDER_IMG}
+                                                alt={t.name}
                                                 className="w-12 h-12 rounded object-cover"
                                             />
                                             <div className="flex-1">
-                                                <p className="text-white font-semibold text-sm">{track.name}</p>
-                                                <p className="text-slate-400 text-xs">
-                                                    {track.artists.map(a => a.name).join(', ')}
-                                                </p>
+                                                <div className="text-white font-semibold">{t.name}</div>
+                                                <div className="text-slate-400 text-sm">
+                                                    {(t.artists || []).map(a => a.name).join(' & ')}
+                                                </div>
                                             </div>
-                                            <button
-                                                onClick={() => addFromSpotify(track)}
+                                            <button 
+                                                onClick={() => addFromSpotify(t)} 
                                                 disabled={posting}
-                                                className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded transition disabled:opacity-50"
+                                                className="px-4 py-2 bg-purple-700 hover:bg-purple-600 text-white font-semibold rounded-lg transition disabled:opacity-50"
                                             >
                                                 Agregar
                                             </button>
@@ -451,44 +393,45 @@ export default function SongVoting({
                             )}
                         </div>
 
-                        <div className="border-t border-purple-700/30 pt-4">
-                            <h4 className="text-white font-semibold mb-3">O agregar manualmente</h4>
-                            <div className="space-y-3">
-                                <input
-                                    type="text"
-                                    placeholder="Título de la canción"
-                                    value={newSong.title}
-                                    onChange={(e) => setNewSong({ ...newSong, title: e.target.value })}
-                                    className="w-full px-4 py-2 bg-slate-900/50 border border-purple-700/50 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-purple-500"
-                                />
-                                <input
-                                    type="text"
-                                    placeholder="Artista"
-                                    value={newSong.artist}
-                                    onChange={(e) => setNewSong({ ...newSong, artist: e.target.value })}
-                                    className="w-full px-4 py-2 bg-slate-900/50 border border-purple-700/50 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-purple-500"
-                                />
-                            </div>
+                        <div className="border-t border-purple-700/30 pt-4 mb-4"></div>
+
+                        {/* Agregar manual */}
+                        <div className="space-y-3 mb-6">
+                            <input
+                                type="text"
+                                placeholder="Título de la canción"
+                                value={newSong.title}
+                                onChange={(e) => setNewSong(prev => ({ ...prev, title: e.target.value }))}
+                                className="w-full px-4 py-2 rounded-lg bg-slate-900/50 border border-purple-700/50 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-600"
+                            />
+                            <input
+                                type="text"
+                                placeholder="Artista"
+                                value={newSong.artist}
+                                onChange={(e) => setNewSong(prev => ({ ...prev, artist: e.target.value }))}
+                                className="w-full px-4 py-2 rounded-lg bg-slate-900/50 border border-purple-700/50 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-600"
+                            />
                         </div>
 
-                        <div className="flex gap-3 mt-6">
-                            <button
-                                onClick={handleAddSong}
-                                disabled={posting}
-                                className="flex-1 bg-purple-700 hover:bg-purple-600 text-white font-semibold py-3 rounded-lg transition disabled:opacity-50"
-                            >
-                                {posting ? 'Agregando...' : 'Agregar Canción'}
-                            </button>
+                        {/* Botones */}
+                        <div className="flex gap-3">
                             <button
                                 onClick={() => {
                                     setShowAddSong(false);
                                     setNewSong({ title: '', artist: '' });
-                                    setSpQuery('');
                                     setSpResults([]);
+                                    setSpQuery('');
                                 }}
-                                className="px-6 bg-slate-900/50 border border-purple-700/50 text-white font-semibold py-3 rounded-lg hover:bg-slate-800/50 transition"
+                                className="flex-1 px-4 py-3 bg-slate-900/50 border border-purple-700/50 text-white font-semibold rounded-lg hover:bg-slate-800/50 transition"
                             >
                                 Cancelar
+                            </button>
+                            <button 
+                                onClick={handleAddSong}
+                                disabled={posting || !newSong.title.trim() || !newSong.artist.trim()}
+                                className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-700 to-violet-700 hover:from-purple-600 hover:to-violet-600 text-white font-semibold rounded-lg transition disabled:opacity-50 shadow-lg"
+                            >
+                                {posting ? 'Agregando…' : 'Agregar Manual'}
                             </button>
                         </div>
                     </div>
