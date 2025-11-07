@@ -80,30 +80,27 @@ export const upload = multer({
 
 
 // Estáticos
-app.use('/uploads', express.static(path.join(process.cwd(), UPLOAD_DIR) => {
-    // Configurar headers CORS permisivos para imágenes
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    
-    // Configurar cache para mejorar rendimiento
-    res.setHeader('Cache-Control', 'public, max-age=31536000');
-    
-    next();
-}, express.static(UPLOAD_DIR, {
-    setHeaders: (res: Response, filePath: string) => {
-        // Configurar tipo de contenido según extensión
-        if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
-            res.setHeader('Content-Type', 'image/jpeg');
-        } else if (filePath.endsWith('.png')) {
-            res.setHeader('Content-Type', 'image/png');
-        } else if (filePath.endsWith('.gif')) {
-            res.setHeader('Content-Type', 'image/gif');
-        } else if (filePath.endsWith('.webp')) {
-            res.setHeader('Content-Type', 'image/webp');
+app.use('/uploads', 
+    (req: Request, res: Response, next: NextFunction) => {
+        // Encabezados requeridos para que Vercel acceda a Render sin bloqueo ORB
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin'); // <--- CLAVE
+        res.setHeader('Cache-Control', 'public, max-age=31536000'); 
+        next();
+    },
+    express.static(path.join(process.cwd(), UPLOAD_DIR), {
+        setHeaders: (res: Response, filePath: string) => {
+            // Configurar tipo de contenido según extensión
+            if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
+                res.setHeader('Content-Type', 'image/jpeg');
+            } else if (filePath.endsWith('.png')) {
+                res.setHeader('Content-Type', 'image/png');
+            } else if (filePath.endsWith('.gif')) {
+                res.setHeader('Content-Type', 'image/gif');
+            } else if (filePath.endsWith('.webp')) {
+                res.setHeader('Content-Type', 'image/webp');
+            }
         }
-    }
 }));
 
 
