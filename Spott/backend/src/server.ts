@@ -78,8 +78,9 @@ export const upload = multer({
     },
 });
 
-// ✅ SOLUCIÓN: Configurar middleware para archivos estáticos con headers CORS permisivos
-app.use('/uploads', (req: Request, res: Response, next: NextFunction) => {
+
+// Estáticos
+app.use('/uploads', express.static(path.join(process.cwd(), UPLOAD_DIR) => {
     // Configurar headers CORS permisivos para imágenes
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
@@ -104,6 +105,7 @@ app.use('/uploads', (req: Request, res: Response, next: NextFunction) => {
         }
     }
 }));
+
 
 // Rutas
 app.use('/api/eventos', eventosRoutes);
