@@ -70,7 +70,7 @@ export default function MisEventos() {
 
     const handleEventoClick = (evento) => {
         if (esEmpresa) {
-            navigate('/empresa/editar-evento', { state: { evento } });
+            navigate('/empresa/ver-evento', { state: { evento } });
         } else {
             navigate('/evento-inscripto', { 
                 state: { 

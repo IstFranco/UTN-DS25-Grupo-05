@@ -20,6 +20,7 @@ import EditarEvento from './pages/EditarEvento';
 import MisEventos from './pages/MisEventos';
 import Registro from './pages/Registro';
 import Contacto from './pages/Contacto';
+import EmpresaVerEvento from './pages/EmpresaVerEvento';
 
 function App() {
   return (
@@ -135,7 +136,15 @@ function App() {
               <PrivateRoute requiredType="empresa">
                 <EmpresaAyuda />
               </PrivateRoute>
-            } 
+            }
+          />
+          <Route 
+            path="/empresa/ver-evento" 
+            element={
+              <PrivateRoute requiredType="empresa">
+                <EmpresaVerEvento />
+              </PrivateRoute>
+            }
           />
 
           {/* ===== RUTAS PROTEGIDAS - AMBOS ===== */}
