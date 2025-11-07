@@ -14,7 +14,7 @@ import { supabase } from '../data/supabaseClient.js'; // Asegúrate que esta rut
 import path from 'path';
 
 // --- NUEVA CONSTANTE ---
-const BUCKET_NAME = 'eventos';
+const BUCKET_NAME = 'Eventos';
 
 // ---- Tipos auxiliares ----
 type InscripcionConEvento = {
