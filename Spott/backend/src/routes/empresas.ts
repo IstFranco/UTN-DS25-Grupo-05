@@ -18,9 +18,9 @@ const router = express.Router();
 // RUTAS PÚBLICAS sin autenticacion
 router.post("/registro", validate(empresaRegisterSchema), crearEmpresa);
 router.post("/login", validate(empresaLoginSchema), loginEmpresa);
-router.get("/:id", obtenerEmpresa);
 
 // RUTAS PRIVADAS requiren autenticacion
+router.get("/:id", authMiddleware, obtenerEmpresa);
 router.put("/:id", authMiddleware, actualizarEmpresa);
 
 export default router;
