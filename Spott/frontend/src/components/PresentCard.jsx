@@ -8,7 +8,7 @@ export default function PresentCard({ imageSrc = "", title, description, rating,
             <div className="relative h-48 overflow-hidden bg-slate-900/50">
                 {imageSrc ? (
                     <img 
-                        src={`${import.meta.env.VITE_TM_API}/uploads/${imageSrc}`}
+                        src={`${import.meta.env.VITE_TM_API}${imageSrc}`}
                         alt={title}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                     />
