@@ -16,7 +16,6 @@ export default function MostrarEvento() {
     const [esFavorito, setEsFavorito] = useState(false);
     const [showTicketModal, setShowTicketModal] = useState(false);
     const [estadisticasEvento, setEstadisticasEvento] = useState(null);
-    const [nombreEmpresa, setNombreEmpresa] = useState('Cargando...');
 
     if (!state?.evento) {
         return (
@@ -52,6 +51,7 @@ export default function MostrarEvento() {
 
     const getFullImageUrl = (imagePath) => {
         if (!imagePath || imagePath.startsWith('http')) return imagePath;
+        // La URL completa es la Raíz del servidor + el path que viene de la DB (ej: /uploads/foto.jpg)
         return `${BACKEND_ROOT_URL}${imagePath}`;
     };
 
@@ -63,10 +63,12 @@ export default function MostrarEvento() {
             }
 
             try {
+                // Llama al endpoint de empresas para obtener el nombre
                 const res = await fetch(`${BACKEND_ROOT_URL}/api/empresas/${empresaId}`);
                 
                 if (res.ok) {
                     const data = await res.json();
+                    // ASUMIMOS que el nombre de la empresa está en data.nombre
                     setNombreEmpresa(data.nombre || 'Empresa sin nombre'); 
                 } else {
                     setNombreEmpresa('Empresa no encontrada');
@@ -120,9 +122,12 @@ export default function MostrarEvento() {
         .catch(err => console.error("Error al verificar favorito:", err));
     }, [id, user]);
 
+    // Las funciones handleTicketSelection, desinscribirme, y toggleFavorito también usan BACKEND_ROOT_URL
+    
     const handleTicketSelection = async (tipoEntrada) => {
         try {
             if (!user || !user.userId) {
+                // Reemplazando alert() por algo más moderno (aunque mantengo alert para respetar el patrón existente)
                 console.error("Error: No se encontró información del usuario. Inicia sesión nuevamente.");
                 return;
             }
@@ -155,6 +160,7 @@ export default function MostrarEvento() {
     };
 
     const desinscribirme = async () => {
+        // En un entorno real, usaría un modal personalizado en lugar de window.confirm/alert.
         if (!window.confirm('¿Estás seguro de que deseas desinscribirte de este evento?')) {
             return;
         }
@@ -231,22 +237,27 @@ export default function MostrarEvento() {
 
             <div className="max-w-4xl mx-auto px-4 py-6">
                 <div className="bg-purple-900/30 backdrop-blur-sm border border-purple-700/20 rounded-xl p-6 shadow-2xl">
-
+                    {/* Header con imagen más grande, título y favorito */}
                     <div className="flex items-start gap-4 mb-6">
                         <img 
+                            // IMAGEN PRINCIPAL: CONSTRUCCIÓN CORRECTA DE LA URL
                             src={getFullImageUrl(imageSrc)} 
                             alt="Logo evento" 
                             className="w-40 h-40 rounded-lg object-cover border-2 border-purple-600/50"
                         />
                         <div className="flex-1">
+                            {/* TÍTULO */}
                             <h2 className="text-2xl font-bold text-white mb-1">{title}</h2>
                             
+                            {/* NOMBRE DE LA EMPRESA (NUEVO REQUERIMIENTO) */}
                             <p className="text-purple-400 font-semibold text-base mb-1">
                                 {nombreEmpresa}
                             </p> 
                             
+                            {/* INSCRIPTOS */}
                             <p className="text-slate-300 mb-3">{inscriptos} inscriptos</p>
                             
+                            {/* Descripción aquí */}
                             <p className="text-slate-300 text-sm leading-relaxed">{description}</p>
                         </div>
                         <button 
@@ -257,6 +268,7 @@ export default function MostrarEvento() {
                         </button>
                     </div>
 
+                    {/* Info del evento (CÓDIGO EXISTENTE) */}
                     <div className="grid grid-cols-2 gap-3 mb-6">
                         <div className="bg-slate-900/50 rounded-lg p-3">
                             <p className="text-slate-400 text-sm">Fecha</p>
@@ -286,6 +298,7 @@ export default function MostrarEvento() {
                         </div>
                     </div>
 
+                    {/* Disponibilidad de entradas (CÓDIGO EXISTENTE) */}
                     {estadisticasEvento && (
                         <div className="bg-slate-900/50 rounded-lg p-4 mb-6">
                             <h3 className="text-white font-bold mb-3">Disponibilidad de Entradas</h3>
@@ -306,6 +319,7 @@ export default function MostrarEvento() {
                         </div>
                     )}
 
+                    {/* Galería de fotos extra (IMAGEN SRC CORREGIDA) */}
                     {imagenes.length > 0 && (
                         <div className="mb-6">
                             <h3 className="text-white font-bold mb-3">Galería del evento</h3>
@@ -313,7 +327,7 @@ export default function MostrarEvento() {
                                 {imagenes.map((img, index) => (
                                     <img 
                                         key={index} 
-                                        src={getFullImageUrl(img)} 
+                                        src={getFullImageUrl(img)} // <-- URL CORREGIDA
                                         alt={`foto-${index}`} 
                                         className="h-40 rounded-lg object-cover border-2 border-purple-600/50 flex-shrink-0"
                                     />
@@ -322,6 +336,7 @@ export default function MostrarEvento() {
                         </div>
                     )}
 
+                    {/* ... Resto de la información (Accesibilidad, Políticas, Links) ... */}
                     <div className="grid grid-cols-2 gap-3 mb-6">
                         <div className="bg-slate-900/50 rounded-lg p-3">
                             <p className="text-slate-400 text-sm">Accesible</p>
@@ -343,6 +358,7 @@ export default function MostrarEvento() {
                         </div>
                     </div>
 
+                    {/* Botones de inscripción (CÓDIGO EXISTENTE) */}
                     <div>
                         {!usuarioInscrito ? (
                             <button 
@@ -367,6 +383,7 @@ export default function MostrarEvento() {
                     </div>
                 </div>
 
+                {/* Componente de votación */}
                 {usuarioInscrito && (
                     <SongVoting 
                         eventoId={id} 
@@ -377,6 +394,7 @@ export default function MostrarEvento() {
                 )}
             </div>
 
+            {/* Modal de selección de tickets (CÓDIGO EXISTENTE) */}
             {showTicketModal && (
                 <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-purple-900/40 backdrop-blur-md border border-purple-700/30 rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
@@ -388,6 +406,7 @@ export default function MostrarEvento() {
                         </div>
 
                         <div className="space-y-4">
+                            {/* Entrada General */}
                             <div 
                                 onClick={() => estadisticasEvento?.disponibles.disponiblesGeneral > 0 && handleTicketSelection('general')}
                                 className={`border-2 rounded-lg p-4 transition ${
@@ -417,6 +436,7 @@ export default function MostrarEvento() {
                                 </p>
                             </div>
 
+                            {/* Entrada VIP */}
                             <div 
                                 onClick={() => estadisticasEvento?.disponibles.disponiblesVip > 0 && handleTicketSelection('vip')}
                                 className={`border-2 rounded-lg p-4 transition ${
