@@ -83,7 +83,7 @@ export const upload = multer({
 });
 
 // Estáticos
-app.use('/uploads', express.static(UPLOAD_DIR));
+app.use('/uploads', express.static(path.join(process.cwd(), UPLOAD_DIR)));
 
 // Rutas
 app.use('/api/eventos', eventosRoutes);
