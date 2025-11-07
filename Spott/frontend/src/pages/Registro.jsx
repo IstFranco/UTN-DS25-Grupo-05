@@ -152,7 +152,10 @@ export default function Registro() {
                         <input
                             type="email"
                             placeholder="Correo electrónico"
-                            {...register('email')}
+                            {...register('email', {
+                                onChange: (e) => {
+                                    e.target.value = e.target.value.toLowerCase();
+                                }})}
                             className={`w-full px-4 py-3 rounded-lg bg-slate-900/50 border text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition ${
                                 errors.email 
                                     ? 'border-red-500 focus:ring-red-500' 

@@ -28,13 +28,21 @@ export default function MostrarEvento() {
         imageSrc,
         title,
         description,
+        fecha,
+        horaInicio,
         rating,
         ciudad,
         barrio,
         tematica,
+        estilo,
         musica,
         inscriptos,
         precio,
+        precioVip,
+        accesible,
+        politicaCancelacion,
+        linkExterno,
+        hashtag,
         imagenes = []
     } = state.evento;
 
@@ -196,7 +204,7 @@ export default function MostrarEvento() {
                     {/* Header con imagen más grande, título y favorito */}
                     <div className="flex items-start gap-4 mb-6">
                         <img 
-                            src={`${import.meta.env.VITE_TM_API}${imageSrc}`}
+                            src={`${import.meta.env.VITE_API_URL}${imageSrc}`}
                             alt="Logo evento" 
                             className="w-40 h-40 rounded-lg object-cover border-2 border-purple-600/50"
                         />
@@ -218,8 +226,10 @@ export default function MostrarEvento() {
                     {/* Info del evento */}
                     <div className="grid grid-cols-2 gap-3 mb-6">
                         <div className="bg-slate-900/50 rounded-lg p-3">
-                            <p className="text-slate-400 text-sm">Rating</p>
-                            <p className="text-white font-semibold">⭐ {rating}</p>
+                            <p className="text-slate-400 text-sm">Fecha</p>
+                            <p className="text-white font-semibold">
+                                📅 {fecha.split('T')[0]}, {horaInicio}
+                            </p>
                         </div>
                         <div className="bg-slate-900/50 rounded-lg p-3">
                             <p className="text-slate-400 text-sm">Ubicación</p>
@@ -230,8 +240,16 @@ export default function MostrarEvento() {
                             <p className="text-white font-semibold">🎭 {tematica}</p>
                         </div>
                         <div className="bg-slate-900/50 rounded-lg p-3">
+                            <p className="text-slate-400 text-sm">Estilo</p>
+                            <p className="text-white font-semibold">🤓 {estilo}</p>
+                        </div>
+                        <div className="bg-slate-900/50 rounded-lg p-3">
                             <p className="text-slate-400 text-sm">Música</p>
                             <p className="text-white font-semibold">🎵 {musica}</p>
+                        </div>
+                        <div className="bg-slate-900/50 rounded-lg p-3">
+                            <p className="text-slate-400 text-sm">Rating</p>
+                            <p className="text-white font-semibold">⭐ {rating}</p>
                         </div>
                     </div>
 
@@ -241,15 +259,15 @@ export default function MostrarEvento() {
                             <h3 className="text-white font-bold mb-3">Disponibilidad de Entradas</h3>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <p className="text-slate-400 text-sm">General</p>
+                                    <p className="text-slate-400 text-sm">General ${precio}</p>
                                     <p className="text-white font-semibold">
-                                        {estadisticasEvento.disponibles.disponiblesGeneral} / {estadisticasEvento.cupos.cupoGeneral} disponibles
+                                        {estadisticasEvento.disponibles.disponiblesGeneral} / {estadisticasEvento.cupos.cupoGeneral} disponibles 
                                     </p>
                                 </div>
                                 <div>
-                                    <p className="text-slate-400 text-sm">VIP</p>
+                                    <p className="text-slate-400 text-sm">VIP ${precioVip}</p>
                                     <p className="text-white font-semibold">
-                                        {estadisticasEvento.disponibles.disponiblesVip} / {estadisticasEvento.cupos.cupoVip} disponibles
+                                        {estadisticasEvento.disponibles.disponiblesVip} / {estadisticasEvento.cupos.cupoVip} disponibles 
                                     </p>
                                 </div>
                             </div>
@@ -272,6 +290,27 @@ export default function MostrarEvento() {
                             </div>
                         </div>
                     )}
+
+                    <div className="grid grid-cols-2 gap-3 mb-6">
+                        <div className="bg-slate-900/50 rounded-lg p-3">
+                            <p className="text-slate-400 text-sm">Accesible</p>
+                            <p className="text-white font-semibold">
+                                {accesible ? (<p>✅ Evento Accesible</p>): (<p>❌ Evento No Accesible</p>)}
+                            </p>
+                        </div>
+                        <div className="bg-slate-900/50 rounded-lg p-3">
+                            <p className="text-slate-400 text-sm">Politicas de Cancelacion</p>
+                            <p className="text-white font-semibold">❌ {politicaCancelacion}</p>
+                        </div>
+                        <div className="bg-slate-900/50 rounded-lg p-3">
+                            <p className="text-slate-400 text-sm">Links de Interes</p>
+                            <p className="text-white font-semibold">📌 {linkExterno}</p>
+                        </div>
+                        <div className="bg-slate-900/50 rounded-lg p-3">
+                            <p className="text-slate-400 text-sm">Hashtag</p>
+                            <p className="text-white font-semibold">😎 {hashtag}</p>
+                        </div>
+                    </div>
 
                     {/* Botones de inscripción */}
                     <div>
@@ -362,7 +401,7 @@ export default function MostrarEvento() {
                             >
                                 <h4 className="text-white font-bold mb-2">👑 Entrada VIP</h4>
                                 <p className="text-2xl font-bold text-white mb-2">
-                                    ${(precio ? precio * 1.5 : 50).toFixed(0)}
+                                    ${precioVip}
                                 </p>
                                 <ul className="text-slate-300 text-sm space-y-1 mb-2">
                                     <li>• Todo lo de entrada general</li>

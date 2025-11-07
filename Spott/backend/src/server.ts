@@ -21,15 +21,11 @@ const PORT = Number(process.env.PORT) || 3000;
 const allowedOrigins = [
     'http://localhost:5173',
     'https://utn-ds-25-grupo-05.vercel.app',
-    'https://utn-ds-25-grupo-05.vercel.app/',
-    process.env.CORS_ORIGIN,
-    process.env.FRONTEND_URL,
-].filter(Boolean);
+];
 
 app.use(
     cors({
         origin: (origin, callback) => {
-
             if (!origin) return callback(null, true);
             // Permitir si está en la lista O si es un preview deployment de Vercel
             if (
@@ -82,8 +78,34 @@ export const upload = multer({
     },
 });
 
+
 // Estáticos
-app.use('/uploads', express.static(path.join(process.cwd(), UPLOAD_DIR)));
+app.use('/uploads', express.static(path.join(process.cwd(), UPLOAD_DIR) => {
+    // Configurar headers CORS permisivos para imágenes
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    
+    // Configurar cache para mejorar rendimiento
+    res.setHeader('Cache-Control', 'public, max-age=31536000');
+    
+    next();
+}, express.static(UPLOAD_DIR, {
+    setHeaders: (res: Response, filePath: string) => {
+        // Configurar tipo de contenido según extensión
+        if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
+            res.setHeader('Content-Type', 'image/jpeg');
+        } else if (filePath.endsWith('.png')) {
+            res.setHeader('Content-Type', 'image/png');
+        } else if (filePath.endsWith('.gif')) {
+            res.setHeader('Content-Type', 'image/gif');
+        } else if (filePath.endsWith('.webp')) {
+            res.setHeader('Content-Type', 'image/webp');
+        }
+    }
+}));
+
 
 // Rutas
 app.use('/api/eventos', eventosRoutes);
@@ -95,11 +117,11 @@ app.use('/api/spotify', rutasSpotify);
 app.use('/api/favoritos', favoritosRoutes);
 app.use('/api/geo', geoRouter);
 
-// Añadir esta ruta a tu servidor antes de app.use('/api/votos', ...)
+// Ruta raíz
 app.get('/', (_, res: Response) => {
     res.json({
         status: 'ok',
-    message: 'API funcionando. Usa las rutas /api/... para interactuar.'
+        message: 'API funcionando. Usa las rutas /api/... para interactuar.'
     });
 });
 
@@ -119,4 +141,3 @@ app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ Backend corriendo en el puerto ${PORT}`);
 });
-
