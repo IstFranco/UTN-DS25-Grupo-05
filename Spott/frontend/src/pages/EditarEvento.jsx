@@ -161,7 +161,7 @@ export default function EditarEvento() {
                                 {imagenes.map((img, index) => (
                                     <img 
                                         key={index} 
-                                        src={{img}}
+                                        src={img}
                                         alt={`foto-${index}`} 
                                         className="h-32 w-32 rounded-lg object-cover border-2 border-purple-600/50 flex-shrink-0"
                                     />
