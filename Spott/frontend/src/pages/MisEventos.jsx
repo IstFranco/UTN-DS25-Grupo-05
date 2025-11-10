@@ -144,7 +144,7 @@ export default function MisEventos() {
 
                 <div className="mt-6">
                     <h2 className="text-2xl font-bold text-white mb-4">
-                        {esEmpresa ? 'Mis eventos creados' : 'Eventos inscritos'}
+                        {esEmpresa ? 'Mis eventos' : 'Eventos inscritos'}
                     </h2>
                     
                     {cargando && (
