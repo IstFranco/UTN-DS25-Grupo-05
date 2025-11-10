@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext'; 
 import Header from '../components/Header';
-import FooterEmpresa from '../components/FooterEmpresa';
+import FooterUsuario from '../components/FooterUsuario';
+import SongVoting from '../components/SongVoting';
 import perfilImg from '../img/LogoPerfil.jpeg';
 import notiImg from '../img/LogoNotificaciones.jpeg';
 
 export default function EditarEvento() {
     const { state } = useLocation();
+    const { user } = useAuth(); 
+    const [usuarioInscrito, setUsuarioInscrito] = useState(false);
+    const [esFavorito, setEsFavorito] = useState(false);
     const [estadisticasEvento, setEstadisticasEvento] = useState(null);
-    const [canciones, setCanciones] = useState([]);
-    const [loadingCanciones, setLoadingCanciones] = useState(false);
-    const [searchTerm, setSearchTerm] = useState('');
 
     if (!state?.evento) {
         return (
@@ -56,50 +59,95 @@ export default function EditarEvento() {
             }
         };
 
-        const cargarCanciones = async () => {
-            try {
-                setLoadingCanciones(true);
-                const res = await fetch(`${import.meta.env.VITE_TM_API}/api/canciones?eventoId=${id}`);
-                if (res.ok) {
-                    const data = await res.json();
-                    setCanciones(data.canciones || []);
-                }
-            } catch (err) {
-                console.error('Error al cargar canciones:', err);
-            } finally {
-                setLoadingCanciones(false);
-            }
-        };
-
         cargarEstadisticas();
-        cargarCanciones();
     }, [id]);
+
+    useEffect(() => {
+        if (!user || !user.userId) {
+            console.error("No se encontró ID de usuario");
+            return;
+        }
+
+        const usuarioId = user.userId;
+
+        fetch(`${import.meta.env.VITE_TM_API}/api/eventos/check/${id}/${usuarioId}`)
+        .then(res => res.json())
+        .then(data => {
+            setUsuarioInscrito(data.inscrito);
+        })
+        .catch(err => console.error("Error al verificar inscripción:", err));
+
+        fetch(`${import.meta.env.VITE_TM_API}/api/favoritos/check/${id}/${usuarioId}`)
+        .then(res => res.json())
+        .then(data => {
+            setEsFavorito(data.esFavorito);
+        })
+        .catch(err => console.error("Error al verificar favorito:", err));
+    }, [id, user]);
+
+    const toggleFavorito = async () => {
+        try {
+            if (!user || !user.userId) {
+                alert("Error: No se encontró información del usuario.");
+                return;
+            }
+
+            const usuarioId = user.userId;
+
+            if (esFavorito) {
+                const res = await fetch(`${import.meta.env.VITE_TM_API}/api/favoritos/${id}/${usuarioId}`, {
+                    method: "DELETE"
+                });
+                if (res.ok) {
+                    setEsFavorito(false);
+                    alert("Eliminado de favoritos");
+                }
+            } else {
+                const res = await fetch(`${import.meta.env.VITE_TM_API}/api/favoritos`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ eventoId: id, usuarioId })
+                });
+                if (res.ok) {
+                    setEsFavorito(true);
+                    alert("Agregado a favoritos");
+                }
+            }
+        } catch (err) {
+            console.error("Error con favoritos:", err);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 pb-24 pt-20">
             <Header
-                title="Editar Evento"
-                leftButton={{ type: 'image', content: perfilImg, to: '/empresa/perfil' }}
-                rightButton={{ type: 'image', content: notiImg, to: '/empresa/notificaciones' }}
+                title="Spott"
+                leftButton={{ type: 'image', content: perfilImg, to: '/usuario/perfil' }}
+                rightButton={{ type: 'image', content: notiImg, to: '/usuario/notificaciones' }}
             />
 
             <div className="max-w-4xl mx-auto px-4 py-6">
                 <div className="bg-purple-900/30 backdrop-blur-sm border border-purple-700/20 rounded-xl p-6 shadow-2xl">
-                    
-                    {/* Header con imagen, título */}
+                    {/* Header con imagen más grande, título y favorito */}
                     <div className="flex items-start gap-4 mb-6">
                         <img 
                             src={`${import.meta.env.VITE_API_URL}${imageSrc}`}
                             alt="Logo evento" 
-                            className="w-32 h-32 rounded-lg object-cover border-2 border-purple-600/50 flex-shrink-0"
+                            className="w-40 h-40 rounded-lg object-cover border-2 border-purple-600/50"
                         />
-                        <div className="flex-1 min-w-0">
-                            <h2 className="text-xl font-bold text-white mb-2">{title}</h2>
-                            <p className="text-slate-400 text-sm mb-3">{inscriptos} inscriptos</p>
+                        <div className="flex-1">
+                            <h2 className="text-2xl font-bold text-white mb-2">{title}</h2>
+                            <p className="text-slate-300 mb-3">{inscriptos} inscriptos</p>
                             
                             {/* Descripción aquí */}
-                            <p className="text-slate-300 text-sm leading-relaxed line-clamp-3">{description}</p>
+                            <p className="text-slate-300 text-sm leading-relaxed">{description}</p>
                         </div>
+                        <button 
+                            onClick={toggleFavorito}
+                            className="text-3xl hover:scale-110 transition"
+                        >
+                            {esFavorito ? '❤️' : '🤍'}
+                        </button>
                     </div>
 
                     {/* Info del evento */}
@@ -156,14 +204,14 @@ export default function EditarEvento() {
                     {/* Galería de fotos extra */}
                     {imagenes.length > 0 && (
                         <div className="mb-6">
-                            <h3 className="text-white font-bold mb-3 text-sm">Galería del evento</h3>
-                            <div className="flex gap-2 overflow-x-auto pb-2">
+                            <h3 className="text-white font-bold mb-3">Galería del evento</h3>
+                            <div className="flex gap-3 overflow-x-auto pb-2">
                                 {imagenes.map((img, index) => (
                                     <img 
                                         key={index} 
                                         src={`${import.meta.env.VITE_TM_API}${img}`}
                                         alt={`foto-${index}`} 
-                                        className="h-32 w-32 rounded-lg object-cover border-2 border-purple-600/50 flex-shrink-0"
+                                        className="h-40 rounded-lg object-cover border-2 border-purple-600/50 flex-shrink-0"
                                     />
                                 ))}
                             </div>
@@ -178,11 +226,11 @@ export default function EditarEvento() {
                             </p>
                         </div>
                         <div className="bg-slate-900/50 rounded-lg p-3">
-                            <p className="text-slate-400 text-sm">Políticas de Cancelación</p>
+                            <p className="text-slate-400 text-sm">Politicas de Cancelacion</p>
                             <p className="text-white font-semibold">❌ {politicaCancelacion}</p>
                         </div>
                         <div className="bg-slate-900/50 rounded-lg p-3">
-                            <p className="text-slate-400 text-sm">Links de Interés</p>
+                            <p className="text-slate-400 text-sm">Links de Interes</p>
                             <p className="text-white font-semibold">📌 {linkExterno}</p>
                         </div>
                         <div className="bg-slate-900/50 rounded-lg p-3">
@@ -190,90 +238,18 @@ export default function EditarEvento() {
                             <p className="text-white font-semibold">😎 {hashtag}</p>
                         </div>
                     </div>
-
-                    {/* Sección de Canciones */}
-                    {canciones.length > 0 && (
-                        <div className="mt-6">
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-xl font-bold text-white">🎵 Canciones del Evento</h3>
-                            </div>
-
-                            {loadingCanciones ? (
-                                <div className="text-center py-8">
-                                    <p className="text-slate-300">Cargando canciones…</p>
-                                </div>
-                            ) : (
-                                <>
-                                    {/* Búsqueda */}
-                                    <div className="flex items-center justify-between mb-4">
-                                        <input
-                                            type="text"
-                                            placeholder="Buscar en playlist..."
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="flex-1 px-4 py-2 rounded-lg bg-slate-900/50 border border-purple-700/50 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-600 transition"
-                                        />
-                                        <span className="ml-4 text-slate-400 text-sm">
-                                            {canciones.filter(c => {
-                                                const q = searchTerm.toLowerCase();
-                                                return c.titulo.toLowerCase().includes(q) || c.artista.toLowerCase().includes(q);
-                                            }).length} canciones
-                                        </span>
-                                    </div>
-
-                                    {/* Lista de canciones */}
-                                    <div className="space-y-3">
-                                        {canciones
-                                            .filter(c => {
-                                                const q = searchTerm.toLowerCase();
-                                                return c.titulo.toLowerCase().includes(q) || c.artista.toLowerCase().includes(q);
-                                            })
-                                            .sort((a, b) => {
-                                                const scoreA = (a.votosUp || 0) - (a.votosDown || 0);
-                                                const scoreB = (b.votosUp || 0) - (b.votosDown || 0);
-                                                if (scoreB !== scoreA) return scoreB - scoreA;
-                                                return (b.votosUp || 0) - (a.votosUp || 0);
-                                            })
-                                            .map((cancion, index) => {
-                                                const score = (cancion.votosUp || 0) - (cancion.votosDown || 0);
-                                                return (
-                                                    <div 
-                                                        key={cancion.id} 
-                                                        className="flex items-center gap-4 bg-slate-900/50 border border-purple-700/30 rounded-lg p-4"
-                                                    >
-                                                        <div className="text-slate-400 font-bold w-8 text-center">
-                                                            #{index + 1}
-                                                        </div>
-
-                                                        <div className="flex-1">
-                                                            <div className="text-white font-semibold">{cancion.titulo}</div>
-                                                            <div className="text-slate-400 text-sm">{cancion.artista}</div>
-                                                        </div>
-
-                                                        <div className="flex items-center gap-4">
-                                                            <div className="text-center">
-                                                                <div className="text-white font-bold text-lg">{score}</div>
-                                                                <div className="text-slate-400 text-xs">Score</div>
-                                                            </div>
-                                                            <div className="text-center">
-                                                                <div className="text-green-400 font-semibold">👍 {cancion.votosUp || 0}</div>
-                                                            </div>
-                                                            <div className="text-center">
-                                                                <div className="text-red-400 font-semibold">👎 {cancion.votosDown || 0}</div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                    )}
                 </div>
+
+                {/* Componente de votación - siempre visible */}
+                <SongVoting 
+                    eventoId={id} 
+                    usuarioInscrito={usuarioInscrito} 
+                    userId={user?.userId}
+                    generoEvento={musica} 
+                />
             </div>
 
-            <FooterEmpresa />
+            <FooterUsuario />
         </div>
     );
 }
