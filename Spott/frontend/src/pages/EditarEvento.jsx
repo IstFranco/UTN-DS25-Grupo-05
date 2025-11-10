@@ -89,7 +89,7 @@ export default function EditarEvento() {
                     {/* Header con imagen, título */}
                     <div className="flex items-start gap-4 mb-6">
                         <img 
-                            src={`${import.meta.env.VITE_API_URL}${imageSrc}`}
+                            src={imageSrc}
                             alt="Logo evento" 
                             className="w-32 h-32 rounded-lg object-cover border-2 border-purple-600/50 flex-shrink-0"
                         />
@@ -161,7 +161,7 @@ export default function EditarEvento() {
                                 {imagenes.map((img, index) => (
                                     <img 
                                         key={index} 
-                                        src={`${import.meta.env.VITE_TM_API}${img}`}
+                                        src={{img}}
                                         alt={`foto-${index}`} 
                                         className="h-32 w-32 rounded-lg object-cover border-2 border-purple-600/50 flex-shrink-0"
                                     />
