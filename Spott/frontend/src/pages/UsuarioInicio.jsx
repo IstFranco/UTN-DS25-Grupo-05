@@ -143,7 +143,7 @@ export default function UsuarioInicio() {
                 const response = await ApiService.obtenerEventosInscritos(usuarioId);
                 setEventosInscritos(response.eventos || []);
             } catch (error) {
-                console.error('Error al cargar eventos inscriptos:', error);
+                console.error('Error al cargar eventos inscritos:', error);
                 const guardados = JSON.parse(localStorage.getItem('eventosUsuario')) || [];
                 setEventosInscritos(guardados);
             }

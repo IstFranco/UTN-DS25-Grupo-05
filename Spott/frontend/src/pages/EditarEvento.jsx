@@ -67,19 +67,19 @@ export default function EditarEvento() {
             <div className="max-w-4xl mx-auto px-4 py-6">
                 <div className="bg-purple-900/30 backdrop-blur-sm border border-purple-700/20 rounded-xl p-6 shadow-2xl">
                     
-                    {/* Header con imagen más grande, título */}
+                    {/* Header con imagen, título */}
                     <div className="flex items-start gap-4 mb-6">
                         <img 
                             src={`${import.meta.env.VITE_API_URL}${imageSrc}`}
                             alt="Logo evento" 
-                            className="w-40 h-40 rounded-lg object-cover border-2 border-purple-600/50"
+                            className="w-32 h-32 rounded-lg object-cover border-2 border-purple-600/50 flex-shrink-0"
                         />
-                        <div className="flex-1">
-                            <h2 className="text-2xl font-bold text-white mb-2">{title}</h2>
-                            <p className="text-slate-300 mb-3">{inscriptos} inscriptos</p>
+                        <div className="flex-1 min-w-0">
+                            <h2 className="text-xl font-bold text-white mb-2">{title}</h2>
+                            <p className="text-slate-400 text-sm mb-3">{inscriptos} inscriptos</p>
                             
                             {/* Descripción aquí */}
-                            <p className="text-slate-300 text-sm leading-relaxed">{description}</p>
+                            <p className="text-slate-300 text-sm leading-relaxed line-clamp-3">{description}</p>
                         </div>
                     </div>
 
@@ -137,14 +137,14 @@ export default function EditarEvento() {
                     {/* Galería de fotos extra */}
                     {imagenes.length > 0 && (
                         <div className="mb-6">
-                            <h3 className="text-white font-bold mb-3">Galería del evento</h3>
-                            <div className="flex gap-3 overflow-x-auto pb-2">
+                            <h3 className="text-white font-bold mb-3 text-sm">Galería del evento</h3>
+                            <div className="flex gap-2 overflow-x-auto pb-2">
                                 {imagenes.map((img, index) => (
                                     <img 
                                         key={index} 
                                         src={`${import.meta.env.VITE_TM_API}${img}`}
                                         alt={`foto-${index}`} 
-                                        className="h-40 rounded-lg object-cover border-2 border-purple-600/50 flex-shrink-0"
+                                        className="h-32 w-32 rounded-lg object-cover border-2 border-purple-600/50 flex-shrink-0"
                                     />
                                 ))}
                             </div>
