@@ -16,7 +16,7 @@ const PLACEHOLDER_IMG = "/placeholder.png";
 
 const normalize = (s) => s?.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
 
-export default function SongVoting({ eventoId, usuarioInscrito = false, userId, generoEvento }) {
+export default function SongVoting({ eventoId, usuarioInscrito = false, userId, generoEvento, userRole }) {
     const [songs, setSongs] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [showAddSong, setShowAddSong] = useState(false);
@@ -31,6 +31,7 @@ export default function SongVoting({ eventoId, usuarioInscrito = false, userId, 
     const [spResults, setSpResults] = useState([]);
 
     const effectiveUserId = userId || getAnonUserId();
+    const isEmpresa = userRole === 'empresa';
 
     useEffect(() => {
         if (!usuarioInscrito || !eventoId) return;
@@ -170,6 +171,8 @@ export default function SongVoting({ eventoId, usuarioInscrito = false, userId, 
     };
 
     const handleVote = async (songId, voteType) => {
+        if (isEmpresa) return; // Empresas no pueden votar
+        
         setSongs(prev => prev.map(s => (s.id === songId ? { ...s, _busy: true } : s)));
         try {
             const song = songs.find(s => s.id === songId);
@@ -301,28 +304,46 @@ export default function SongVoting({ eventoId, usuarioInscrito = false, userId, 
                                     <div className="text-white font-bold text-lg w-12 text-center">
                                         {score}
                                     </div>
-                                    <button
-                                        className={`px-3 py-2 rounded-lg transition ${
-                                            song.userVote === 'like' 
-                                                ? 'bg-green-600 hover:bg-green-700' 
-                                                : 'bg-slate-800 hover:bg-slate-700'
-                                        }`}
-                                        disabled={song._busy}
-                                        onClick={() => handleVote(song.id, 'like')}
-                                    >
-                                        👍
-                                    </button>
-                                    <button
-                                        className={`px-3 py-2 rounded-lg transition ${
-                                            song.userVote === 'dislike' 
-                                                ? 'bg-red-600 hover:bg-red-700' 
-                                                : 'bg-slate-800 hover:bg-slate-700'
-                                        }`}
-                                        disabled={song._busy}
-                                        onClick={() => handleVote(song.id, 'dislike')}
-                                    >
-                                        👎
-                                    </button>
+                                    
+                                    {/* Botones de votación - solo visibles para usuarios */}
+                                    {!isEmpresa && (
+                                        <>
+                                            <button
+                                                className={`px-3 py-2 rounded-lg transition ${
+                                                    song.userVote === 'like' 
+                                                        ? 'bg-green-600 hover:bg-green-700' 
+                                                        : 'bg-slate-800 hover:bg-slate-700'
+                                                }`}
+                                                disabled={song._busy}
+                                                onClick={() => handleVote(song.id, 'like')}
+                                            >
+                                                👍
+                                            </button>
+                                            <button
+                                                className={`px-3 py-2 rounded-lg transition ${
+                                                    song.userVote === 'dislike' 
+                                                        ? 'bg-red-600 hover:bg-red-700' 
+                                                        : 'bg-slate-800 hover:bg-slate-700'
+                                                }`}
+                                                disabled={song._busy}
+                                                onClick={() => handleVote(song.id, 'dislike')}
+                                            >
+                                                👎
+                                            </button>
+                                        </>
+                                    )}
+                                    
+                                    {/* Vista de empresa - solo muestra los contadores */}
+                                    {isEmpresa && (
+                                        <div className="flex items-center gap-3">
+                                            <div className="text-green-400 font-semibold">
+                                                👍 {song.votesUp || 0}
+                                            </div>
+                                            <div className="text-red-400 font-semibold">
+                                                👎 {song.votesDown || 0}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         );

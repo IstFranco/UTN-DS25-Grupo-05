@@ -178,7 +178,8 @@ export default function EditarEvento() {
                         eventoId={id} 
                         usuarioInscrito={true}
                         userId={null}
-                        generoEvento={musica} 
+                        generoEvento={musica}
+                        userRole="empresa"
                     />
                 </div>
             </div>
