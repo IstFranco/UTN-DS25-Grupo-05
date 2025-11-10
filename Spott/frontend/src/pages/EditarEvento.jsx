@@ -8,6 +8,9 @@ import notiImg from '../img/LogoNotificaciones.jpeg';
 export default function EditarEvento() {
     const { state } = useLocation();
     const [estadisticasEvento, setEstadisticasEvento] = useState(null);
+    const [canciones, setCanciones] = useState([]);
+    const [loadingCanciones, setLoadingCanciones] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
 
     if (!state?.evento) {
         return (
