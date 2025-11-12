@@ -258,7 +258,7 @@ export default function EditarEvento() {
                 />
             </div>
 
-            <FooterUsuario />
+            <FooterEmpresa />
         </div>
     );
 }
