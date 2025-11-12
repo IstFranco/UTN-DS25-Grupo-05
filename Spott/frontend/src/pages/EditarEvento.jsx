@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext'; 
 import Header from '../components/Header';
 import FooterEmpresa from '../components/FooterEmpresa';
 import SongVoting from '../components/SongVoting';
@@ -10,9 +8,6 @@ import notiImg from '../img/LogoNotificaciones.jpeg';
 
 export default function EditarEvento() {
     const { state } = useLocation();
-    const { user } = useAuth(); 
-    const [usuarioInscrito, setUsuarioInscrito] = useState(false);
-    const [esFavorito, setEsFavorito] = useState(false);
     const [estadisticasEvento, setEstadisticasEvento] = useState(null);
 
     if (!state?.evento) {
@@ -62,92 +57,31 @@ export default function EditarEvento() {
         cargarEstadisticas();
     }, [id]);
 
-    useEffect(() => {
-        if (!user || !user.userId) {
-            console.error("No se encontró ID de usuario");
-            return;
-        }
-
-        const usuarioId = user.userId;
-
-        fetch(`${import.meta.env.VITE_TM_API}/api/eventos/check/${id}/${usuarioId}`)
-        .then(res => res.json())
-        .then(data => {
-            setUsuarioInscrito(data.inscrito);
-        })
-        .catch(err => console.error("Error al verificar inscripción:", err));
-
-        fetch(`${import.meta.env.VITE_TM_API}/api/favoritos/check/${id}/${usuarioId}`)
-        .then(res => res.json())
-        .then(data => {
-            setEsFavorito(data.esFavorito);
-        })
-        .catch(err => console.error("Error al verificar favorito:", err));
-    }, [id, user]);
-
-    const toggleFavorito = async () => {
-        try {
-            if (!user || !user.userId) {
-                alert("Error: No se encontró información del usuario.");
-                return;
-            }
-
-            const usuarioId = user.userId;
-
-            if (esFavorito) {
-                const res = await fetch(`${import.meta.env.VITE_TM_API}/api/favoritos/${id}/${usuarioId}`, {
-                    method: "DELETE"
-                });
-                if (res.ok) {
-                    setEsFavorito(false);
-                    alert("Eliminado de favoritos");
-                }
-            } else {
-                const res = await fetch(`${import.meta.env.VITE_TM_API}/api/favoritos`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ eventoId: id, usuarioId })
-                });
-                if (res.ok) {
-                    setEsFavorito(true);
-                    alert("Agregado a favoritos");
-                }
-            }
-        } catch (err) {
-            console.error("Error con favoritos:", err);
-        }
-    };
-
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 pb-24 pt-20">
             <Header
-                title="Spott"
-                leftButton={{ type: 'image', content: perfilImg, to: '/usuario/perfil' }}
-                rightButton={{ type: 'image', content: notiImg, to: '/usuario/notificaciones' }}
+                title="Editar Evento"
+                leftButton={{ type: 'image', content: perfilImg, to: '/empresa/perfil' }}
+                rightButton={{ type: 'image', content: notiImg, to: '/empresa/notificaciones' }}
             />
 
             <div className="max-w-4xl mx-auto px-4 py-6">
                 <div className="bg-purple-900/30 backdrop-blur-sm border border-purple-700/20 rounded-xl p-6 shadow-2xl">
-                    {/* Header con imagen más grande, título y favorito */}
+                    
+                    {/* Header con imagen, título */}
                     <div className="flex items-start gap-4 mb-6">
                         <img 
                             src={imageSrc}
                             alt="Logo evento" 
-                            className="w-40 h-40 rounded-lg object-cover border-2 border-purple-600/50"
+                            className="w-32 h-32 rounded-lg object-cover border-2 border-purple-600/50 flex-shrink-0"
                         />
-                        <div className="flex-1">
-                            <h2 className="text-2xl font-bold text-white mb-2">{title}</h2>
-                            <p className="text-slate-300 mb-3">{inscriptos} inscriptos</p>
+                        <div className="flex-1 min-w-0">
+                            <h2 className="text-xl font-bold text-white mb-2">{title}</h2>
+                            <p className="text-slate-400 text-sm mb-3">{inscriptos} inscriptos</p>
                             
                             {/* Descripción aquí */}
-                            <p className="text-slate-300 text-sm leading-relaxed">{description}</p>
+                            <p className="text-slate-300 text-sm leading-relaxed line-clamp-3">{description}</p>
                         </div>
-                        <button 
-                            onClick={toggleFavorito}
-                            className="text-3xl hover:scale-110 transition"
-                        >
-                            {esFavorito ? '❤️' : '🤍'}
-                        </button>
                     </div>
 
                     {/* Info del evento */}
@@ -204,14 +138,14 @@ export default function EditarEvento() {
                     {/* Galería de fotos extra */}
                     {imagenes.length > 0 && (
                         <div className="mb-6">
-                            <h3 className="text-white font-bold mb-3">Galería del evento</h3>
-                            <div className="flex gap-3 overflow-x-auto pb-2">
+                            <h3 className="text-white font-bold mb-3 text-sm">Galería del evento</h3>
+                            <div className="flex gap-2 overflow-x-auto pb-2">
                                 {imagenes.map((img, index) => (
                                     <img 
                                         key={index} 
                                         src={img}
                                         alt={`foto-${index}`} 
-                                        className="h-40 rounded-lg object-cover border-2 border-purple-600/50 flex-shrink-0"
+                                        className="h-32 w-32 rounded-lg object-cover border-2 border-purple-600/50 flex-shrink-0"
                                     />
                                 ))}
                             </div>
@@ -226,11 +160,11 @@ export default function EditarEvento() {
                             </p>
                         </div>
                         <div className="bg-slate-900/50 rounded-lg p-3">
-                            <p className="text-slate-400 text-sm">Politicas de Cancelacion</p>
+                            <p className="text-slate-400 text-sm">Políticas de Cancelación</p>
                             <p className="text-white font-semibold">❌ {politicaCancelacion}</p>
                         </div>
                         <div className="bg-slate-900/50 rounded-lg p-3">
-                            <p className="text-slate-400 text-sm">Links de Interes</p>
+                            <p className="text-slate-400 text-sm">Links de Interés</p>
                             <p className="text-white font-semibold">📌 {linkExterno}</p>
                         </div>
                         <div className="bg-slate-900/50 rounded-lg p-3">
@@ -248,14 +182,6 @@ export default function EditarEvento() {
                         userRole="empresa"
                     />
                 </div>
-
-                {/* Componente de votación - siempre visible */}
-                <SongVoting 
-                    eventoId={id} 
-                    usuarioInscrito={usuarioInscrito} 
-                    userId={user?.userId}
-                    generoEvento={musica} 
-                />
             </div>
 
             <FooterEmpresa />
