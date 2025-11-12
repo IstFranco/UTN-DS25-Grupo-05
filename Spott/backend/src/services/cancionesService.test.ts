@@ -1,25 +1,25 @@
-// Test unitario para cancionesService (CJS-friendly)
+// Test unitario para cancionesService 
 import { assertGeneroCompatible } from './cancionesService';
 
-// 👇 Mock del módulo prisma ANTES de que Jest evalue los imports del SUT
+
 jest.mock('../data/prisma.js', () => {
-  const findUnique = jest.fn(); // mock base sin genéricos
+  const findUnique = jest.fn(); 
     return {
         __esModule: true,
         prisma: {
         evento: { findUnique }
         },
-        // por si en algún archivo importaran default (no molesta tenerlo)
+       
         default: {
         evento: { findUnique }
         }
     };
     });
 
-    // Luego del mock, importamos prisma (queda mockeado)
+    
     import { prisma } from '../data/prisma.js';
 
-    // Para evitar choques de tipos estrictos (never), casteamos el mock:
+   
     const findUniqueMock = prisma.evento.findUnique as unknown as jest.Mock;
 
     describe('cancionesService.assertGeneroCompatible (UNIT)', () => {
@@ -28,7 +28,7 @@ jest.mock('../data/prisma.js', () => {
     });
 
     test('lanza "El evento no existe" si no encuentra el evento', async () => {
-        // evitamos never usando implementación asíncrona
+        
         findUniqueMock.mockImplementationOnce(async () => null);
 
         await expect(assertGeneroCompatible('evt-404', 'rock'))
