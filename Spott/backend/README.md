@@ -32,3 +32,12 @@ Este trabajo fue realizado en equipo por los integrantes del grupo, cada uno apo
 - **Backend**: desarrollo de controladores, validaciones, configuración de Prisma y conexión con base de datos.  
 - **Frontend**: vistas de login, registro e interacción con eventos.  
 - **Integración**: pruebas de endpoints, debugging y documentación.
+
+## 🧪 Testing
+
+### Cómo ejecutar
+bash
+cd Spott/backend
+npm test
+npm run test:watch
+npm run test:coverage
