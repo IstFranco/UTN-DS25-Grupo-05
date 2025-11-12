@@ -3,13 +3,18 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext'; 
 import Header from '../components/Header';
 import FooterUsuario from '../components/FooterUsuario';
+import FooterEmpresa from '../components/FooterEmpresa';
 import SongVoting from '../components/SongVoting';
 import perfilImg from '../img/LogoPerfil.jpeg';
 import notiImg from '../img/LogoNotificaciones.jpeg';
 
 export default function MostrarEvento() {
     const { state } = useLocation();
-    const { user } = useAuth(); 
+    
+    const { user, userType } = useAuth();
+    const esEmpresa = userType === 'empresa';
+    const rol = esEmpresa ? 'empresa' : 'usuario';
+
     const [usuarioInscrito, setUsuarioInscrito] = useState(false);
     const [esFavorito, setEsFavorito] = useState(false);
     const [showTicketModal, setShowTicketModal] = useState(false);
@@ -63,6 +68,8 @@ export default function MostrarEvento() {
     }, [id]);
 
     useEffect(() => {
+        if (esEmpresa) return;
+
         if (!user || !user.userId) {
             console.error("No se encontró ID de usuario");
             return;
@@ -83,7 +90,7 @@ export default function MostrarEvento() {
             setEsFavorito(data.esFavorito);
         })
         .catch(err => console.error("Error al verificar favorito:", err));
-    }, [id, user]);
+    }, [id, user, esEmpresa]);
 
     const handleTicketSelection = async (tipoEntrada) => {
         try {
@@ -193,18 +200,18 @@ export default function MostrarEvento() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 pb-24 pt-20">
+            
             <Header
                 title="Spott"
-                leftButton={{ type: 'image', content: perfilImg, to: '/usuario/perfil' }}
-                rightButton={{ type: 'image', content: notiImg, to: '/usuario/notificaciones' }}
+                leftButton={{ type: 'image', content: perfilImg, to: `/${rol}/perfil` }}
+                rightButton={{ type: 'image', content: notiImg, to: `/${rol}/notificaciones` }}
             />
 
             <div className="max-w-4xl mx-auto px-4 py-6">
                 <div className="bg-purple-900/30 backdrop-blur-sm border border-purple-700/20 rounded-xl p-6 shadow-2xl">
-                    {/* Header con imagen más grande, título y favorito */}
                     <div className="flex items-start gap-4 mb-6">
                         <img 
-                            src={`${import.meta.env.VITE_API_URL}${imageSrc}`}
+                            src={imageSrc}
                             alt="Logo evento" 
                             className="w-40 h-40 rounded-lg object-cover border-2 border-purple-600/50"
                         />
@@ -212,18 +219,19 @@ export default function MostrarEvento() {
                             <h2 className="text-2xl font-bold text-white mb-2">{title}</h2>
                             <p className="text-slate-300 mb-3">{inscriptos} inscriptos</p>
                             
-                            {/* Descripción aquí */}
                             <p className="text-slate-300 text-sm leading-relaxed">{description}</p>
                         </div>
-                        <button 
-                            onClick={toggleFavorito}
-                            className="text-3xl hover:scale-110 transition"
-                        >
-                            {esFavorito ? '❤️' : '🤍'}
-                        </button>
+                        
+                        {!esEmpresa && (
+                            <button 
+                                onClick={toggleFavorito}
+                                className="text-3xl hover:scale-110 transition"
+                            >
+                                {esFavorito ? '❤️' : '🤍'}
+                            </button>
+                        )}
                     </div>
 
-                    {/* Info del evento */}
                     <div className="grid grid-cols-2 gap-3 mb-6">
                         <div className="bg-slate-900/50 rounded-lg p-3">
                             <p className="text-slate-400 text-sm">Fecha</p>
@@ -253,7 +261,6 @@ export default function MostrarEvento() {
                         </div>
                     </div>
 
-                    {/* Disponibilidad de entradas */}
                     {estadisticasEvento && (
                         <div className="bg-slate-900/50 rounded-lg p-4 mb-6">
                             <h3 className="text-white font-bold mb-3">Disponibilidad de Entradas</h3>
@@ -274,7 +281,6 @@ export default function MostrarEvento() {
                         </div>
                     )}
 
-                    {/* Galería de fotos extra */}
                     {imagenes.length > 0 && (
                         <div className="mb-6">
                             <h3 className="text-white font-bold mb-3">Galería del evento</h3>
@@ -282,7 +288,7 @@ export default function MostrarEvento() {
                                 {imagenes.map((img, index) => (
                                     <img 
                                         key={index} 
-                                        src={`${import.meta.env.VITE_TM_API}${img}`}
+                                        src={img}
                                         alt={`foto-${index}`} 
                                         className="h-40 rounded-lg object-cover border-2 border-purple-600/50 flex-shrink-0"
                                     />
@@ -295,15 +301,15 @@ export default function MostrarEvento() {
                         <div className="bg-slate-900/50 rounded-lg p-3">
                             <p className="text-slate-400 text-sm">Accesible</p>
                             <p className="text-white font-semibold">
-                                {accesible ? (<p>✅ Evento Accesible</p>): (<p>❌ Evento No Accesible</p>)}
+                                {accesible ? (<p>✅ Evento Accesible</p>) : (<p>❌ Evento No Accesible</p>)}
                             </p>
                         </div>
                         <div className="bg-slate-900/50 rounded-lg p-3">
-                            <p className="text-slate-400 text-sm">Politicas de Cancelacion</p>
+                            <p className="text-slate-400 text-sm">Políticas de Cancelación</p>
                             <p className="text-white font-semibold">❌ {politicaCancelacion}</p>
                         </div>
                         <div className="bg-slate-900/50 rounded-lg p-3">
-                            <p className="text-slate-400 text-sm">Links de Interes</p>
+                            <p className="text-slate-400 text-sm">Links de Interés</p>
                             <p className="text-white font-semibold">📌 {linkExterno}</p>
                         </div>
                         <div className="bg-slate-900/50 rounded-lg p-3">
@@ -312,33 +318,33 @@ export default function MostrarEvento() {
                         </div>
                     </div>
 
-                    {/* Botones de inscripción */}
-                    <div>
-                        {!usuarioInscrito ? (
-                            <button 
-                                onClick={() => setShowTicketModal(true)}
-                                className="w-full bg-gradient-to-r from-purple-700 to-violet-700 hover:from-purple-600 hover:to-violet-600 text-white font-semibold py-3 px-4 rounded-lg transition shadow-lg"
-                            >
-                                Inscribirme al evento
-                            </button>
-                        ) : (
-                            <div className="space-y-3">
-                                <div className="bg-green-600/20 border border-green-500/50 text-green-200 p-3 rounded-lg text-center font-semibold">
-                                    ✅ ¡Ya estás inscrito!
-                                </div>
+                    {!esEmpresa && (
+                        <div>
+                            {!usuarioInscrito ? (
                                 <button 
-                                    onClick={desinscribirme}
-                                    className="w-full bg-red-600/20 border border-red-500/50 hover:bg-red-600/30 text-white font-semibold py-3 px-4 rounded-lg transition"
+                                    onClick={() => setShowTicketModal(true)}
+                                    className="w-full bg-gradient-to-r from-purple-700 to-violet-700 hover:from-purple-600 hover:to-violet-600 text-white font-semibold py-3 px-4 rounded-lg transition shadow-lg"
                                 >
-                                    Desinscribirme del evento
+                                    Inscribirme al evento
                                 </button>
-                            </div>
-                        )}
-                    </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    <div className="bg-green-600/20 border border-green-500/50 text-green-200 p-3 rounded-lg text-center font-semibold">
+                                        ✅ ¡Ya estás inscrito!
+                                    </div>
+                                    <button 
+                                        onClick={desinscribirme}
+                                        className="w-full bg-red-600/20 border border-red-500/50 hover:bg-red-600/30 text-white font-semibold py-3 px-4 rounded-lg transition"
+                                    >
+                                        Desinscribirme del evento
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
 
-                {/* Componente de votación - solo si está inscrito */}
-                {usuarioInscrito && (
+                {!esEmpresa && usuarioInscrito && (
                     <SongVoting 
                         eventoId={id} 
                         usuarioInscrito={usuarioInscrito} 
@@ -348,8 +354,7 @@ export default function MostrarEvento() {
                 )}
             </div>
 
-            {/* Modal de selección de tickets */}
-            {showTicketModal && (
+            {!esEmpresa && showTicketModal && (
                 <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-purple-900/40 backdrop-blur-md border border-purple-700/30 rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
                         <div className="text-center mb-6">
@@ -360,7 +365,6 @@ export default function MostrarEvento() {
                         </div>
 
                         <div className="space-y-4">
-                            {/* Entrada General */}
                             <div 
                                 onClick={() => estadisticasEvento?.disponibles.disponiblesGeneral > 0 && handleTicketSelection('general')}
                                 className={`border-2 rounded-lg p-4 transition ${
@@ -390,7 +394,6 @@ export default function MostrarEvento() {
                                 </p>
                             </div>
 
-                            {/* Entrada VIP */}
                             <div 
                                 onClick={() => estadisticasEvento?.disponibles.disponiblesVip > 0 && handleTicketSelection('vip')}
                                 className={`border-2 rounded-lg p-4 transition ${
@@ -432,7 +435,7 @@ export default function MostrarEvento() {
                 </div>
             )}
 
-            <FooterUsuario />
+            {esEmpresa ? <FooterEmpresa /> : <FooterUsuario />}
         </div>
     );
 }

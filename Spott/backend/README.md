@@ -32,3 +32,37 @@ Este trabajo fue realizado en equipo por los integrantes del grupo, cada uno apo
 - **Backend**: desarrollo de controladores, validaciones, configuración de Prisma y conexión con base de datos.  
 - **Frontend**: vistas de login, registro e interacción con eventos.  
 - **Integración**: pruebas de endpoints, debugging y documentación.
+
+##  Testing
+Sección “Testing” 
+### Qué se testea (servicios – backend):
+- **CancionesService**
+- Evento inexistente → el servicio lanza un error con mensaje "El evento no existe".
+
+- Género opcional → si la canción no tiene género definido, no lanza error.
+
+- Género coincidente → si el género de la canción y el del evento coinciden, la función se resuelve correctamente.
+
+- Género no coincidente → lanza un error con código 400 cuando los géneros son distintos.
+
+- **locationService**
+
+- listarProvincias → devuelve un arreglo de { nombre } mapeando correctamente la respuesta de la API.
+
+- listarLocalidadesPorProvincia → devuelve un arreglo de { nombre } según la provincia indicada.
+
+- localidadPerteneceAProvincia (true) → devuelve true cuando la localidad pertenece a la provincia.
+
+- localidadPerteneceAProvincia (false) → devuelve false si no hay coincidencias.
+
+
+### Cómo ejecutar los tests:
+
+Desde la carpeta Spott/backend:
+
+- Ejecutar una corrida de todos los tests
+npm test
+- Modo watch, queda corriendo y ejecuta test al guardar
+npm run test:watch
+- Muestra qué porcentaje del código está testeado.
+npm run test:coverage

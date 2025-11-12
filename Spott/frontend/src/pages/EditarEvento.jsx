@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext'; 
 import Header from '../components/Header';
-import FooterUsuario from '../components/FooterUsuario';
+import FooterEmpresa from '../components/FooterEmpresa';
 import SongVoting from '../components/SongVoting';
 import perfilImg from '../img/LogoPerfil.jpeg';
 import notiImg from '../img/LogoNotificaciones.jpeg';
@@ -131,7 +131,7 @@ export default function EditarEvento() {
                     {/* Header con imagen más grande, título y favorito */}
                     <div className="flex items-start gap-4 mb-6">
                         <img 
-                            src={`${import.meta.env.VITE_API_URL}${imageSrc}`}
+                            src={imageSrc}
                             alt="Logo evento" 
                             className="w-40 h-40 rounded-lg object-cover border-2 border-purple-600/50"
                         />
@@ -209,7 +209,7 @@ export default function EditarEvento() {
                                 {imagenes.map((img, index) => (
                                     <img 
                                         key={index} 
-                                        src={`${import.meta.env.VITE_TM_API}${img}`}
+                                        src={img}
                                         alt={`foto-${index}`} 
                                         className="h-40 rounded-lg object-cover border-2 border-purple-600/50 flex-shrink-0"
                                     />
@@ -238,6 +238,15 @@ export default function EditarEvento() {
                             <p className="text-white font-semibold">😎 {hashtag}</p>
                         </div>
                     </div>
+
+                    {/* Sección de Canciones - Componente SongVoting */}
+                    <SongVoting 
+                        eventoId={id} 
+                        usuarioInscrito={true}
+                        userId={null}
+                        generoEvento={musica}
+                        userRole="empresa"
+                    />
                 </div>
 
                 {/* Componente de votación - siempre visible */}
